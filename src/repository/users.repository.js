@@ -1,37 +1,56 @@
-const users = require('../model/users')
+const User = require('../model/users');
 const bcrypt = require('bcryptjs');
-const salt = bcrypt.genSaltSync(12);
 
-exports.getAllUsers = async () => await users.findAll();
+const UsersRepository = {
+    // Créer un utilisateur
+    async createUser({ name, email, password, role }) {
+        return await User.create({
+            name,
+            email,
+            password, // Le mot de passe est déjà hashé dans la couche service
+            role,
+        });
+    },
 
-exports.getUserById = async (userID) => {
-    return await users.findByPk(userID)
+    // Obtenir tous les utilisateurs
+    async getAllUsers() {
+        return await User.findAll({
+            attributes: { exclude: ['password'] }, // Exclure le mot de passe des résultats
+        });
+    },
+
+    // Obtenir un utilisateur par son ID
+    async getUserById(userID) {
+        return await User.findByPk(userID, {
+            attributes: { exclude: ['password'] }, // Sécurité : Ne pas renvoyer le mot de passe
+        });
+    },
+
+    // Obtenir un utilisateur par son email
+    async getUserByEmail(email) {
+        return await User.findOne({ where: { email } });
+    },
+
+    // Mettre à jour les informations de connexion (email et mot de passe)
+    async updateUserLogin(userID, { email, password }) {
+        return await User.update(
+            { email, password },
+            { where: { userID } }
+        );
+    },
+
+    // Mettre à jour uniquement le nom de l'utilisateur
+    async updateUser(userID, { name }) {
+        return await User.update(
+            { name },
+            { where: { userID } }
+        );
+    },
+
+    // Supprimer un utilisateur
+    async deleteUser(userID) {
+        return await User.destroy({ where: { userID } });
+    },
 };
-exports.getUserByEmail = async (email) => {
-    return await users.findOne({where: {email}});
-};
-exports.createUser = async (body) => {
-    body.password = bcrypt.hashSync(body.password, salt);
-    return await users.create(body);
-};
 
-exports.updateUserLogin = async (userID, data) => {
-    const foundUser = await users.findOne({where: {userID}});
-
-    if (!foundUser) {
-        throw new Error('User not found');
-    }
-    await users.update({password: bcrypt.hashSync(data.password, salt),email:data.email}, {
-        where: {userID}
-    });
-}
-
-exports.updateUser = async (userID, data) => {
-    await users.update({name: data.name,}, {where: {userID}})
-    return await users.findByPk(userID)
-}
-
-
-exports.deleteUser = async (userID) => {
-    await users.destroy({where: {userID}});
-}
+module.exports = UsersRepository;
