@@ -30,7 +30,7 @@ jobs:
           if (-not (Test-Path $targetFolder)) {
             New-Item -ItemType Directory -Path $targetFolder
           }
-          Copy-Item -Path * -Destination $targetFolder -Recurse
+          Copy-Item -Path * -Destination $targetFolder -Recurse -Force
         shell: powershell
 
       # Redémarrer le serveur Node.js avec pm2
