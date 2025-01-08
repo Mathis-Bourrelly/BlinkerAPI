@@ -17,9 +17,9 @@ const modelDefiners = [
     require('../model/users'),
 ];
 
-for (const modelDefiner of modelDefiners) {
-    modelDefiner.sync();
-}
+//for (const modelDefiner of modelDefiners) {
+//    modelDefiner.sync();
+//}
 
 
 
