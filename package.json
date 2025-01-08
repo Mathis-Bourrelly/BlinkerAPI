@@ -21,7 +21,6 @@
     "express-validator": "^7.1.0",
     "luxon": "^3.4.4",
     "morgan": "^1.10.0",
-    "pm2": "^5.4.3",
     "sequelize": "^6.37.3"
   }
 }
