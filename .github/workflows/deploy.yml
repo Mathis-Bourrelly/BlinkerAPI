@@ -23,10 +23,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # Construire l'application (si applicable)
-      - name: Build application
-        run: npm run build # Remplace cette commande selon tes besoins
-
       # Copier les fichiers dans le dossier spécifique sur le serveur Windows
       - name: Deploy to target folder
         run: |
