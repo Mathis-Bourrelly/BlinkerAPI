@@ -14,7 +14,7 @@ function initJwtMiddleware(app) {
             algorithms: ['HS256'],
         }).unless({
             path: [
-                '/login','/auth',
+                '/login','/auth','/status'
             ],
 
         }),
