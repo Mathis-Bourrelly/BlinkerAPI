@@ -31,4 +31,4 @@ jobs:
             New-Item -ItemType Directory -Path $targetFolder
           }
           Copy-Item -Path * -Destination $targetFolder -Recurse
-        shell: pwsh
+        shell: powershell
