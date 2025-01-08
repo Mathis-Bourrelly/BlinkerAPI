@@ -36,7 +36,7 @@ jobs:
       # Redémarrer le serveur Node.js avec pm2
       - name: Restart Node.js server with pm2
         run: |
-          npx pm2 stop all || true  # Ignore les erreurs si aucun processus n'existe
+          npx pm2 stop all -ErrorAction SilentlyContinue
           npx pm2 start "D:\blinker\index.js" --name blinker-api
           npx pm2 list
         shell: powershell
