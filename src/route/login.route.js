@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const router = express.Router();
 
 router.get('/status', async (req, res) => {
-    res.send('ready');
+    res.send({"status":'ready'});
 });
 
 
