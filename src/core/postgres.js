@@ -9,7 +9,7 @@ exports.sequelize = new Sequelize({
     password: process.env.DB_PASSWORD,
     host: process.env.HOST,
     port: process.env.DB_PORT,
-    ssl: true,
+    ssl: false,
     clientMinMessages: 'notice',
 });
 
