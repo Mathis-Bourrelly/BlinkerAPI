@@ -1,37 +1,28 @@
-const users = require('../model/users')
-const bcrypt = require('bcryptjs');
-const salt = bcrypt.genSaltSync(12);
+const users = require('../model/users');
 
-exports.getAllUsers = async () => await users.findAll();
-
-exports.getUserById = async (userID) => {
-    return await users.findByPk(userID)
+exports.getAllUsers = async () => {
+    return await users.findAll();
 };
+
+exports.getUserById = async (id) => {
+    return await users.findByPk(id);
+};
+
 exports.getUserByEmail = async (email) => {
-    return await users.findOne({where: {email}});
-};
-exports.createUser = async (body) => {
-    body.password = bcrypt.hashSync(body.password, salt);
-    return await users.create(body);
+    return await users.findOne({ where: { email } });
 };
 
-exports.updateUserLogin = async (userID, data) => {
-    const foundUser = await users.findOne({where: {userID}});
+exports.createUser = async (data) => {
+    return await users.create(data);
+};
 
-    if (!foundUser) {
-        throw new Error('User not found');
-    }
-    await users.update({password: bcrypt.hashSync(data.password, salt),email:data.email}, {
-        where: {userID}
-    });
-}
+exports.updateUser = async (id, data) => {
+    const [updatedRows] = await users.update(data, { where: { userID: id } });
+    if (updatedRows === 0) return null; // Aucun utilisateur mis à jour
+    return await users.findByPk(id);
+};
 
-exports.updateUser = async (userID, data) => {
-    await users.update({name: data.name,}, {where: {userID}})
-    return await users.findByPk(userID)
-}
-
-
-exports.deleteUser = async (userID) => {
-    await users.destroy({where: {userID}});
-}
+exports.deleteUser = async (id) => {
+    const deletedRows = await users.destroy({ where: { userID: id } });
+    return deletedRows > 0; // Retourne `true` si un utilisateur a été supprimé
+};
