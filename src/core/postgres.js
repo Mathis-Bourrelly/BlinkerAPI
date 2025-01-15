@@ -1,6 +1,7 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
+// Initialisation de Sequelize avec les options de connexion
 exports.sequelize = new Sequelize({
     dialect: 'postgres',
     database: process.env.DB_NAME,
@@ -8,6 +9,10 @@ exports.sequelize = new Sequelize({
     password: process.env.DB_PASSWORD,
     host: process.env.HOST,
     port: process.env.DB_PORT,
+    define: {
+        freezeTableName: true, // Empêche Sequelize de modifier les noms de table
+    },
+});
     ssl: false,
     logging: console.log, // Pour afficher les logs SQL (facultatif)
     clientMinMessages: 'notice',
@@ -16,7 +21,32 @@ exports.sequelize = new Sequelize({
 // Importer les modèles
 const modelDefiners = [
     require('../model/users'),
+    // Ajoutez ici d'autres modèles si nécessaire
 ];
+
+for (const modelDefiner of modelDefiners) {
+    modelDefiner.sync();
+}
+
+// Vérification et synchronisation des modèles
+(async () => {
+    try {
+        for (const modelDefiner of modelDefiners) {
+            if (modelDefiner && typeof modelDefiner.sync === 'function') {
+                console.log(`Synchronisation du modèle : ${modelDefiner.name || 'Inconnu'}`);
+                await modelDefiner.sync();
+            } else {
+                console.warn('Un modèle est invalide ou mal importé.');
+            }
+        }
+
+        // Synchronisation globale de la base avec `alter` pour ajuster les tables existantes
+        await exports.sequelize.sync({ alter: true });
+        console.log('Base de données synchronisée avec succès !');
+    } catch (error) {
+        console.error('Erreur de synchronisation des modèles :', error);
+    }
+})();
 
 // Initialiser les modèles
 //for (const modelDefiner of modelDefiners) {
@@ -25,9 +55,3 @@ const modelDefiners = [
 //for (const modelDefiner of modelDefiners) {
 //    modelDefiner.sync();
 //}
-
-
-// Synchroniser la base de données
-exports.sequelize.sync({ alter: true }) // Utiliser alter pour mettre à jour automatiquement
-    .then(() => console.log('Base de données synchronisée !'))
-    .catch((error) => console.error('Erreur de synchronisation :', error));

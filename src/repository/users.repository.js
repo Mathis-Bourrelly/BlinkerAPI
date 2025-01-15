@@ -1,28 +1,56 @@
-const users = require('../model/users');
+const User = require('../model/users');
+const bcrypt = require('bcryptjs');
 
-exports.getAllUsers = async () => {
-    return await users.findAll();
+const UsersRepository = {
+    // Créer un utilisateur
+    async createUser({ name, email, password, role }) {
+        return await User.create({
+            name,
+            email,
+            password, // Le mot de passe est déjà hashé dans la couche service
+            role,
+        });
+    },
+
+    // Obtenir tous les utilisateurs
+    async getAllUsers() {
+        return await User.findAll({
+            attributes: { exclude: ['password'] }, // Exclure le mot de passe des résultats
+        });
+    },
+
+    // Obtenir un utilisateur par son ID
+    async getUserById(userID) {
+        return await User.findByPk(userID, {
+            attributes: { exclude: ['password'] }, // Sécurité : Ne pas renvoyer le mot de passe
+        });
+    },
+
+    // Obtenir un utilisateur par son email
+    async getUserByEmail(email) {
+        return await User.findOne({ where: { email } });
+    },
+
+    // Mettre à jour les informations de connexion (email et mot de passe)
+    async updateUserLogin(userID, { email, password }) {
+        return await User.update(
+            { email, password },
+            { where: { userID } }
+        );
+    },
+
+    // Mettre à jour uniquement le nom de l'utilisateur
+    async updateUser(userID, { name }) {
+        return await User.update(
+            { name },
+            { where: { userID } }
+        );
+    },
+
+    // Supprimer un utilisateur
+    async deleteUser(userID) {
+        return await User.destroy({ where: { userID } });
+    },
 };
 
-exports.getUserById = async (id) => {
-    return await users.findByPk(id);
-};
-
-exports.getUserByEmail = async (email) => {
-    return await users.findOne({ where: { email } });
-};
-
-exports.createUser = async (data) => {
-    return await users.create(data);
-};
-
-exports.updateUser = async (id, data) => {
-    const [updatedRows] = await users.update(data, { where: { userID: id } });
-    if (updatedRows === 0) return null; // Aucun utilisateur mis à jour
-    return await users.findByPk(id);
-};
-
-exports.deleteUser = async (id) => {
-    const deletedRows = await users.destroy({ where: { userID: id } });
-    return deletedRows > 0; // Retourne `true` si un utilisateur a été supprimé
-};
+module.exports = UsersRepository;
