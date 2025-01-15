@@ -88,18 +88,18 @@ exports.updateUser = async (id, data) => {
         data.password = bcrypt.hashSync(data.password, 12);
     }
 
-    return await userRepository.updateUser(id, data);
+    return await UsersRepository.updateUser(id, data);
 };
 
 exports.deleteUser = async (id) => {
-    return await userRepository.deleteUser(id);
+    return await UsersRepository.deleteUser(id);
 };
 
 
 exports.verifyUser = async (token) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await userRepository.getUserById(decoded.userID);
+        const user = await UsersRepository.getUserById(decoded.userID);
 
         if (!user) {
             throw new Error('User not found');
@@ -109,7 +109,7 @@ exports.verifyUser = async (token) => {
             throw new Error('User is already verified');
         }
 
-        await userRepository.updateUser(user.userID, { isVerified: true });
+        await UsersRepository.updateUser(user.userID, { isVerified: true });
         return { message: 'User successfully verified' };
     } catch (error) {
         throw new Error('Invalid or expired token');

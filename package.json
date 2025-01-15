@@ -14,7 +14,7 @@
     "@sequelize/postgres": "^7.0.0-alpha.41",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "express": "^4.19.2",
     "express-fileupload": "^1.5.0",
     "express-jwt": "^8.4.1",
@@ -24,5 +24,5 @@
     "nodemailer": "^6.9.16",
     "nodemon": "^3.1.9",
     "sequelize": "^6.37.3"
-    }
+  }
 }

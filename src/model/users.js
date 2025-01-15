@@ -1,4 +1,5 @@
-const { sequelize } = require('../core/postgres'); // Assurez-vous que le chemin est correct
+const { sequelize } = require('../core/postgres');
+const {DataTypes} = require("sequelize");
 
 const Users = sequelize.define('Users', {
     userID: {
@@ -23,7 +24,13 @@ const Users = sequelize.define('Users', {
     role: {
         type: DataTypes.STRING(50),
         allowNull: false,
+        defaultValue: "user"
     },
+    isVerified: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    }
 
 }, {
     timestamps: false,

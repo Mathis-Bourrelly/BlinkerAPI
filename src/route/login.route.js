@@ -1,20 +1,16 @@
 const express = require("express");
 const { validationResult, body } = require("express-validator");
 const userService = require("../services/users.service");
+const UsersRepository = require("../repository/users.repository");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const router = express.Router();
 
-
-router.post(
-    "/login",
-    body("email").isEmail().withMessage("Veuillez fournir une adresse e-mail valide."),
-    body("password").not().isEmpty().withMessage("Le mot de passe est requis."),
-
   
-router.get('/status', async (req, res) => {
+router.get('/status',
+    async (req, res) => {
     res.send({"status":'ready'});
-});
+})
 
 
 router.post('/login',
@@ -30,7 +26,7 @@ router.post('/login',
             const { email, password } = req.body;
 
             // Récupérer l'utilisateur par e-mail
-            const user = await userService.getUserByEmail(email);
+            const user = await UsersRepository.getUserByEmail(email);
 
             if (!user) {
                 return res.status(401).json({ message: "Adresse e-mail ou mot de passe incorrect." });

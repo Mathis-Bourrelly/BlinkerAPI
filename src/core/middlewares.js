@@ -16,7 +16,7 @@ function initJwtMiddleware(app) {
     */
     app.use(
         jwt({
-            secret: process.env.MOTDEPASSEAPP,
+            secret: process.env.JWT_SECRET,
             algorithms: ['HS256'],
         }).unless({
             path: [

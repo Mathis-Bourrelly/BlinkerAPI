@@ -14,17 +14,6 @@ class WebServer {
         initializeConfigMiddlewares(this.app);
         this._initializeRoutes();
         initializeErrorMiddlewares(this.app);
-        this._initializeDatabase();
-    }
-
-    async _initializeDatabase() {
-        try {
-            await sequelize.sync();
-            console.log('Database synchronized successfully');
-        } catch (error) {
-            console.error('Error synchronizing database:', error);
-            process.exit(1);
-        }
     }
 
     start() {

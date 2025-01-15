@@ -12,10 +12,11 @@ exports.sequelize = new Sequelize({
     define: {
         freezeTableName: true, // Empêche Sequelize de modifier les noms de table
     },
-});
     ssl: false,
     logging: console.log, // Pour afficher les logs SQL (facultatif)
-    clientMinMessages: 'notice',
+    dialectOptions: {
+        clientMinMessages: 'notice',
+    }
 });
 
 // Importer les modèles
@@ -24,11 +25,6 @@ const modelDefiners = [
     // Ajoutez ici d'autres modèles si nécessaire
 ];
 
-for (const modelDefiner of modelDefiners) {
-    modelDefiner.sync();
-}
-
-// Vérification et synchronisation des modèles
 (async () => {
     try {
         for (const modelDefiner of modelDefiners) {
@@ -47,11 +43,3 @@ for (const modelDefiner of modelDefiners) {
         console.error('Erreur de synchronisation des modèles :', error);
     }
 })();
-
-// Initialiser les modèles
-//for (const modelDefiner of modelDefiners) {
-//    modelDefiner(exports.sequelize); // Appeler la fonction avec l'instance Sequelize
-//}
-//for (const modelDefiner of modelDefiners) {
-//    modelDefiner.sync();
-//}

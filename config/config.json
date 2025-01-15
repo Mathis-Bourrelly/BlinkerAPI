@@ -1,9 +1,9 @@
 {
   "development": {
-    "username": "postgres",
-    "password": null,
-    "database": "blinker",
-    "host": "127.0.0.1",
+    "username": "blinker_user",
+    "password": "1seulMaître13",
+    "database": "BLINKER_DB",
+    "host": "bdd.dev.blinker.eterny.fr",
     "port": 5432,
     "dialect": "postgres"
   },
