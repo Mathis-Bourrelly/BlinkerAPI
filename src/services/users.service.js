@@ -81,37 +81,7 @@ const UsersService = {
     },
 };
 
-<<<<<<< Updated upstream
-module.exports = UsersService;
-=======
-exports.getUserById = async (id) => {
-    return await userRepository.getUserById(id);
-};
 
-exports.getUserByEmail = async (email) => {
-    return await userRepository.getUserByEmail(email);
-};
-
-exports.createUser = async (data) => {
-    const existingUser = await userRepository.getUserByEmail(data.email);
-    if (existingUser) {
-        throw new Error('User already exists');
-    }
-
-    data.password = bcrypt.hashSync(data.password, 12);
-    data.isVerified = false; // Initialiser à non vérifié
-
-    const newUser = await userRepository.createUser(data);
-
-    try {
-        await sendConfirmationEmail(newUser);
-    } catch (error) {
-        console.error('Failed to send confirmation email:', error.message);
-    }
-
-    newUser.password = undefined;
-    return newUser;
-};
 
 exports.updateUser = async (id, data) => {
     if (data.password) {
@@ -124,6 +94,7 @@ exports.updateUser = async (id, data) => {
 exports.deleteUser = async (id) => {
     return await userRepository.deleteUser(id);
 };
+
 
 exports.verifyUser = async (token) => {
     try {
@@ -163,4 +134,4 @@ const sendConfirmationEmail = async (user) => {
 
     console.log(`Confirmation email sent to ${user.email}`);
 };
->>>>>>> Stashed changes
+

@@ -5,11 +5,21 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const router = express.Router();
 
-// Route de connexion
+
 router.post(
     "/login",
     body("email").isEmail().withMessage("Veuillez fournir une adresse e-mail valide."),
     body("password").not().isEmpty().withMessage("Le mot de passe est requis."),
+
+  
+router.get('/status', async (req, res) => {
+    res.send({"status":'ready'});
+});
+
+
+router.post('/login',
+    body('email').not().isEmpty(),
+    body('password').not().isEmpty(),
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

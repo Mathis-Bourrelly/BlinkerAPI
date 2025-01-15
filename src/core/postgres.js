@@ -1,6 +1,5 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
-const { PostgresDialect } = require("@sequelize/postgres");
 
 // Initialisation de Sequelize avec les options de connexion
 exports.sequelize = new Sequelize({
@@ -10,36 +9,25 @@ exports.sequelize = new Sequelize({
     password: process.env.DB_PASSWORD,
     host: process.env.HOST,
     port: process.env.DB_PORT,
-<<<<<<< Updated upstream
-    ssl: true,
-    clientMinMessages: 'notice',
-});
-
-=======
-    logging: console.log, // Affiche les requêtes SQL dans la console pour débogage
-    dialectOptions: {
-        ssl: process.env.DB_SSL === 'true', // Activer SSL si nécessaire
-    },
     define: {
         freezeTableName: true, // Empêche Sequelize de modifier les noms de table
     },
 });
+    ssl: false,
+    logging: console.log, // Pour afficher les logs SQL (facultatif)
+    clientMinMessages: 'notice',
+});
 
-// Importation des modèles
->>>>>>> Stashed changes
+// Importer les modèles
 const modelDefiners = [
     require('../model/users'),
     // Ajoutez ici d'autres modèles si nécessaire
 ];
 
-<<<<<<< Updated upstream
 for (const modelDefiner of modelDefiners) {
     modelDefiner.sync();
 }
 
-
-
-=======
 // Vérification et synchronisation des modèles
 (async () => {
     try {
@@ -59,4 +47,11 @@ for (const modelDefiner of modelDefiners) {
         console.error('Erreur de synchronisation des modèles :', error);
     }
 })();
->>>>>>> Stashed changes
+
+// Initialiser les modèles
+//for (const modelDefiner of modelDefiners) {
+//    modelDefiner(exports.sequelize); // Appeler la fonction avec l'instance Sequelize
+//}
+//for (const modelDefiner of modelDefiners) {
+//    modelDefiner.sync();
+//}
