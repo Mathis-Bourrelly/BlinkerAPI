@@ -5,6 +5,10 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require('bcryptjs');
 const router = express.Router();
 
+router.get('/status', async (req, res) => {
+    res.send({"status":'ready'});
+});
+
 
 router.post('/login',
     body('email').not().isEmpty(),

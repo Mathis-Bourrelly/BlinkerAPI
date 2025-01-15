@@ -20,7 +20,7 @@ function initJwtMiddleware(app) {
             algorithms: ['HS256'],
         }).unless({
             path: [
-                '/login', '/auth', // Chemins exclus de la vérification JWT
+                '/login','/auth','/status','/users'
             ],
         }),
     );
@@ -39,7 +39,7 @@ const initFileUploadMiddleware = (app) => {
 
 const initCorsMiddleware = (app) => {
     const corsOptions = {
-        origin: 'http://localhost:3000', // Origine autorisée pour les requêtes CORS
+        origin: ['http://localhost:3000','http://localhost:3004','http://localhost:3011','http://localhost:8081'],
     };
 
     app.use(cors(corsOptions));

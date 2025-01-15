@@ -19,9 +19,13 @@ const modelDefiners = [
 ];
 
 // Initialiser les modèles
-for (const modelDefiner of modelDefiners) {
-    modelDefiner(exports.sequelize); // Appeler la fonction avec l'instance Sequelize
-}
+//for (const modelDefiner of modelDefiners) {
+//    modelDefiner(exports.sequelize); // Appeler la fonction avec l'instance Sequelize
+//}
+//for (const modelDefiner of modelDefiners) {
+//    modelDefiner.sync();
+//}
+
 
 // Synchroniser la base de données
 exports.sequelize.sync({ alter: true }) // Utiliser alter pour mettre à jour automatiquement

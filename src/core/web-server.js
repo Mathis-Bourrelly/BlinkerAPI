@@ -7,7 +7,7 @@ const {sequelize} = require('./postgres');
 
 class WebServer {
     app = undefined;
-    port = 3000;
+    port = 3011;
     server = undefined;
 
 

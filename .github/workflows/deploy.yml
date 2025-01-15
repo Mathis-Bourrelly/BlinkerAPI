@@ -1,0 +1,34 @@
+name: Deploy Node.js App
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      # Vérifier le code depuis le repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Installer Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16 # Remplace par la version de Node.js utilisée par ton projet
+
+      # Installer les dépendances
+      - name: Install dependencies
+        run: npm install
+
+      # Copier les fichiers dans le dossier spécifique sur le serveur Windows
+      - name: Deploy to target folder
+        run: |
+          $targetFolder = "D:\blinker"
+          if (-not (Test-Path $targetFolder)) {
+            New-Item -ItemType Directory -Path $targetFolder
+          }
+          Copy-Item -Path * -Destination $targetFolder -Recurse -Force
+        shell: powershell
