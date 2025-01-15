@@ -1,5 +1,7 @@
 const UsersRepository = require('../repository/users.repository');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { sendEmail } = require('../core/emailService');
 
 const UsersService = {
     // Créer un utilisateur avec validations métier
@@ -79,4 +81,86 @@ const UsersService = {
     },
 };
 
+<<<<<<< Updated upstream
 module.exports = UsersService;
+=======
+exports.getUserById = async (id) => {
+    return await userRepository.getUserById(id);
+};
+
+exports.getUserByEmail = async (email) => {
+    return await userRepository.getUserByEmail(email);
+};
+
+exports.createUser = async (data) => {
+    const existingUser = await userRepository.getUserByEmail(data.email);
+    if (existingUser) {
+        throw new Error('User already exists');
+    }
+
+    data.password = bcrypt.hashSync(data.password, 12);
+    data.isVerified = false; // Initialiser à non vérifié
+
+    const newUser = await userRepository.createUser(data);
+
+    try {
+        await sendConfirmationEmail(newUser);
+    } catch (error) {
+        console.error('Failed to send confirmation email:', error.message);
+    }
+
+    newUser.password = undefined;
+    return newUser;
+};
+
+exports.updateUser = async (id, data) => {
+    if (data.password) {
+        data.password = bcrypt.hashSync(data.password, 12);
+    }
+
+    return await userRepository.updateUser(id, data);
+};
+
+exports.deleteUser = async (id) => {
+    return await userRepository.deleteUser(id);
+};
+
+exports.verifyUser = async (token) => {
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await userRepository.getUserById(decoded.userID);
+
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        if (user.isVerified) {
+            throw new Error('User is already verified');
+        }
+
+        await userRepository.updateUser(user.userID, { isVerified: true });
+        return { message: 'User successfully verified' };
+    } catch (error) {
+        throw new Error('Invalid or expired token');
+    }
+};
+
+/**
+ * Envoie un e-mail de confirmation pour valider l'utilisateur
+ * @param {Object} user - L'utilisateur nouvellement créé
+ */
+const sendConfirmationEmail = async (user) => {
+    const token = jwt.sign({ userID: user.userID }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    const confirmationUrl = `http://localhost:3000/users/confirm/${token}`;
+
+    await sendEmail(
+        user.email,
+        'Confirmation de votre compte Blinker',
+        `Cliquez sur ce lien pour valider votre compte : ${confirmationUrl}`,
+        `<h1>Confirmation de votre compte</h1><p>Cliquez sur <a href="${confirmationUrl}">ce lien</a> pour valider votre compte.</p>`
+    );
+
+    console.log(`Confirmation email sent to ${user.email}`);
+};
+>>>>>>> Stashed changes

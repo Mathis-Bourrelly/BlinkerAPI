@@ -1,6 +1,13 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
+<<<<<<< Updated upstream
 const UsersService = require('../services/users.service');
+=======
+const { sendEmail } = require('../core/emailService');
+const userService = require('../services/users.service');
+const { checkVerifiedUser } = require('../core/middlewares/authMiddleware');
+>>>>>>> Stashed changes
 const router = express.Router();
 
 // Créer un nouvel utilisateur
@@ -57,6 +64,15 @@ router.put('/auth/:id',
     body('password').notEmpty(),
     body('email').isEmail(),
     async (req, res) => {
+<<<<<<< Updated upstream
+=======
+        console.log("Route POST /users atteinte !");
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+>>>>>>> Stashed changes
         try {
             await UsersService.updateUserLogin(req.params.id, req.body);
             res.sendStatus(204);
@@ -85,4 +101,38 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+<<<<<<< Updated upstream
 module.exports = router;
+=======
+// Confirmer un compte utilisateur
+router.get('/confirm/:token', async (req, res) => {
+    try {
+        const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
+
+        const user = await userService.getUserById(decoded.userID);
+
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({ message: 'Compte déjà vérifié' });
+        }
+
+        await userService.updateUser(user.userID, { isVerified: true });
+        res.status(200).json({ message: 'Compte vérifié avec succès !' });
+    } catch (error) {
+        console.error('Erreur lors de la vérification du compte :', error.message);
+        res.status(400).json({ message: 'Lien de confirmation invalide ou expiré' });
+    }
+});
+
+// Route protégée
+router.get('/protected-route', checkVerifiedUser, async (req, res) => {
+    res.status(200).json({ message: 'Bienvenue sur une route protégée !' });
+});
+
+module.exports = {
+    initializeRoutes: () => router,
+};
+>>>>>>> Stashed changes
