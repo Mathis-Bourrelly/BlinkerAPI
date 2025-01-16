@@ -50,6 +50,12 @@ const UsersService = {
         if (!user) throw new Error('Utilisateur non trouvé');
         return user;
     },
+    // Récupérer un utilisateur par email
+    async getUserByEmail(email) {
+        const user = await UsersRepository.getUserByEmail(email);
+        if (!user) throw new Error('Utilisateur non trouvé');
+        return user;
+    },
 
     // Mettre à jour les informations de connexion (email + mot de passe)
     async updateUserLogin(userID, data) {
@@ -135,3 +141,4 @@ const sendConfirmationEmail = async (user) => {
     console.log(`Confirmation email sent to ${user.email}`);
 };
 
+module.exports = UsersService;

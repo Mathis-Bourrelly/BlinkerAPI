@@ -2,6 +2,8 @@ const express = require('express');
 const fileUpload = require('express-fileupload');
 const { DateTime } = require('luxon');
 let cors = require('cors');
+const swaggerjsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express')
 // var { expressjwt: jwt } = require("express-jwt"); // Import du JWT
 
 const initJsonHandlerMiddleware = (app) => app.use(express.json());
@@ -79,6 +81,26 @@ const initLoggerMiddleware = (app) => {
     });
 };
 
+const initSwaggerMiddleware = (app) => {
+    const swaggerOptions = {
+        swaggerDefinition: {
+            openapi: '3.0.0',
+            info: {
+                title: 'Blinker API',
+                description: 'Blinker API Information',
+            },
+            servers: [
+                {
+                    url: "http://localhost:3011/"
+                }
+            ],
+        },
+        apis: ['./src/route/*.js']
+    }
+    const swaggerDocs = swaggerjsdoc(swaggerOptions)
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs))
+}
+
 exports.initializeConfigMiddlewares = (app) => {
     initCorsMiddleware(app); // Initialisation du middleware CORS
     initJsonHandlerMiddleware(app); // Gestion des requêtes JSON
@@ -86,6 +108,7 @@ exports.initializeConfigMiddlewares = (app) => {
     initLoggerMiddleware(app); // Logger des requêtes
     staticMiddleware(app); // Fichiers statiques
     initFileUploadMiddleware(app); // Middleware d'upload de fichiers
+    initSwaggerMiddleware(app) // Middleware de la génération de docs
 }
 
 exports.initializeErrorMiddlewares = (app) => {

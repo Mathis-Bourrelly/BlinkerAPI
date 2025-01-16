@@ -1,7 +1,6 @@
 const express = require("express");
 const { validationResult, body } = require("express-validator");
-const userService = require("../services/users.service");
-const UsersRepository = require("../repository/users.repository");
+const UsersService = require("../services/users.service");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const router = express.Router();
@@ -26,7 +25,7 @@ router.post('/login',
             const { email, password } = req.body;
 
             // Récupérer l'utilisateur par e-mail
-            const user = await UsersRepository.getUserByEmail(email);
+            const user = await UsersService.getUserByEmail(email);
 
             if (!user) {
                 return res.status(401).json({ message: "Adresse e-mail ou mot de passe incorrect." });
@@ -53,7 +52,7 @@ router.post('/login',
             res.status(200).json({ token, message: "Connexion réussie !" });
         } catch (error) {
             console.error("Erreur lors de la connexion :", error.message);
-            res.status(500).json({ message: "Une erreur est survenue lors de la connexion." });
+            res.status(500).json({ message: `Erreur lors de la connexion : ${error.message}` });
         }
     }
 );

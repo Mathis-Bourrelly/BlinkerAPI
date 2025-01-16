@@ -4,11 +4,42 @@ const {body, validationResult} = require('express-validator');
 const UsersService = require('../services/users.service');
 const {sendEmail} = require('../core/emailService');
 const {checkVerifiedUser} = require('../core/middlewares/authMiddleware');
-const {getUserById} = require("../repository/users.repository");
-const UsersRepository = require("../repository/users.repository");
 const router = express.Router();
 
-// Créer un nouvel utilisateur
+/**
+ * @swagger
+ * /users/register:
+ *   post:
+ *     summary: Créer un nouvel utilisateur.
+ *     description: Enregistrer un nouvel utilisateur avec un email, un mot de passe, un nom et un rôle facultatif.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 example: Password123!
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               role:
+ *                 type: string
+ *                 enum: [user, admin]
+ *                 example: user
+ *     responses:
+ *       201:
+ *         description: Utilisateur créé avec succès
+ *       400:
+ *         description: Validation échouée
+ *       409:
+ *         description: Conflit, utilisateur existant
+ */
 router.post('/register',
     body('email').isEmail().withMessage('Email invalide'),
     body('password').isStrongPassword({
@@ -29,7 +60,7 @@ router.post('/register',
         }
 
         try {
-            const user = await UsersRepository.createUser(req.body);
+            const user = await UsersService.createUser(req.body);
             res.status(201).json({
                 success: true, message: 'Utilisateur créé avec succès', data: user,
             });
@@ -38,34 +69,98 @@ router.post('/register',
         }
     });
 
-// Obtenir tous les utilisateurs
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: Obtenir tous les utilisateurs.
+ *     description: Récupère une liste de tous les utilisateurs.
+ *     responses:
+ *       200:
+ *         description: Une liste d'utilisateurs
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 router.get('/', async (req, res) => {
     try {
-        const users = await UsersRepository.getAllUsers();
+        const users = await UsersService.getAllUsers();
         res.status(200).json(users);
     } catch (error) {
         res.status(500).json({message: error.message});
     }
 });
 
-// Obtenir un utilisateur par ID
+/**
+ * @swagger
+ * /users/{id}:
+ *   get:
+ *     summary: Obtenir un utilisateur par ID.
+ *     description: Récupère un utilisateur à partir de son ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: L'ID de l'utilisateur
+ *     responses:
+ *       200:
+ *         description: Utilisateur trouvé
+ *       404:
+ *         description: Utilisateur non trouvé
+ */
 router.get('/:id', async (req, res) => {
     try {
-        const user = await UsersRepository.getUserById(req.params.id);
+        const user = await UsersService.getUserById(req.params.id);
         res.json(user);
     } catch (error) {
         res.status(404).json({success: false, message: error.message});
     }
 });
 
-// Mettre à jour les informations de connexion
+/**
+ * @swagger
+ * /users/auth/{id}:
+ *   put:
+ *     summary: Mettre à jour les informations de connexion de l'utilisateur.
+ *     description: Met à jour l'email et le mot de passe de l'utilisateur en vérifiant l'ancien mot de passe.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'utilisateur
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               prevPassword:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Informations mises à jour avec succès
+ *       400:
+ *         description: Erreurs de validation
+ *       404:
+ *         description: Utilisateur non trouvé
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 router.put('/auth/:id', body('prevPassword').notEmpty().withMessage('Previous password is required'), body('password').notEmpty().withMessage('New password is required'), body('email').isEmail().withMessage('Valid email is required'), async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({errors: errors.array()});
     }
     try {
-        const user = await getUserById(req.params.id);
+        const user = await UsersService.getUserById(req.params.id);
         if (!user) {
             return res.status(404).json({message: 'User not found'});
         }
@@ -84,10 +179,30 @@ router.put('/auth/:id', body('prevPassword').notEmpty().withMessage('Previous pa
     }
 });
 
-// Obtenir un utilisateur par email
+/**
+ * @swagger
+ * /users/email/{email}:
+ *   get:
+ *     summary: Obtenir un utilisateur par email.
+ *     description: Récupère un utilisateur à partir de son email.
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Email de l'utilisateur
+ *     responses:
+ *       200:
+ *         description: Utilisateur trouvé
+ *       404:
+ *         description: Utilisateur non trouvé
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 router.get('/email/:email', async (req, res) => {
     try {
-        const user = await UsersRepository.getUserByEmail(req.params.email);
+        const user = await UsersService.getUserByEmail(req.params.email);
         if (!user) return res.status(404).json({message: 'User not found'});
         res.status(200).json(user);
     } catch (error) {
@@ -95,7 +210,31 @@ router.get('/email/:email', async (req, res) => {
     }
 });
 
-// Créer un utilisateur
+/**
+ * @swagger
+ * /users:
+ *   post:
+ *     summary: Créer un utilisateur.
+ *     description: Ajoute un nouvel utilisateur.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Utilisateur créé avec succès
+ *       400:
+ *         description: Erreur de validation
+ */
 router.post('/', body('email').isEmail(), body('password').isLength({min: 8}), body('name').notEmpty(), async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -103,28 +242,87 @@ router.post('/', body('email').isEmail(), body('password').isLength({min: 8}), b
     }
 
     try {
-        const newUser = await UsersRepository.createUser(req.body);
+        const newUser = await UsersService.createUser(req.body);
         res.status(201).json(newUser);
     } catch (error) {
         res.status(400).json({message: error.message});
     }
 });
 
-// Mettre à jour un utilisateur par ID
+/**
+ * @swagger
+ * /users/{id}:
+ *   put:
+ *     summary: Mettre à jour un utilisateur par ID.
+ *     description: Met à jour les informations d'un utilisateur.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'utilisateur
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       204:
+ *         description: Mise à jour réussie
+ *       400:
+ *         description: Erreur de validation
+ */
 router.put('/:id', body('name').optional().notEmpty(), body('email').optional().isEmail(), body('password').optional().isLength({min: 8}), async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({errors: errors.array()});
     }
     try {
-        await UsersService.UsersRepository(req.params.id, req.body);
+        await UsersService.updateUser(req.params.id, req.body);
         res.sendStatus(204);
     } catch (error) {
         res.status(400).json({success: false, message: error.message});
     }
 });
 
-// Mettre à jour le nom de l'utilisateur
+/**
+ * @swagger
+ * /users/{id}:
+ *   put:
+ *     summary: Mettre à jour le nom d'un utilisateur par ID.
+ *     description: Met à jour uniquement le nom d'un utilisateur.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'utilisateur
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Nouveau nom de l'utilisateur
+ *     responses:
+ *       200:
+ *         description: Utilisateur mis à jour avec succès
+ *       404:
+ *         description: Utilisateur non trouvé
+ */
 router.put('/:id', body('name').notEmpty(), async (req, res) => {
     try {
         const updatedUser = await UsersService.updateUser(req.params.id, req.body);
@@ -134,7 +332,27 @@ router.put('/:id', body('name').notEmpty(), async (req, res) => {
     }
 });
 
-// Supprimer un utilisateur
+/**
+ * @swagger
+ * /users/{id}:
+ *   delete:
+ *     summary: Supprimer un utilisateur par ID.
+ *     description: Supprime un utilisateur en utilisant son ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'utilisateur
+ *     responses:
+ *       204:
+ *         description: Utilisateur supprimé avec succès
+ *       404:
+ *         description: Utilisateur non trouvé
+ *       500:
+ *         description: Erreur interne du serveur
+ */
 router.delete('/:id', async (req, res) => {
     try {
         await UsersService.deleteUser(req.params.id);
@@ -144,12 +362,32 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// Confirmer un compte utilisateur
+/**
+ * @swagger
+ * /users/confirm/{token}:
+ *   get:
+ *     summary: Confirmer un compte utilisateur.
+ *     description: Vérifie un compte utilisateur à l'aide d'un token de confirmation.
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token de confirmation
+ *     responses:
+ *       200:
+ *         description: Compte vérifié avec succès
+ *       400:
+ *         description: Lien de confirmation invalide ou expiré
+ *       404:
+ *         description: Utilisateur non trouvé
+ */
 router.get('/confirm/:token', async (req, res) => {
     try {
         const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
 
-        const user = await UsersRepository.getUserById(decoded.userID);
+        const user = await UsersService.getUserById(decoded.userID);
 
         if (!user) {
             return res.status(404).json({message: 'Utilisateur non trouvé'});
@@ -159,7 +397,7 @@ router.get('/confirm/:token', async (req, res) => {
             return res.status(400).json({message: 'Compte déjà vérifié'});
         }
 
-        await UsersRepository.updateUser(user.userID, {isVerified: true});
+        await UsersService.updateUser(user.userID, {isVerified: true});
         res.status(200).json({message: 'Compte vérifié avec succès !'});
     } catch (error) {
         console.error('Erreur lors de la vérification du compte :', error.message);
@@ -175,7 +413,7 @@ router.get('/protected-route', checkVerifiedUser, async (req, res) => {
 // Supprimer un utilisateur par ID
 router.delete('/:id', async (req, res) => {
     try {
-        const result = await userService.deleteUser(req.params.id);
+        const result = await UsersService.deleteUser(req.params.id);
         if (!result) return res.status(404).json({message: 'User not found'});
         res.status(204).send();
     } catch (error) {
@@ -190,7 +428,7 @@ router.post('/send-test-email/', async (req, res) => {
         if (!userID) {
             return res.status(400).send('ID utilisateur requis pour l’envoi de l’e-mail de confirmation.');
         }
-        const user = await UsersRepository.getUserById(userID);
+        const user = await UsersService.getUserById(userID);
         if (!user) {
             return res.status(400).send('ID utilisateur inconnue.');
         }
