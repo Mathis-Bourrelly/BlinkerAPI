@@ -96,9 +96,8 @@ const initSwaggerMiddleware = (app) => {
                 description: 'Blinker API Information',
             },
             servers: [
-                {
-                    url: "http://localhost:3011/"
-                }
+                {url: "http://localhost:3011/"},
+                {url: "http://dev.blinker.eterny.fr/"}
             ],
         },
         apis: ['./src/route/*.js']
