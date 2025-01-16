@@ -41,7 +41,13 @@ const initFileUploadMiddleware = (app) => {
 
 const initCorsMiddleware = (app) => {
     const corsOptions = {
-        origin: ['http://localhost:3000','http://localhost:3004','http://localhost:3011','http://localhost:8081'],
+        origin: [
+            'http://localhost:3000',
+            'http://localhost:3004',
+            'http://localhost:3011',
+            'http://localhost:8081',
+            'http://dev.blinker.eterny.fr'
+        ],
     };
 
     app.use(cors(corsOptions));
