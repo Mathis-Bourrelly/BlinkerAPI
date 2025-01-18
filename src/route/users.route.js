@@ -62,7 +62,7 @@ router.post('/register',
         try {
             const user = await UsersService.createUser(req.body);
             res.status(201).json({
-                success: true, message: 'Utilisateur créé avec succès', data: user,
+                success: true, message: 'Utilisateur créé avec succès, email de confirmation envoyé', data: user,
             });
         } catch (error) {
             res.status(409).json({success: false, message: error.message});
@@ -397,7 +397,7 @@ router.get('/confirm/:token', async (req, res) => {
             return res.status(400).json({message: 'Compte déjà vérifié'});
         }
 
-        await UsersService.updateUser(user.userID, {isVerified: true});
+        await UsersService.verifyUser(user);
         res.status(200).json({message: 'Compte vérifié avec succès !'});
     } catch (error) {
         console.error('Erreur lors de la vérification du compte :', error.message);

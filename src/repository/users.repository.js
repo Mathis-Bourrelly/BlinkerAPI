@@ -47,6 +47,14 @@ const UsersRepository = {
         );
     },
 
+    // Mettre à jour uniquement le nom de l'utilisateur
+    async verifyUser(userID) {
+        return await User.update(
+            { isVerified: true },
+            { where: { userID } }
+        );
+    },
+
     // Supprimer un utilisateur
     async deleteUser(userID) {
         return await User.destroy({ where: { userID } });
