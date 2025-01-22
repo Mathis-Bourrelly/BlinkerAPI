@@ -12,6 +12,7 @@ const router = express.Router();
  *   post:
  *     summary: Créer un nouvel utilisateur.
  *     description: Enregistrer un nouvel utilisateur avec un email, un mot de passe, un nom et un rôle facultatif.
+ *     tags: [users]
  *     requestBody:
  *       required: true
  *       content:
@@ -75,6 +76,7 @@ router.post('/register',
  *   get:
  *     summary: Obtenir tous les utilisateurs.
  *     description: Récupère une liste de tous les utilisateurs.
+ *     tags: [users]
  *     responses:
  *       200:
  *         description: Une liste d'utilisateurs
@@ -96,6 +98,7 @@ router.get('/', async (req, res) => {
  *   get:
  *     summary: Obtenir un utilisateur par ID.
  *     description: Récupère un utilisateur à partir de son ID.
+ *     tags: [users]
  *     parameters:
  *       - in: path
  *         name: id
@@ -124,6 +127,7 @@ router.get('/:id', async (req, res) => {
  *   put:
  *     summary: Mettre à jour les informations de connexion de l'utilisateur.
  *     description: Met à jour l'email et le mot de passe de l'utilisateur en vérifiant l'ancien mot de passe.
+ *     tags: [users]
  *     parameters:
  *       - in: path
  *         name: id
@@ -185,6 +189,7 @@ router.put('/auth/:id', body('prevPassword').notEmpty().withMessage('Previous pa
  *   get:
  *     summary: Obtenir un utilisateur par email.
  *     description: Récupère un utilisateur à partir de son email.
+ *     tags: [users]
  *     parameters:
  *       - in: path
  *         name: email
@@ -216,6 +221,7 @@ router.get('/email/:email', async (req, res) => {
  *   post:
  *     summary: Créer un utilisateur.
  *     description: Ajoute un nouvel utilisateur.
+ *     tags: [users]
  *     requestBody:
  *       required: true
  *       content:
@@ -255,6 +261,7 @@ router.post('/', body('email').isEmail(), body('password').isLength({min: 8}), b
  *   put:
  *     summary: Mettre à jour un utilisateur par ID.
  *     description: Met à jour les informations d'un utilisateur.
+ *     tags: [users]
  *     parameters:
  *       - in: path
  *         name: id
@@ -300,6 +307,7 @@ router.put('/:id', body('name').optional().notEmpty(), body('email').optional().
  *   put:
  *     summary: Mettre à jour le nom d'un utilisateur par ID.
  *     description: Met à jour uniquement le nom d'un utilisateur.
+ *     tags: [users]
  *     parameters:
  *       - in: path
  *         name: id
@@ -338,6 +346,7 @@ router.put('/:id', body('name').notEmpty(), async (req, res) => {
  *   delete:
  *     summary: Supprimer un utilisateur par ID.
  *     description: Supprime un utilisateur en utilisant son ID.
+ *     tags: [users]
  *     parameters:
  *       - in: path
  *         name: id
@@ -368,6 +377,7 @@ router.delete('/:id', async (req, res) => {
  *   get:
  *     summary: Confirmer un compte utilisateur.
  *     description: Vérifie un compte utilisateur à l'aide d'un token de confirmation.
+ *     tags: [users]
  *     parameters:
  *       - in: path
  *         name: token

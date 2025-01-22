@@ -11,6 +11,7 @@ const router = express.Router();
  *   get:
  *     summary: Vérifie le statut du service
  *     description: Renvoie un objet JSON indiquant que le service est prêt.
+ *     tags: [login]
  *     responses:
  *       200:
  *         description: Le service est prêt.
@@ -34,6 +35,7 @@ router.get('/status',
  *   post:
  *     summary: Authentifie un utilisateur
  *     description: Connecte un utilisateur avec un email et un mot de passe et renvoie un jeton JWT.
+ *     tags: [login]
  *     requestBody:
  *       required: true
  *       content:
@@ -118,6 +120,7 @@ router.post('/login',
  *   post:
  *     summary: Vérifie un jeton JWT
  *     description: Vérifie si un jeton JWT est valide et renvoie les données décodées.
+ *     tags: [login]
  *     requestBody:
  *       required: true
  *       content:
