@@ -5,13 +5,68 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const router = express.Router();
 
-  
+/**
+ * @swagger
+ * /status:
+ *   get:
+ *     summary: Vérifie le statut du service
+ *     description: Renvoie un objet JSON indiquant que le service est prêt.
+ *     responses:
+ *       200:
+ *         description: Le service est prêt.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ready"
+ */
 router.get('/status',
     async (req, res) => {
     res.send({"status":'ready'});
 })
 
-
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Authentifie un utilisateur
+ *     description: Connecte un utilisateur avec un email et un mot de passe et renvoie un jeton JWT.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "example@example.com"
+ *               password:
+ *                 type: string
+ *                 example: "securePassword123"
+ *     responses:
+ *       200:
+ *         description: Connexion réussie.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                   example: "Connexion réussie !"
+ *       401:
+ *         description: Adresse e-mail ou mot de passe incorrect.
+ *       403:
+ *         description: Le compte n'est pas confirmé.
+ *       500:
+ *         description: Erreur interne.
+ */
 router.post('/login',
     body('email').not().isEmpty(),
     body('password').not().isEmpty(),
@@ -57,7 +112,38 @@ router.post('/login',
     }
 );
 
-// Vérification d'un jeton JWT
+/**
+ * @swagger
+ * /auth:
+ *   post:
+ *     summary: Vérifie un jeton JWT
+ *     description: Vérifie si un jeton JWT est valide et renvoie les données décodées.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: "your.jwt.token"
+ *     responses:
+ *       200:
+ *         description: Jeton valide.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Jeton valide."
+ *                 decoded:
+ *                   type: object
+ *       401:
+ *         description: Jeton invalide ou expiré.
+ */
 router.post(
     "/auth",
     body("token").not().isEmpty().withMessage("Le jeton est requis."),
