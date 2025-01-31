@@ -6,17 +6,12 @@ const {sendEmail} = require('../core/emailService');
 const UsersService = {
     // Créer un utilisateur avec validations métier
     async createUser(body) {
-        const {email, role = 'user', password, name} = body;
+        const {email, password, name} = body;
 
         // Vérifier si l'utilisateur existe déjà
         const existingUser = await UsersRepository.getUserByEmail(email);
         if (existingUser) {
             throw new Error('Cet email est déjà utilisé');
-        }
-
-        // Vérifier que le rôle est valide
-        if (!['user', 'admin'].includes(role)) {
-            throw new Error('Role invalide, il doit être "user" ou "admin"');
         }
 
         // Hasher le mot de passe
@@ -27,7 +22,6 @@ const UsersService = {
             name,
             email,
             password: hashedPassword,
-            role,
         });
         await this.sendConfirmationEmail(newUser)
         // Retourner les données sans le mot de passe

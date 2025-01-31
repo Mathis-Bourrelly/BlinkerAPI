@@ -42,21 +42,14 @@ const router = express.Router();
  *         description: Conflit, utilisateur existant
  */
 router.post('/register',
-    body('email').isEmail().withMessage('Email invalide'),
-    body('password').isStrongPassword({
-        minLength: 12,
-        minLowercase: 1,
-        minUppercase: 1,
-        minNumbers: 1,
-        minSymbols: 1,
-    }).withMessage('Mot de passe trop faible'),
-    body('name').notEmpty().withMessage('Le nom est requis'),
-    body('role').optional().isIn(['user', 'admin']).withMessage('Role invalide'),
+    body('email').isEmail().withMessage('invalid_email'),
+
+    body('name').notEmpty().withMessage('name_required'),
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
-                success: false, message: 'Validation échouée', errors: errors.array(),
+                success: false, message:  errors.array()[0].msg, errors: errors.array(),
             });
         }
 
@@ -69,6 +62,9 @@ router.post('/register',
             res.status(409).json({success: false, message: error.message});
         }
     });
+
+//TODO grant to admin route
+
 
 /**
  * @swagger

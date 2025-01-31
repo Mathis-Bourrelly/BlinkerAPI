@@ -3,12 +3,11 @@ const bcrypt = require('bcryptjs');
 
 const UsersRepository = {
     // Créer un utilisateur
-    async createUser({ name, email, password, role }) {
+    async createUser({ name, email, password }) {
         return await User.create({
             name,
             email,
             password, // Le mot de passe est déjà hashé dans la couche service
-            role,
         });
     },
 
