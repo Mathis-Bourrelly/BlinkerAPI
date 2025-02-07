@@ -10,7 +10,9 @@ const UsersService = {
 
         // Vérifier si l'utilisateur existe déjà
         const existingUser = await UsersRepository.getUserByEmail(email);
+
         if (existingUser) {
+            console.log("Cet email est déjà utilisé")
             throw new Error('Cet email est déjà utilisé');
         }
 

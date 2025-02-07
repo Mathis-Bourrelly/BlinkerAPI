@@ -35,9 +35,9 @@ class WebServer {
     _initializeRoutes() {
         console.log('Initializing routes...');
         this.app.use('/users', usersRoute.initializeRoutes());
-        console.log('/users route initialized');
+        console.log('users route initialized');
         this.app.use('/', loginRoute.initializeRoutes());
-        console.log('Root login route initialized');
+        console.log('login route initialized');
     }
 }
 

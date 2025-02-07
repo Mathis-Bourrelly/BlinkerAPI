@@ -29,10 +29,6 @@ const router = express.Router();
  *               name:
  *                 type: string
  *                 example: John Doe
- *               role:
- *                 type: string
- *                 enum: [user, admin]
- *                 example: user
  *     responses:
  *       201:
  *         description: Utilisateur créé avec succès
@@ -59,6 +55,7 @@ router.post('/register',
                 success: true, message: 'Utilisateur créé avec succès, email de confirmation envoyé', data: user,
             });
         } catch (error) {
+            console.log(error);
             res.status(409).json({success: false, message: error.message});
         }
     });
@@ -237,7 +234,18 @@ router.get('/email/:email', async (req, res) => {
  *       400:
  *         description: Erreur de validation
  */
-router.post('/', body('email').isEmail(), body('password').isLength({min: 8}), body('name').notEmpty(), async (req, res) => {
+router.post('/',
+    body('email').isEmail(),
+    body('password').isStrongPassword(
+        {
+            minLength: 12,
+            minLowercase: 1,
+            minUppercase: 1,
+            minNumbers: 1,
+            minSymbols: 1
+        }),
+    body('name').notEmpty(),
+    async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({errors: errors.array()});

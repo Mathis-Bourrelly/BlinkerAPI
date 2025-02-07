@@ -73,9 +73,11 @@ router.post('/login',
     body('email').not().isEmpty(),
     body('password').not().isEmpty(),
     async (req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+        const result = validationResult(req);
+        if (!result.isEmpty()) {
+            console.log(result.errors[0].path)
+            const errorString = result.errors[0].path
+            return res.status(400).json({message: "field" +  String(errorString).charAt(0).toUpperCase() + String(errorString).slice(1) + "Missing"});
         }
 
         try {
