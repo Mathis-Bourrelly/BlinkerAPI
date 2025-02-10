@@ -99,6 +99,21 @@ const initSwaggerMiddleware = (app) => {
                 {url: "http://localhost:3011/"},
                 {url: "http://dev.blinker.eterny.fr/"}
             ],
+            components: {
+                securitySchemes: {
+                    BearerAuth: {
+                        type: "http",
+                        scheme: "bearer",
+                        bearerFormat: "JWT",
+                        description: "Ajoutez un token JWT en cliquant sur 'Authorize'."
+                    }
+                }
+            },
+            security: [
+                {
+                    BearerAuth: [],
+                },
+            ],
         },
         apis: ['./src/route/*.js']
     }

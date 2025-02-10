@@ -38,15 +38,17 @@ const UsersRepository = {
         );
     },
 
-    // Mettre à jour uniquement le nom de l'utilisateur
-    async updateUser(userID, { name }) {
-        return await User.update(
-            { name },
-            { where: { userID } }
-        );
+    async updateUser(userID, updates) {
+        const user = await User.findByPk(userID);
+        if (!user) {
+            throw new Error('Utilisateur non trouvé');
+        }
+
+        await user.update(updates);
+
+        return user;
     },
 
-    // Mettre à jour uniquement le nom de l'utilisateur
     async verifyUser(userID) {
         return await User.update(
             { isVerified: true },
@@ -54,7 +56,6 @@ const UsersRepository = {
         );
     },
 
-    // Supprimer un utilisateur
     async deleteUser(userID) {
         return await User.destroy({ where: { userID } });
     },

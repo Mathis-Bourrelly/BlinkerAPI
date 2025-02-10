@@ -82,12 +82,29 @@ const UsersService = {
         await UsersRepository.deleteUser(userID);
     },
 
+    async grantUser(req, userID) {
+        if (!req.user || req.user.role !== 'admin') {
+            throw new Error('Accès refusé : vous devez être administrateur');
+        }
+
+        const user = await UsersRepository.getUserById(userID);
+        if (!user) throw new Error('Utilisateur non trouvé');
+
+        if (user.role === 'admin') {
+            throw new Error('Cet utilisateur est déjà administrateur');
+        }
+
+        user.role = 'admin';
+        await UsersRepository.updateUser(userID, { role: 'admin' });
+
+        return { message: "L'utilisateur a été promu administrateur" };
+    },
 
     async verifyUser(user){
         try {
             if (!user) {
                 throw new Error('User not found');
-            }t('email')
+            }
 
             if (user.isVerified) {
                 throw new Error('User is already verified');

@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const {body, validationResult} = require('express-validator');
 const UsersService = require('../services/users.service');
 const {sendEmail} = require('../core/emailService');
-const {checkVerifiedUser} = require('../core/middlewares/authMiddleware');
+const AuthMiddleware = require('../core/middlewares/authMiddleware');
 const router = express.Router();
 
 /**
@@ -59,9 +59,6 @@ router.post('/register',
             res.status(409).json({success: false, message: error.message});
         }
     });
-
-//TODO grant to admin route
-
 
 /**
  * @swagger
@@ -419,11 +416,6 @@ router.get('/confirm/:token', async (req, res) => {
     }
 });
 
-// Route protégée
-router.get('/protected-route', checkVerifiedUser, async (req, res) => {
-    res.status(200).json({message: 'Bienvenue sur une route protégée !'});
-})
-
 // Supprimer un utilisateur par ID
 router.delete('/:id', async (req, res) => {
     try {
@@ -469,6 +461,43 @@ router.post('/send-test-email/', async (req, res) => {
         res.status(500).send('Échec de l’envoi de l’e-mail.');
     }
 });
+
+/**
+ * @swagger
+ * /users/grant-admin/{userID}:
+ *   post:
+ *     summary: Accorder le rôle d'administrateur à un utilisateur
+ *     description: Permet à un administrateur de promouvoir un utilisateur au rôle d'administrateur.
+ *     tags: [users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userID
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID de l'utilisateur à promouvoir
+ *     responses:
+ *       200:
+ *         description: L'utilisateur a été promu administrateur avec succès
+ *       403:
+ *         description: Accès refusé - seul un administrateur peut accorder ce rôle
+ *       404:
+ *         description: Utilisateur non trouvé
+ */
+router.post('/grant-admin/:userID',
+    AuthMiddleware.verifyToken,
+    AuthMiddleware.checkVerifiedUser,
+    async (req, res) => {
+        try {
+            const result = await UsersService.grantUser(req, req.params.userID);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(403).json({ error: error.message });
+        }
+    });
 
 module.exports = {
     initializeRoutes: () => router,

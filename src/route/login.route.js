@@ -103,9 +103,9 @@ router.post('/login',
 
             // Générer un jeton JWT
             const token = jwt.sign(
-                { userID: user.userID, email: user.email },
+                { userID: user.userID, email: user.email, role: user.role},
                 process.env.JWT_SECRET,
-                { expiresIn: "1d" } // Jeton valide 1 jour
+                { expiresIn: "1d" }
             );
 
             res.status(200).json({ token, message: "Connexion réussie !" });

@@ -46,6 +46,7 @@ const modelDefiners = [
         // Synchronisation globale de la base avec `alter` pour ajuster les tables existantes
         await exports.sequelize.sync({ alter: true });
         console.log('Base de données synchronisée avec succès !');
+        console.log('http://localhost:3011/api-docs')
     } catch (error) {
         console.error('Erreur de synchronisation des modèles :', error);
     }
