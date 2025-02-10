@@ -1,0 +1,89 @@
+[
+  {
+    "name": "test",
+    "password": "test",
+    "email": "test.test@test.com",
+    "role": "user",
+    "isVerified": true
+  },
+  {
+    "userID": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Alice Dupont",
+    "password": "hashed_password_1",
+    "email": "alice.dupont@example.com",
+    "role": "user",
+    "isVerified": true
+  },
+  {
+    "userID": "550e8400-e29b-41d4-a716-446655440001",
+    "name": "Bob Martin",
+    "password": "hashed_password_2",
+    "email": "bob.martin@example.com",
+    "role": "admin",
+    "isVerified": true
+  },
+  {
+    "userID": "550e8400-e29b-41d4-a716-446655440002",
+    "name": "Charlie Bernard",
+    "password": "hashed_password_3",
+    "email": "charlie.bernard@example.com",
+    "role": "user",
+    "isVerified": false
+  },
+  {
+    "userID": "550e8400-e29b-41d4-a716-446655440003",
+    "name": "David Morel",
+    "password": "hashed_password_4",
+    "email": "david.morel@example.com",
+    "role": "moderator",
+    "isVerified": true
+  },
+  {
+    "userID": "550e8400-e29b-41d4-a716-446655440004",
+    "name": "Emma Lefevre",
+    "password": "hashed_password_5",
+    "email": "emma.lefevre@example.com",
+    "role": "user",
+    "isVerified": false
+  },
+  {
+    "userID": "550e8400-e29b-41d4-a716-446655440005",
+    "name": "François Lambert",
+    "password": "hashed_password_6",
+    "email": "francois.lambert@example.com",
+    "role": "admin",
+    "isVerified": true
+  },
+  {
+    "userID": "550e8400-e29b-41d4-a716-446655440006",
+    "name": "Gabriel Roche",
+    "password": "hashed_password_7",
+    "email": "gabriel.roche@example.com",
+    "role": "user",
+    "isVerified": false
+  },
+  {
+    "userID": "550e8400-e29b-41d4-a716-446655440007",
+    "name": "Hugo Fontaine",
+    "password": "hashed_password_8",
+    "email": "hugo.fontaine@example.com",
+    "role": "moderator",
+    "isVerified": true
+  },
+  {
+    "userID": "550e8400-e29b-41d4-a716-446655440008",
+    "name": "Isabelle Girard",
+    "password": "hashed_password_9",
+    "email": "isabelle.girard@example.com",
+    "role": "user",
+    "isVerified": true
+  },
+  {
+    "userID": "550e8400-e29b-41d4-a716-446655440009",
+    "name": "Julien Perrot",
+    "password": "hashed_password_10",
+    "email": "julien.perrot@example.com",
+    "role": "user",
+    "isVerified": false
+  }
+]
