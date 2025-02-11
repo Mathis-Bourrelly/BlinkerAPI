@@ -23,6 +23,7 @@ exports.sequelize = new Sequelize({
 const modelDefiners = [
     require('../models/users'),
     require('../models/follows'),
+    require('../models/profiles'),
 ];
 
 (async () => {
