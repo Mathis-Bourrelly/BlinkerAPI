@@ -39,7 +39,6 @@ const router = express.Router();
  */
 router.post('/register',
     body('email').isEmail().withMessage('invalid_email'),
-
     body('name').notEmpty().withMessage('name_required'),
     async (req, res) => {
         const errors = validationResult(req);
@@ -65,20 +64,20 @@ router.post('/register',
  * /users:
  *   get:
  *     summary: Obtenir tous les utilisateurs.
- *     description: Récupère une liste de tous les utilisateurs.
+ *     description: Récupère une liste de tous les utilisateurs enregistrés.
  *     tags: [users]
  *     responses:
  *       200:
- *         description: Une liste d'utilisateurs
+ *         description: Liste des utilisateurs récupérée avec succès
  *       500:
  *         description: Erreur interne du serveur
  */
 router.get('/', async (req, res) => {
     try {
-        const users = await UsersService.getAllUsers();
-        res.status(200).json(users);
+        const result = await UsersService.getAllUsers();
+        res.status(200).json(result);
     } catch (error) {
-        res.status(500).json({message: error.message});
+        res.status(error.status || 500).json({ message: error.message });
     }
 });
 
@@ -87,7 +86,7 @@ router.get('/', async (req, res) => {
  * /users/{id}:
  *   get:
  *     summary: Obtenir un utilisateur par ID.
- *     description: Récupère un utilisateur à partir de son ID.
+ *     description: Récupère un utilisateur à partir de son ID unique.
  *     tags: [users]
  *     parameters:
  *       - in: path
@@ -95,81 +94,21 @@ router.get('/', async (req, res) => {
  *         required: true
  *         schema:
  *           type: string
- *         description: L'ID de l'utilisateur
+ *         description: ID de l'utilisateur à rechercher
  *     responses:
  *       200:
  *         description: Utilisateur trouvé
  *       404:
  *         description: Utilisateur non trouvé
- */
-router.get('/:id', async (req, res) => {
-    try {
-        const user = await UsersService.getUserById(req.params.id);
-        res.json(user);
-    } catch (error) {
-        res.status(404).json({success: false, message: error.message});
-    }
-});
-
-/**
- * @swagger
- * /users/auth/{id}:
- *   put:
- *     summary: Mettre à jour les informations de connexion de l'utilisateur.
- *     description: Met à jour l'email et le mot de passe de l'utilisateur en vérifiant l'ancien mot de passe.
- *     tags: [users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID de l'utilisateur
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               prevPassword:
- *                 type: string
- *               password:
- *                 type: string
- *               email:
- *                 type: string
- *     responses:
- *       200:
- *         description: Informations mises à jour avec succès
- *       400:
- *         description: Erreurs de validation
- *       404:
- *         description: Utilisateur non trouvé
  *       500:
  *         description: Erreur interne du serveur
  */
-router.put('/auth/:id', body('prevPassword').notEmpty().withMessage('Previous password is required'), body('password').notEmpty().withMessage('New password is required'), body('email').isEmail().withMessage('Valid email is required'), async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({errors: errors.array()});
-    }
+router.get('/:id', async (req, res) => {
     try {
-        const user = await UsersService.getUserById(req.params.id);
-        if (!user) {
-            return res.status(404).json({message: 'User not found'});
-        }
-        // Vérifie que l'ancien mot de passe correspond
-        if (user.password !== req.body.prevPassword) {
-            return res.status(401).json({message: 'Incorrect previous password'});
-        }
-        // Met à jour l'utilisateur avec le nouveau mot de passe et l'email
-        user.password = req.body.password;
-        user.email = req.body.email;
-
-        await userService.updateUser(user); // Implémente `updateUser` dans ton service
-        res.status(200).json({message: 'User updated successfully', user});
+        const result = await UsersService.getUserById(req.params.id);
+        res.status(200).json(result);
     } catch (error) {
-        res.status(500).json({message: error.message});
+        res.status(error.status || 500).json({ success: false, message: error.message });
     }
 });
 
@@ -178,7 +117,7 @@ router.put('/auth/:id', body('prevPassword').notEmpty().withMessage('Previous pa
  * /users/email/{email}:
  *   get:
  *     summary: Obtenir un utilisateur par email.
- *     description: Récupère un utilisateur à partir de son email.
+ *     description: Récupère un utilisateur à partir de son adresse email.
  *     tags: [users]
  *     parameters:
  *       - in: path
@@ -186,7 +125,7 @@ router.put('/auth/:id', body('prevPassword').notEmpty().withMessage('Previous pa
  *         required: true
  *         schema:
  *           type: string
- *         description: Email de l'utilisateur
+ *         description: Email de l'utilisateur à rechercher
  *     responses:
  *       200:
  *         description: Utilisateur trouvé
@@ -197,11 +136,10 @@ router.put('/auth/:id', body('prevPassword').notEmpty().withMessage('Previous pa
  */
 router.get('/email/:email', async (req, res) => {
     try {
-        const user = await UsersService.getUserByEmail(req.params.email);
-        if (!user) return res.status(404).json({message: 'User not found'});
-        res.status(200).json(user);
+        const result = await UsersService.getUserByEmail(req.params.email);
+        res.status(200).json(result);
     } catch (error) {
-        res.status(500).json({message: error.message});
+        res.status(error.status || 500).json({ message: error.message });
     }
 });
 
@@ -210,7 +148,7 @@ router.get('/email/:email', async (req, res) => {
  * /users:
  *   post:
  *     summary: Créer un utilisateur.
- *     description: Ajoute un nouvel utilisateur.
+ *     description: Ajoute un nouvel utilisateur avec un email, un mot de passe sécurisé et un nom.
  *     tags: [users]
  *     requestBody:
  *       required: true
@@ -221,101 +159,58 @@ router.get('/email/:email', async (req, res) => {
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
+ *                 description: Adresse email de l'utilisateur
  *               password:
  *                 type: string
+ *                 description: Mot de passe sécurisé (minimum 12 caractères, majuscules, minuscules, chiffres et symboles requis)
  *               name:
  *                 type: string
+ *                 description: Nom de l'utilisateur
  *     responses:
  *       201:
  *         description: Utilisateur créé avec succès
  *       400:
  *         description: Erreur de validation
+ *       409:
+ *         description: Conflit - l'utilisateur existe déjà
  */
 router.post('/',
-    body('email').isEmail(),
-    body('password').isStrongPassword(
-        {
-            minLength: 12,
-            minLowercase: 1,
-            minUppercase: 1,
-            minNumbers: 1,
-            minSymbols: 1
-        }),
-    body('name').notEmpty(),
+    body('email').isEmail().withMessage("L'email doit être valide"),
+    body('password').isStrongPassword({
+        minLength: 12,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1
+    }).withMessage("Le mot de passe doit contenir au moins 12 caractères, une majuscule, une minuscule, un chiffre et un symbole"),
+    body('name').notEmpty().withMessage("Le nom ne peut pas être vide"),
     async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({errors: errors.array()});
+        try {
+            const result = await UsersService.createUser(req.body);
+            res.status(201).json(result);
+        } catch (error) {
+            res.status(error.status || 400).json({ message: error.message });
+        }
     }
-
-    try {
-        const newUser = await UsersService.createUser(req.body);
-        res.status(201).json(newUser);
-    } catch (error) {
-        res.status(400).json({message: error.message});
-    }
-});
+);
 
 /**
  * @swagger
  * /users/{id}:
  *   put:
- *     summary: Mettre à jour un utilisateur par ID.
- *     description: Met à jour les informations d'un utilisateur.
+ *     summary: Mettre à jour un utilisateur.
+ *     description: Met à jour les informations d'un utilisateur (nom, email, mot de passe, etc.).
  *     tags: [users]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: ID de l'utilisateur
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       204:
- *         description: Mise à jour réussie
- *       400:
- *         description: Erreur de validation
- */
-router.put('/:id', body('name').optional().notEmpty(), body('email').optional().isEmail(), body('password').optional().isLength({min: 8}), async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({errors: errors.array()});
-    }
-    try {
-        await UsersService.updateUser(req.params.id, req.body);
-        res.sendStatus(204);
-    } catch (error) {
-        res.status(400).json({success: false, message: error.message});
-    }
-});
-
-/**
- * @swagger
- * /users/{id}:
- *   put:
- *     summary: Mettre à jour le nom d'un utilisateur par ID.
- *     description: Met à jour uniquement le nom d'un utilisateur.
- *     tags: [users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID de l'utilisateur
+ *         description: ID de l'utilisateur à mettre à jour
  *     requestBody:
  *       required: true
  *       content:
@@ -326,51 +221,35 @@ router.put('/:id', body('name').optional().notEmpty(), body('email').optional().
  *               name:
  *                 type: string
  *                 description: Nouveau nom de l'utilisateur
- *     responses:
- *       200:
- *         description: Utilisateur mis à jour avec succès
- *       404:
- *         description: Utilisateur non trouvé
- */
-router.put('/:id', body('name').notEmpty(), async (req, res) => {
-    try {
-        const updatedUser = await UsersService.updateUser(req.params.id, req.body);
-        res.status(200).json(updatedUser);
-    } catch (error) {
-        res.status(404).json({message: error.message});
-    }
-});
-
-/**
- * @swagger
- * /users/{id}:
- *   delete:
- *     summary: Supprimer un utilisateur par ID.
- *     description: Supprime un utilisateur en utilisant son ID.
- *     tags: [users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID de l'utilisateur
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Nouvelle adresse email
+ *               password:
+ *                 type: string
+ *                 description: Nouveau mot de passe (au moins 8 caractères)
  *     responses:
  *       204:
- *         description: Utilisateur supprimé avec succès
+ *         description: Utilisateur mis à jour avec succès
+ *       400:
+ *         description: Erreur de validation
  *       404:
  *         description: Utilisateur non trouvé
- *       500:
- *         description: Erreur interne du serveur
  */
-router.delete('/:id', async (req, res) => {
-    try {
-        await UsersService.deleteUser(req.params.id);
-        res.sendStatus(204);
-    } catch (error) {
-        res.status(404).json({message: error.message});
+router.put('/:id',
+    AuthMiddleware.verifyToken,
+    body('name').optional().notEmpty().withMessage('Le nom ne peut pas être vide'),
+    body('email').optional().isEmail().withMessage('L\'email doit être valide'),
+    body('password').optional().isLength({ min: 8 }).withMessage('Le mot de passe doit contenir au moins 8 caractères'),
+    async (req, res) => {
+        try {
+            await UsersService.updateUser(req.params.id, req.body);
+            res.sendStatus(204);
+        } catch (error) {
+            res.status(error.status || 400).json({ success: false, message: error.message });
+        }
     }
-});
+);
 
 /**
  * @swagger
@@ -396,34 +275,43 @@ router.delete('/:id', async (req, res) => {
  */
 router.get('/confirm/:token', async (req, res) => {
     try {
-        const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
-
-        const user = await UsersService.getUserById(decoded.userID);
-
-        if (!user) {
-            return res.status(404).json({message: 'Utilisateur non trouvé'});
-        }
-
-        if (user.isVerified) {
-            return res.status(400).json({message: 'Compte déjà vérifié'});
-        }
-
-        await UsersService.verifyUser(user);
-        res.status(200).json({message: 'Compte vérifié avec succès !'});
+        const result = await UsersService.confirmUser(req.params.token);
+        res.status(200).json(result);
     } catch (error) {
-        console.error('Erreur lors de la vérification du compte :', error.message);
-        res.status(400).json({message: 'Lien de confirmation invalide ou expiré'});
+        res.status(error.status || 400).json({ message: error.message });
     }
 });
 
-// Supprimer un utilisateur par ID
-router.delete('/:id', async (req, res) => {
+/**
+ * @swagger
+ * /users/{id}:
+ *   delete:
+ *     summary: Supprimer un utilisateur par ID.
+ *     description: Supprime un utilisateur en utilisant son ID.
+ *     tags: [users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'utilisateur
+ *     responses:
+ *       204:
+ *         description: Utilisateur supprimé avec succès
+ *       404:
+ *         description: Utilisateur non trouvé
+ *       500:
+ *         description: Erreur interne du serveur
+ */
+router.delete('/:id', AuthMiddleware.verifyToken, async (req, res) => {
     try {
-        const result = await UsersService.deleteUser(req.params.id);
-        if (!result) return res.status(404).json({message: 'User not found'});
-        res.status(204).send();
+        await UsersService.deleteUser(req.params.id);
+        res.sendStatus(204);
     } catch (error) {
-        res.status(500).json({message: error.message});
+        res.status(error.status || 500).json({ message: error.message });
     }
 });
 
@@ -498,6 +386,91 @@ router.post('/grant-admin/:userID',
             res.status(403).json({ error: error.message });
         }
     });
+
+/**
+ * @swagger
+ * /users/reset-password:
+ *   post:
+ *     summary: Demander une réinitialisation de mot de passe
+ *     description: Envoie un email de réinitialisation de mot de passe si l'utilisateur existe.
+ *     tags: [users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: Email de réinitialisation envoyé si l'utilisateur existe
+ *       400:
+ *         description: Validation échouée
+ *       404:
+ *         description: Utilisateur non trouvé
+ */
+router.post('/reset-password',
+    body('email').isEmail().withMessage('invalid_email'),
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false, message: errors.array()[0].msg, errors: errors.array(),
+            });
+        }
+
+        try {
+            await UsersService.requestPasswordReset(req.body.email);
+            res.status(200).json({ success: true, message: 'Email de réinitialisation envoyé' });
+        } catch (error) {
+            res.status(error.status || 500).json({ success: false, message: error.message });
+        }
+    }
+);
+
+/**
+ * @swagger
+ * /users/reset-password/{token}:
+ *   post:
+ *     summary: Réinitialiser le mot de passe
+ *     description: Permet à un utilisateur de définir un nouveau mot de passe après avoir demandé une réinitialisation.
+ *     tags: [users]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token de réinitialisation du mot de passe
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               newPassword:
+ *                 type: string
+ *                 example: SecurePassword123!
+ *     responses:
+ *       200:
+ *         description: Mot de passe mis à jour avec succès
+ *       400:
+ *         description: Erreur de validation ou token invalide
+ *       404:
+ *         description: Utilisateur non trouvé
+ */
+router.post('/reset-password/:token', async (req, res) => {
+    try {
+        await UsersService.resetPassword(req.params.token, req.body.newPassword);
+        res.status(200).json({ success: true, message: "Mot de passe mis à jour avec succès" });
+    } catch (error) {
+        res.status(error.status || 400).json({ success: false, message: error.message });
+    }
+});
 
 module.exports = {
     initializeRoutes: () => router,

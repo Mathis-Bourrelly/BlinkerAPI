@@ -4,81 +4,69 @@ const jwt = require('jsonwebtoken');
 const {sendEmail} = require('../core/emailService');
 
 const UsersService = {
-    // Créer un utilisateur avec validations métier
-    async createUser(body) {
-        const {email, password, name} = body;
 
+    async createUser({ email, password, name }) {
         // Vérifier si l'utilisateur existe déjà
         const existingUser = await UsersRepository.getUserByEmail(email);
-
         if (existingUser) {
-            console.log("Cet email est déjà utilisé")
-            throw new Error('Cet email est déjà utilisé');
+            const error = new Error("Un utilisateur avec cet email existe déjà");
+            error.status = 409;
+            throw error;
         }
 
-        // Hasher le mot de passe
-        const hashedPassword = bcrypt.hashSync(password, 12);
+        const hashedPassword = bcrypt.hashSync(password, 10);
 
-        // Appel au repository pour créer l'utilisateur
         const newUser = await UsersRepository.createUser({
-            name,
             email,
             password: hashedPassword,
+            name,
+            isVerified: false
         });
-        await this.sendConfirmationEmail(newUser)
-        // Retourner les données sans le mot de passe
+
+        await this.sendConfirmationEmail(newUser);
+
         return {
-            id: newUser.userID,
-            name: newUser.name,
-            email: newUser.email,
-            role: newUser.role,
+            message: "Utilisateur créé avec succès, veuillez confirmer votre compte.",
+            userID: newUser.id
         };
     },
 
-    // Récupérer tous les utilisateurs
     async getAllUsers() {
         return await UsersRepository.getAllUsers();
     },
 
-    // Récupérer un utilisateur par ID
     async getUserById(userID) {
         const user = await UsersRepository.getUserById(userID);
-        if (!user) throw new Error('Utilisateur non trouvé');
-        return user;
-    },
-    // Récupérer un utilisateur par email
-    async getUserByEmail(email) {
-        const user = await UsersRepository.getUserByEmail(email);
-        if (!user) throw new Error('Utilisateur non trouvé');
-        return user;
-    },
 
-    // Mettre à jour les informations de connexion (email + mot de passe)
-    async updateUserLogin(userID, data) {
-        const {prevPassword, password, email} = data;
-        const foundUser = await UsersRepository.getUserById(userID);
-
-        if (!foundUser) throw new Error('Utilisateur non trouvé');
-
-        // Vérification du mot de passe précédent
-        if (!bcrypt.compareSync(prevPassword, foundUser.password)) {
-            throw new Error('Mot de passe précédent incorrect');
+        if (!user) {
+            const error = new Error("Utilisateur non trouvé");
+            error.status = 404;
+            throw error;
         }
 
-        // Mise à jour des données
-        const hashedPassword = bcrypt.hashSync(password, 12);
-        await UsersRepository.updateUserLogin(userID, {password: hashedPassword, email});
+        return user;
     },
 
-    // Mettre à jour le nom de l'utilisateur
-    async updateUserName(userID, data) {
-        return await UsersRepository.updateUser(userID, data);
+    async getUserByEmail(email) {
+        const user = await UsersRepository.getUserByEmail(email);
+
+        if (!user) {
+            const error = new Error("Utilisateur non trouvé");
+            error.status = 404;
+            throw error;
+        }
+
+        return user;
     },
 
-    // Supprimer un utilisateur
     async deleteUser(userID) {
         const user = await UsersRepository.getUserById(userID);
-        if (!user) throw new Error('Utilisateur non trouvé');
+        if (!user) {
+            const error = new Error("Utilisateur non trouvé");
+            error.status = 404;
+            throw error;
+        }
+
         await UsersRepository.deleteUser(userID);
     },
 
@@ -100,41 +88,135 @@ const UsersService = {
         return { message: "L'utilisateur a été promu administrateur" };
     },
 
-    async verifyUser(user){
+    async confirmUser(token) {
         try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const user = await UsersRepository.getUserById(decoded.userID);
+
             if (!user) {
-                throw new Error('User not found');
+                const error = new Error("Utilisateur non trouvé");
+                error.status = 404;
+                throw error;
             }
 
             if (user.isVerified) {
-                throw new Error('User is already verified');
+                const error = new Error("Compte déjà vérifié");
+                error.status = 400;
+                throw error;
             }
 
-            await UsersRepository.verifyUser(user.userID);
-            return {message: 'User successfully verified'};
+            // Mise à jour du statut de vérification
+            await UsersRepository.updateUser(user.userID, { isVerified: true });
+
+            return { message: "Compte vérifié avec succès !" };
         } catch (error) {
-            throw new Error('Invalid or expired token');
+            console.error("Erreur lors de la vérification du compte :", error.message);
+            throw new Error("Lien de confirmation invalide ou expiré");
         }
     },
 
+    async updateUser(userID, updates) {
+        const user = await UsersRepository.getUserById(userID);
 
-    /**
-     * Envoie un e-mail de confirmation pour valider l'utilisateur
-     * @param {Object} user - L'utilisateur nouvellement créé
-     */
-    async sendConfirmationEmail(user){
-        const token = jwt.sign({userID: user.userID}, process.env.JWT_SECRET, {expiresIn: '1d'});
+        if (!user) {
+            const error = new Error("Utilisateur non trouvé");
+            error.status = 404;
+            throw error;
+        }
 
-        const confirmationUrl = `http://localhost:3011/users/confirm/${token}`;
+        // Vérifier si le mot de passe est à mettre à jour
+        if (updates.password) {
+            const bcrypt = require('bcryptjs');
+            updates.password = bcrypt.hashSync(updates.password, 10);
+        }
 
-        await sendEmail(
-            user.email,
-            'Confirmation de votre compte Blinker',
-            `Cliquez sur ce lien pour valider votre compte : ${confirmationUrl}`,
-            `<h1>Confirmation de votre compte</h1><p>Cliquez sur <a href="${confirmationUrl}">ce lien</a> pour valider votre compte.</p>`
-        );
+        // Met à jour uniquement les champs fournis
+        await UsersRepository.updateUser(userID, updates);
 
-        console.log(`Confirmation email sent to ${user.email}`);
+        return { message: "Utilisateur mis à jour avec succès" };
+    },
+
+    async sendConfirmationEmail(user) {
+        try {
+            const token = jwt.sign(
+                { userID: user.userID },
+                process.env.JWT_SECRET,
+                { expiresIn: '1d' }
+            );
+
+            const confirmationUrl = `${process.env.BASE_URL || 'http://localhost:3011'}/users/confirm/${token}`;
+
+            const subject = 'Confirmation de votre compte Blinker';
+            const text = `Cliquez sur ce lien pour valider votre compte : ${confirmationUrl}`;
+            const html = `
+            <h1>Confirmation de votre compte</h1>
+            <p>Cliquez sur <a href="${confirmationUrl}">ce lien</a> pour valider votre compte.</p>
+        `;
+
+            await sendEmail(user.email, subject, text, html);
+
+            console.log(`📧 Email de confirmation envoyé à ${user.email}`);
+        } catch (error) {
+            console.error(`❌ Erreur lors de l'envoi de l'email à ${user.email} :`, error.message);
+            throw new Error('Impossible d’envoyer l’email de confirmation.');
+        }
+    },
+
+    async requestPasswordReset(email) {
+        try {
+            const user = await UsersRepository.getUserByEmail(email);
+            if (!user) {
+                throw new Error("Utilisateur non trouvé");
+            }
+
+            const token = jwt.sign(
+                { userID: user.userID },
+                process.env.JWT_SECRET,
+                { expiresIn: "1h" }
+            );
+
+            const resetUrl = `${process.env.BASE_URL}/users/reset-password/${token}`;
+
+            const subject = "Réinitialisation de votre mot de passe Blinker";
+            const text = `Cliquez sur ce lien pour réinitialiser votre mot de passe : ${resetUrl}`;
+            const html = `
+                <h1>Réinitialisation de votre mot de passe</h1>
+                <p>Vous avez demandé une réinitialisation de votre mot de passe. Cliquez sur <a href="${resetUrl}">ce lien</a> pour définir un nouveau mot de passe.</p>
+                <p>Ce lien est valable pendant 1 heure.</p>
+                <p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
+            `;
+
+            await sendEmail(user.email, subject, text, html);
+
+            console.log(`📧 Email de réinitialisation envoyé à ${user.email}`);
+        } catch (error) {
+            console.error(`❌ Erreur lors de l'envoi de l'email à ${user.email} :`, error.message);
+            throw new Error("Impossible d’envoyer l’email de réinitialisation.");
+        }
+    },
+
+    async resetPassword(token, newPassword) {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const user = await UsersRepository.getUserById(decoded.userID);
+
+            if (!user) {
+                throw new Error("Utilisateur non trouvé");
+            }
+
+            if (!newPassword || newPassword.length < 12 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[!@#$%^&*]/.test(newPassword)) {
+                throw new Error("Le mot de passe doit contenir au moins 12 caractères, une majuscule, une minuscule, un chiffre et un symbole");
+            }
+
+            const hashedPassword = bcrypt.hashSync(newPassword, 10);
+
+            await UsersRepository.updateUser(user.userID, { password: hashedPassword });
+
+            return { message: "Mot de passe mis à jour avec succès" };
+        } catch (error) {
+            console.error("Erreur lors de la réinitialisation du mot de passe :", error.message);
+            throw new Error("Token invalide ou expiré");
+        }
     }
 };
 

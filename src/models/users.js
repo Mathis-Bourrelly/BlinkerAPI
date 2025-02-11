@@ -1,5 +1,5 @@
 const { sequelize } = require('../core/postgres');
-const {DataTypes} = require("sequelize");
+const { DataTypes } = require("sequelize");
 
 const Users = sequelize.define('Users', {
     userID: {
@@ -31,7 +31,6 @@ const Users = sequelize.define('Users', {
         allowNull: false,
         defaultValue: false
     }
-
 }, {
     timestamps: false,
     createdAt: false,

@@ -1,8 +1,6 @@
 const express = require("express");
 const { validationResult, body } = require("express-validator");
-const UsersService = require("../services/users.service");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
+const AuthService = require("../services/login.service");
 const router = express.Router();
 
 /**
@@ -24,10 +22,9 @@ const router = express.Router();
  *                   type: string
  *                   example: "ready"
  */
-router.get('/status',
-    async (req, res) => {
-    res.send({"status":'ready'});
-})
+router.get('/status', (req, res) => {
+    res.json({ status: "ready" });
+});
 
 /**
  * @swagger
@@ -62,6 +59,8 @@ router.get('/status',
  *                 message:
  *                   type: string
  *                   example: "Connexion réussie !"
+ *       400:
+ *         description: Erreur de validation
  *       401:
  *         description: Adresse e-mail ou mot de passe incorrect.
  *       403:
@@ -70,48 +69,14 @@ router.get('/status',
  *         description: Erreur interne.
  */
 router.post('/login',
-    body('email').not().isEmpty(),
-    body('password').not().isEmpty(),
+    body('email').notEmpty().withMessage("L'email est requis"),
+    body('password').notEmpty().withMessage("Le mot de passe est requis"),
     async (req, res) => {
-        const result = validationResult(req);
-        if (!result.isEmpty()) {
-            console.log(result.errors[0].path)
-            const errorString = result.errors[0].path
-            return res.status(400).json({message: "field" +  String(errorString).charAt(0).toUpperCase() + String(errorString).slice(1) + "Missing"});
-        }
-
         try {
-            const { email, password } = req.body;
-
-            // Récupérer l'utilisateur par e-mail
-            const user = await UsersService.getUserByEmail(email);
-
-            if (!user) {
-                return res.status(401).json({ message: "Adresse e-mail ou mot de passe incorrect." });
-            }
-
-            // Vérifier si le compte est confirmé
-            if (!user.isVerified) {
-                return res.status(403).json({ message: "Votre compte n'est pas encore confirmé." });
-            }
-
-            // Vérifier le mot de passe
-            const isPasswordValid = bcrypt.compareSync(password, user.password);
-            if (!isPasswordValid) {
-                return res.status(401).json({ message: "Adresse e-mail ou mot de passe incorrect." });
-            }
-
-            // Générer un jeton JWT
-            const token = jwt.sign(
-                { userID: user.userID, email: user.email, role: user.role},
-                process.env.JWT_SECRET,
-                { expiresIn: "1d" }
-            );
-
-            res.status(200).json({ token, message: "Connexion réussie !" });
+            const result = await AuthService.login(req.body);
+            res.status(200).json(result);
         } catch (error) {
-            console.error("Erreur lors de la connexion :", error.message);
-            res.status(500).json({ message: `Erreur lors de la connexion : ${error.message}` });
+            res.status(error.status || 500).json({ message: error.message });
         }
     }
 );
@@ -151,20 +116,13 @@ router.post('/login',
  */
 router.post(
     "/auth",
-    body("token").not().isEmpty().withMessage("Le jeton est requis."),
+    body("token").notEmpty().withMessage("Le jeton est requis."),
     async (req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
         try {
-            const { token } = req.body;
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            res.status(200).json({ message: "Jeton valide.", decoded });
+            const result = await AuthService.verifyToken(req.body.token);
+            res.status(200).json(result);
         } catch (error) {
-            console.error("Erreur lors de la vérification du jeton :", error.message);
-            res.status(401).json({ message: "Jeton invalide ou expiré." });
+            res.status(401).json({ message: error.message });
         }
     }
 );

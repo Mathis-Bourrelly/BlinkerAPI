@@ -19,17 +19,10 @@ exports.sequelize = new Sequelize({
     }
 });
 
-/*
-exports.sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: 'BLINKER_DB.sqlite'
-});
-*/
-
 // Importer les modèles
 const modelDefiners = [
-    require('../model/users'),
-    // Ajoutez ici d'autres modèles si nécessaire
+    require('../models/users'),
+    require('../models/follows'),
 ];
 
 (async () => {

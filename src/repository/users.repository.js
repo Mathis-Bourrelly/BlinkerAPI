@@ -1,5 +1,4 @@
-const User = require('../model/users');
-const bcrypt = require('bcryptjs');
+const User = require('../models/users');
 
 const UsersRepository = {
     // Créer un utilisateur
@@ -30,14 +29,6 @@ const UsersRepository = {
         return await User.findOne({ where: { email } });
     },
 
-    // Mettre à jour les informations de connexion (email et mot de passe)
-    async updateUserLogin(userID, { email, password }) {
-        return await User.update(
-            { email, password },
-            { where: { userID } }
-        );
-    },
-
     async updateUser(userID, updates) {
         const user = await User.findByPk(userID);
         if (!user) {
@@ -47,13 +38,6 @@ const UsersRepository = {
         await user.update(updates);
 
         return user;
-    },
-
-    async verifyUser(userID) {
-        return await User.update(
-            { isVerified: true },
-            { where: { userID } }
-        );
     },
 
     async deleteUser(userID) {

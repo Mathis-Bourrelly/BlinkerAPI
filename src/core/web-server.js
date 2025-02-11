@@ -1,6 +1,7 @@
 const express = require('express');
 const { initializeConfigMiddlewares, initializeErrorMiddlewares } = require('./middlewares');
 const usersRoute = require('../route/users.route');
+const followsRoute = require('../route/follows.route');
 const loginRoute = require('../route/login.route');
 const { sequelize } = require('./postgres');
 
@@ -38,6 +39,8 @@ class WebServer {
         console.log('users route initialized');
         this.app.use('/', loginRoute.initializeRoutes());
         console.log('login route initialized');
+        this.app.use('/follows', followsRoute.initializeRoutes());
+        console.log('users route initialized');
     }
 }
 
