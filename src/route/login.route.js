@@ -56,10 +56,10 @@ router.post(
  */
 router.post(
     "/auth/google",
-    body("token").notEmpty().withMessage("Le token Google est requis."),
+    body("id_token").notEmpty().withMessage("Le token Google est requis."),
     async (req, res, next) => {
         try {
-            const result = await AuthService.loginWithGoogle(req.body.token);
+            const result = await AuthService.loginWithGoogle(req.body.id_token);
             res.status(200).json(result);
         } catch (error) {
             next(error);

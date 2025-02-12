@@ -137,3 +137,4 @@ config/
 
 #base pour travail proxy bureau
 BLINKER_DB.sqlite
+/sql/
