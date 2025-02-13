@@ -15,7 +15,6 @@ class WebServer {
         this.app = express();
         initializeConfigMiddlewares(this.app);
         this._initializeRoutes();
-        initializeErrorMiddlewares(this.app);
     }
 
     start() {

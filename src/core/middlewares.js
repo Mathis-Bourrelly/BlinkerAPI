@@ -4,7 +4,8 @@ const { DateTime } = require('luxon');
 let cors = require('cors');
 const swaggerjsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express')
-// var { expressjwt: jwt } = require("express-jwt"); // Import du JWT
+var { expressjwt: jwt } = require("express-jwt"); // Import du JWT
+
 
 const initJsonHandlerMiddleware = (app) => app.use(express.json());
 
@@ -22,7 +23,7 @@ function initJwtMiddleware(app) {
             algorithms: ['HS256'],
         }).unless({
             path: [
-                '/login','/auth','/status','/users'
+                '/login','/auth','/status','/auth/google'
             ],
         }),
     );
@@ -124,16 +125,9 @@ const initSwaggerMiddleware = (app) => {
 exports.initializeConfigMiddlewares = (app) => {
     initCorsMiddleware(app); // Initialisation du middleware CORS
     initJsonHandlerMiddleware(app); // Gestion des requêtes JSON
-    //initJwtMiddleware(app); // Middleware JWT pour l'authentification
+    initJwtMiddleware(app); // Middleware JWT pour l'authentification
     initLoggerMiddleware(app); // Logger des requêtes
     staticMiddleware(app); // Fichiers statiques
     initFileUploadMiddleware(app); // Middleware d'upload de fichiers
     initSwaggerMiddleware(app) // Middleware de la génération de docs
-}
-
-exports.initializeErrorMiddlewares = (app) => {
-    // Gestion globale des erreurs
-    app.use((err, req, res, next) => {
-        res.status(500).send(err.message);
-    });
 }
