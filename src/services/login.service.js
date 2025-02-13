@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { OAuth2Client } = require("google-auth-library");
 const UsersService = require("./users.service");
+const UsersRepository = require("../repository/users.repository");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -84,16 +85,14 @@ class AuthService {
             throw this.createError(401, "Token invalide ou adresse e-mail manquante.");
         }
 
-        const { sub: googleId, email, name, picture } = payload;
+        const { email, name } = payload;
 
-        let user = await UsersService.getUserByEmail(email);
+        let user = await UsersRepository.getUserByEmail(email);
         if (!user) {
-            user = await UsersService.createUser({
-                googleId,
+            user = await UsersRepository.createUser({
                 email,
-                name: name || "Utilisateur inconnu",
-                picture: picture || "",
-                isVerified: true,
+                name,
+                isVerified: true
             });
         }
 
