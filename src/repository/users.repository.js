@@ -21,7 +21,7 @@ const UsersRepository = {
     // Obtenir un utilisateur par son ID
     async getUserById(userID) {
         return await User.findByPk(userID, {
-            attributes: { exclude: ['password'] }, // Sécurité : Ne pas renvoyer le mot de passe
+            attributes: { exclude: ['password'] },
         });
     },
 

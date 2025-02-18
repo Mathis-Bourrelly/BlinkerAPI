@@ -23,7 +23,7 @@ function initJwtMiddleware(app) {
             algorithms: ['HS256'],
         }).unless({
             path: [
-                '/login','/auth','/status','/auth/google'
+                '/login','/auth','/status','/auth/google','/api-docs'
             ],
         }),
     );
@@ -124,11 +124,11 @@ const initSwaggerMiddleware = (app) => {
 }
 
 exports.initializeConfigMiddlewares = (app) => {
+    initSwaggerMiddleware(app) // Middleware de la génération de docs
     initCorsMiddleware(app); // Initialisation du middleware CORS
     initJsonHandlerMiddleware(app); // Gestion des requêtes JSON
     initJwtMiddleware(app); // Middleware JWT pour l'authentification
     initLoggerMiddleware(app); // Logger des requêtes
     staticMiddleware(app); // Fichiers statiques
     initFileUploadMiddleware(app); // Middleware d'upload de fichiers
-    initSwaggerMiddleware(app) // Middleware de la génération de docs
 }
