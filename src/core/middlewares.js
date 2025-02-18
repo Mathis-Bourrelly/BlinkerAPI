@@ -47,7 +47,8 @@ const initCorsMiddleware = (app) => {
             'http://localhost:3004',
             'http://localhost:3011',
             'http://localhost:8081',
-            'http://dev.blinker.eterny.fr'
+            'https://dev.blinker.eterny.fr',
+            'https://app.dev.blinker.eterny.fr'
         ],
     };
 
