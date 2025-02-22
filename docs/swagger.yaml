@@ -1,0 +1,948 @@
+openapi: 3.0.0
+info:
+  title: Blinker API
+  description: Documentation globale de l'API Blinker
+  version: 1.0.0
+
+servers:
+  - url: "http://localhost:3011/"
+  - url: "https://dev.blinker.eterny.fr/"
+
+tags:
+  - name: Blinks
+    description: Opérations liées aux Blinks
+  - name: Follow
+    description: Opérations liées aux abonnements
+  - name: Profiles
+    description: Opérations liées aux profils utilisateurs
+  - name: Users
+    description: Gestion des utilisateurs
+  - name: Authentification
+    description: Gestion des connexions
+
+paths:
+  # ---------------------------
+  # Endpoints Blinks
+  # ---------------------------
+  /blinks:
+    post:
+      tags:
+        - Blinks
+      summary: Créer un nouveau blink
+      description: Création d'un blink avec un userID et un tableau de contenus.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userID
+                - contents
+              properties:
+                userID:
+                  type: string
+                  example: "user123"
+                contents:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Contenu du blink"]
+      responses:
+        '201':
+          description: Blink créé avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blink'
+        '400':
+          description: Données invalides.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Données invalides"
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /blinks/{blinkID}:
+    get:
+      tags:
+        - Blinks
+      summary: Récupérer un blink par ID
+      description: Récupère un blink en fonction de son identifiant.
+      parameters:
+        - name: blinkID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du blink à récupérer.
+      responses:
+        '200':
+          description: Blink récupéré avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blink'
+        '404':
+          description: Blink non trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Blink non trouvé"
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+    put:
+      tags:
+        - Blinks
+      summary: Mettre à jour un blink existant
+      description: Met à jour les contenus d'un blink.
+      parameters:
+        - name: blinkID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du blink à mettre à jour.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contents
+              properties:
+                contents:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Nouveau contenu"]
+      responses:
+        '200':
+          description: Blink mis à jour avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blink'
+        '400':
+          description: Données invalides.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Données invalides"
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+    delete:
+      tags:
+        - Blinks
+      summary: Supprimer un blink par ID
+      description: Supprime un blink en fonction de son identifiant.
+      parameters:
+        - name: blinkID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du blink à supprimer.
+      responses:
+        '204':
+          description: Blink supprimé avec succès (aucun contenu renvoyé).
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  # ---------------------------
+  # Endpoints Follow
+  # ---------------------------
+  /follows/{targetUserID}:
+    post:
+      tags:
+        - Follow
+      summary: Suivre un utilisateur
+      description: Permet à un utilisateur authentifié de suivre un autre utilisateur.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: targetUserID
+          required: true
+          schema:
+            type: string
+          description: ID de l'utilisateur à suivre.
+      responses:
+        '200':
+          description: L'utilisateur est maintenant suivi.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Utilisateur suivi"
+        '400':
+          description: Erreur de validation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Erreur de validation"
+        '404':
+          description: Utilisateur non trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Utilisateur non trouvé"
+
+  /unfollow/{targetUserID}:
+    delete:
+      tags:
+        - Follow
+      summary: Se désabonner d'un utilisateur
+      description: Permet à un utilisateur authentifié d'arrêter de suivre un autre utilisateur.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: targetUserID
+          required: true
+          schema:
+            type: string
+          description: ID de l'utilisateur à ne plus suivre.
+      responses:
+        '200':
+          description: L'utilisateur a été désabonné avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Désabonnement réussi"
+        '400':
+          description: Erreur de validation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Erreur de validation"
+        '404':
+          description: Utilisateur non trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Utilisateur non trouvé"
+
+  /follows/followers/{userID}:
+    get:
+      tags:
+        - Follow
+      summary: Obtenir la liste des abonnés d'un utilisateur
+      description: Renvoie la liste des utilisateurs qui suivent un utilisateur donné.
+      parameters:
+        - in: path
+          name: userID
+          required: true
+          schema:
+            type: string
+          description: ID de l'utilisateur cible.
+      responses:
+        '200':
+          description: Liste des abonnés retournée avec succès.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '404':
+          description: Utilisateur non trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Utilisateur non trouvé"
+
+  /follows/following/{userID}:
+    get:
+      tags:
+        - Follow
+      summary: Obtenir la liste des utilisateurs suivis par un utilisateur
+      description: Renvoie la liste des utilisateurs suivis par un utilisateur donné.
+      parameters:
+        - in: path
+          name: userID
+          required: true
+          schema:
+            type: string
+          description: ID de l'utilisateur cible.
+      responses:
+        '200':
+          description: Liste des utilisateurs suivis retournée avec succès.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '404':
+          description: Utilisateur non trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Utilisateur non trouvé"
+
+  # ---------------------------
+  # Endpoints Authentification
+  # ---------------------------
+  /status:
+    get:
+      tags:
+        - Authentification
+      summary: Vérifier le statut du service
+      description: Retourne le statut du service.
+      responses:
+        '200':
+          description: Service prêt.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ready"
+
+  /login:
+    post:
+      tags:
+        - Authentification
+      summary: Authentification via email/mot de passe
+      description: Authentifie un utilisateur à l'aide de son email et de son mot de passe.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "Password123!"
+      responses:
+        '200':
+          description: Authentification réussie.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "jwt_token"
+        '400':
+          description: Erreur de validation ou d'authentification.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+
+  /auth:
+    post:
+      tags:
+        - Authentification
+      summary: Vérifier un token JWT
+      description: Vérifie la validité d'un token JWT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  example: "jwt_token"
+      responses:
+        '200':
+          description: Token valide.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    example: true
+        '400':
+          description: Token invalide.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Token invalide"
+
+  /auth/google:
+    post:
+      tags:
+        - Authentification
+      summary: Authentification avec Google OAuth
+      description: Authentifie un utilisateur via Google OAuth.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id_token
+              properties:
+                id_token:
+                  type: string
+                  example: "google_id_token"
+      responses:
+        '200':
+          description: Authentification réussie.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "jwt_token"
+        '400':
+          description: Erreur d'authentification.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  # ---------------------------
+  # Endpoints Profiles
+  # ---------------------------
+  /profiles:
+    post:
+      tags:
+        - Profiles
+      summary: Créer un profil pour un utilisateur
+      description: Associe un profil à un utilisateur existant avec un username, une bio et une photo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userID:
+                  type: string
+                  format: uuid
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+                username:
+                  type: string
+                  example: "user123"
+                bio:
+                  type: string
+                  example: "Développeur full-stack passionné."
+                avatar_url:
+                  type: string
+                  example: "https://example.com/avatar.png"
+      responses:
+        '201':
+          description: Profil créé avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          description: Erreur de validation.
+        '409':
+          description: Username déjà utilisé.
+        '500':
+          description: Erreur interne.
+
+  /profiles/{userID}:
+    get:
+      tags:
+        - Profiles
+      summary: Récupérer le profil d'un utilisateur
+      description: Retourne le profil d'un utilisateur à partir de son userID.
+      parameters:
+        - in: path
+          name: userID
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Profil récupéré avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '404':
+          description: Profil non trouvé.
+        '500':
+          description: Erreur interne.
+
+  # ---------------------------
+  # Endpoints Users
+  # ---------------------------
+  /users/register:
+    post:
+      tags:
+        - Users
+      summary: Créer un nouvel utilisateur
+      description: Enregistrer un nouvel utilisateur avec un email, un mot de passe et un nom.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "Password123!"
+                name:
+                  type: string
+                  example: "John Doe"
+      responses:
+        '201':
+          description: Utilisateur créé avec succès.
+        '400':
+          description: Validation échouée.
+        '409':
+          description: Conflit, utilisateur existant.
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Obtenir tous les utilisateurs
+      description: Récupère une liste de tous les utilisateurs enregistrés.
+      responses:
+        '200':
+          description: Liste des utilisateurs récupérée avec succès.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '500':
+          description: Erreur interne du serveur.
+    post:
+      tags:
+        - Users
+      summary: Créer un utilisateur
+      description: Ajoute un nouvel utilisateur avec un email, un mot de passe sécurisé et un nom.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Adresse email de l'utilisateur
+                password:
+                  type: string
+                  description: Mot de passe sécurisé (minimum 12 caractères, majuscules, minuscules, chiffres et symboles requis)
+                name:
+                  type: string
+                  description: Nom de l'utilisateur
+      responses:
+        '201':
+          description: Utilisateur créé avec succès.
+        '400':
+          description: Erreur de validation.
+        '409':
+          description: Conflit - l'utilisateur existe déjà.
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Obtenir un utilisateur par ID
+      description: Récupère un utilisateur à partir de son ID unique.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID de l'utilisateur à rechercher.
+      responses:
+        '200':
+          description: Utilisateur trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Utilisateur non trouvé.
+        '500':
+          description: Erreur interne du serveur.
+    put:
+      tags:
+        - Users
+      summary: Mettre à jour un utilisateur
+      description: Met à jour les informations d'un utilisateur (nom, email, mot de passe, etc.).
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID de l'utilisateur à mettre à jour.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nouveau nom de l'utilisateur
+                email:
+                  type: string
+                  format: email
+                  description: Nouvelle adresse email
+                password:
+                  type: string
+                  description: Nouveau mot de passe (au moins 8 caractères)
+      responses:
+        '204':
+          description: Utilisateur mis à jour avec succès.
+        '400':
+          description: Erreur de validation.
+        '404':
+          description: Utilisateur non trouvé.
+    delete:
+      tags:
+        - Users
+      summary: Supprimer un utilisateur par ID
+      description: Supprime un utilisateur en utilisant son ID.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID de l'utilisateur.
+      responses:
+        '204':
+          description: Utilisateur supprimé avec succès.
+        '404':
+          description: Utilisateur non trouvé.
+        '500':
+          description: Erreur interne du serveur.
+
+  /users/email/{email}:
+    get:
+      tags:
+        - Users
+      summary: Obtenir un utilisateur par email
+      description: Récupère un utilisateur à partir de son adresse email.
+      parameters:
+        - in: path
+          name: email
+          required: true
+          schema:
+            type: string
+          description: Email de l'utilisateur à rechercher.
+      responses:
+        '200':
+          description: Utilisateur trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Utilisateur non trouvé.
+        '500':
+          description: Erreur interne du serveur.
+
+  /users/confirm/{token}:
+    get:
+      tags:
+        - Users
+      summary: Confirmer un compte utilisateur
+      description: Vérifie un compte utilisateur à l'aide d'un token de confirmation.
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Token de confirmation.
+      responses:
+        '200':
+          description: Compte vérifié avec succès.
+        '400':
+          description: Lien de confirmation invalide ou expiré.
+        '404':
+          description: Utilisateur non trouvé.
+
+  /users/send-test-email/:
+    post:
+      tags:
+        - Users
+      summary: Envoyer un email de test
+      description: Envoie un email de confirmation à l'utilisateur spécifié.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userID:
+                  type: string
+                  example: "user123"
+                subject:
+                  type: string
+                  example: "Confirmation de votre compte"
+                text:
+                  type: string
+                  example: "Cliquez sur le lien pour confirmer votre compte."
+      responses:
+        '200':
+          description: E-mail de confirmation envoyé avec succès.
+        '400':
+          description: Erreur de validation.
+        '500':
+          description: Erreur lors de l'envoi de l'e-mail.
+
+  /users/grant-admin/{userID}:
+    post:
+      tags:
+        - Users
+      summary: Accorder le rôle d'administrateur à un utilisateur
+      description: Permet à un administrateur de promouvoir un utilisateur au rôle d'administrateur.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userID
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de l'utilisateur à promouvoir.
+      responses:
+        '200':
+          description: L'utilisateur a été promu administrateur avec succès.
+        '403':
+          description: Accès refusé - seul un administrateur peut accorder ce rôle.
+        '404':
+          description: Utilisateur non trouvé.
+
+  /users/reset-password:
+    post:
+      tags:
+        - Users
+      summary: Demander une réinitialisation de mot de passe
+      description: Envoie un email de réinitialisation de mot de passe si l'utilisateur existe.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "user@example.com"
+      responses:
+        '200':
+          description: Email de réinitialisation envoyé si l'utilisateur existe.
+        '400':
+          description: Validation échouée.
+        '404':
+          description: Utilisateur non trouvé.
+
+  /users/reset-password/{token}:
+    post:
+      tags:
+        - Users
+      summary: Réinitialiser le mot de passe
+      description: Permet à un utilisateur de définir un nouveau mot de passe après avoir demandé une réinitialisation.
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Token de réinitialisation du mot de passe.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+                  example: "SecurePassword123!"
+      responses:
+        '200':
+          description: Mot de passe mis à jour avec succès.
+        '400':
+          description: Erreur de validation ou token invalide.
+        '404':
+          description: Utilisateur non trouvé.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    Blink:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "blink123"
+        userID:
+          type: string
+          example: "user123"
+        contents:
+          type: array
+          items:
+            type: string
+          example: ["Contenu du blink"]
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "user123"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        name:
+          type: string
+          example: "John Doe"
+    Profile:
+      type: object
+      properties:
+        userID:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        username:
+          type: string
+          example: "user123"
+        bio:
+          type: string
+          example: "Développeur full-stack passionné."
+        avatar_url:
+          type: string
+          example: "https://example.com/avatar.png"
+        score:
+          type: integer
+          example: 0

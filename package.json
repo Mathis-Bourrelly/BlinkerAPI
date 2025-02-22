@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "seed": "node seeders/index.js"
+    "seed": "node seeders/index.js",
+    "seed_debug": "node --inspect seeders/index.js"
   },
   "author": "",
   "license": "ISC",
@@ -20,7 +21,9 @@
     "express-fileupload": "^1.5.0",
     "express-jwt": "^8.4.1",
     "express-validator": "^7.1.0",
+    "fs": "^0.0.1-security",
     "google-auth-library": "^9.15.1",
+    "js-yaml": "^4.1.0",
     "jsonwebtoken": "^9.0.2",
     "luxon": "^3.4.4",
     "morgan": "^1.10.0",
@@ -31,5 +34,9 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "sequelize-auto": "^0.8.8",
+    "swagger-autogen": "^2.23.7"
   }
 }

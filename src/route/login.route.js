@@ -4,16 +4,10 @@ const AuthService = require("../services/login.service");
 
 const router = express.Router();
 
-/**
- * Vérifie le statut du service.
- */
 router.get("/status", (req, res) => {
     res.json({ status: "ready" });
 });
 
-/**
- * Authentification utilisateur via email/mot de passe.
- */
 router.post(
     "/login",
     [
@@ -35,9 +29,6 @@ router.post(
     }
 );
 
-/**
- * Vérification d'un token JWT.
- */
 router.post(
     "/auth",
     body("token").notEmpty().withMessage("Le jeton est requis."),
@@ -51,9 +42,6 @@ router.post(
     }
 );
 
-/**
- * Authentification avec Google OAuth.
- */
 router.post(
     "/auth/google",
     body("id_token").notEmpty().withMessage("Le token Google est requis."),

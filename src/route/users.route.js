@@ -6,37 +6,6 @@ const {sendEmail} = require('../core/emailService');
 const AuthMiddleware = require('../core/middlewares/authMiddleware');
 const router = express.Router();
 
-/**
- * @swagger
- * /users/register:
- *   post:
- *     summary: Créer un nouvel utilisateur.
- *     description: Enregistrer un nouvel utilisateur avec un email, un mot de passe, un nom et un rôle facultatif.
- *     tags: [users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: user@example.com
- *               password:
- *                 type: string
- *                 example: Password123!
- *               name:
- *                 type: string
- *                 example: John Doe
- *     responses:
- *       201:
- *         description: Utilisateur créé avec succès
- *       400:
- *         description: Validation échouée
- *       409:
- *         description: Conflit, utilisateur existant
- */
 router.post('/register',
     body('email').isEmail().withMessage('invalid_email'),
     body('name').notEmpty().withMessage('name_required'),
@@ -59,19 +28,6 @@ router.post('/register',
         }
     });
 
-/**
- * @swagger
- * /users:
- *   get:
- *     summary: Obtenir tous les utilisateurs.
- *     description: Récupère une liste de tous les utilisateurs enregistrés.
- *     tags: [users]
- *     responses:
- *       200:
- *         description: Liste des utilisateurs récupérée avec succès
- *       500:
- *         description: Erreur interne du serveur
- */
 router.get('/', async (req, res) => {
     try {
         const result = await UsersService.getAllUsers();
@@ -81,28 +37,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /users/{id}:
- *   get:
- *     summary: Obtenir un utilisateur par ID.
- *     description: Récupère un utilisateur à partir de son ID unique.
- *     tags: [users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID de l'utilisateur à rechercher
- *     responses:
- *       200:
- *         description: Utilisateur trouvé
- *       404:
- *         description: Utilisateur non trouvé
- *       500:
- *         description: Erreur interne du serveur
- */
 router.get('/:id', async (req, res) => {
     try {
         const result = await UsersService.getUserById(req.params.id);
@@ -112,28 +46,6 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /users/email/{email}:
- *   get:
- *     summary: Obtenir un utilisateur par email.
- *     description: Récupère un utilisateur à partir de son adresse email.
- *     tags: [users]
- *     parameters:
- *       - in: path
- *         name: email
- *         required: true
- *         schema:
- *           type: string
- *         description: Email de l'utilisateur à rechercher
- *     responses:
- *       200:
- *         description: Utilisateur trouvé
- *       404:
- *         description: Utilisateur non trouvé
- *       500:
- *         description: Erreur interne du serveur
- */
 router.get('/email/:email', async (req, res) => {
     try {
         const result = await UsersService.getUserByEmail(req.params.email);
@@ -143,38 +55,6 @@ router.get('/email/:email', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /users:
- *   post:
- *     summary: Créer un utilisateur.
- *     description: Ajoute un nouvel utilisateur avec un email, un mot de passe sécurisé et un nom.
- *     tags: [users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 description: Adresse email de l'utilisateur
- *               password:
- *                 type: string
- *                 description: Mot de passe sécurisé (minimum 12 caractères, majuscules, minuscules, chiffres et symboles requis)
- *               name:
- *                 type: string
- *                 description: Nom de l'utilisateur
- *     responses:
- *       201:
- *         description: Utilisateur créé avec succès
- *       400:
- *         description: Erreur de validation
- *       409:
- *         description: Conflit - l'utilisateur existe déjà
- */
 router.post('/',
     body('email').isEmail().withMessage("L'email doit être valide"),
     body('password').isStrongPassword({
@@ -195,47 +75,6 @@ router.post('/',
     }
 );
 
-/**
- * @swagger
- * /users/{id}:
- *   put:
- *     summary: Mettre à jour un utilisateur.
- *     description: Met à jour les informations d'un utilisateur (nom, email, mot de passe, etc.).
- *     tags: [users]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID de l'utilisateur à mettre à jour
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 description: Nouveau nom de l'utilisateur
- *               email:
- *                 type: string
- *                 format: email
- *                 description: Nouvelle adresse email
- *               password:
- *                 type: string
- *                 description: Nouveau mot de passe (au moins 8 caractères)
- *     responses:
- *       204:
- *         description: Utilisateur mis à jour avec succès
- *       400:
- *         description: Erreur de validation
- *       404:
- *         description: Utilisateur non trouvé
- */
 router.put('/:id',
     AuthMiddleware.verifyToken,
     body('name').optional().notEmpty().withMessage('Le nom ne peut pas être vide'),
@@ -251,28 +90,6 @@ router.put('/:id',
     }
 );
 
-/**
- * @swagger
- * /users/confirm/{token}:
- *   get:
- *     summary: Confirmer un compte utilisateur.
- *     description: Vérifie un compte utilisateur à l'aide d'un token de confirmation.
- *     tags: [users]
- *     parameters:
- *       - in: path
- *         name: token
- *         required: true
- *         schema:
- *           type: string
- *         description: Token de confirmation
- *     responses:
- *       200:
- *         description: Compte vérifié avec succès
- *       400:
- *         description: Lien de confirmation invalide ou expiré
- *       404:
- *         description: Utilisateur non trouvé
- */
 router.get('/confirm/:token', async (req, res) => {
     try {
         const result = await UsersService.confirmUser(req.params.token);
@@ -282,30 +99,6 @@ router.get('/confirm/:token', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /users/{id}:
- *   delete:
- *     summary: Supprimer un utilisateur par ID.
- *     description: Supprime un utilisateur en utilisant son ID.
- *     tags: [users]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID de l'utilisateur
- *     responses:
- *       204:
- *         description: Utilisateur supprimé avec succès
- *       404:
- *         description: Utilisateur non trouvé
- *       500:
- *         description: Erreur interne du serveur
- */
 router.delete('/:id', AuthMiddleware.verifyToken, async (req, res) => {
     try {
         await UsersService.deleteUser(req.params.id);
@@ -350,31 +143,6 @@ router.post('/send-test-email/', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /users/grant-admin/{userID}:
- *   post:
- *     summary: Accorder le rôle d'administrateur à un utilisateur
- *     description: Permet à un administrateur de promouvoir un utilisateur au rôle d'administrateur.
- *     tags: [users]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userID
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: ID de l'utilisateur à promouvoir
- *     responses:
- *       200:
- *         description: L'utilisateur a été promu administrateur avec succès
- *       403:
- *         description: Accès refusé - seul un administrateur peut accorder ce rôle
- *       404:
- *         description: Utilisateur non trouvé
- */
 router.post('/grant-admin/:userID',
     AuthMiddleware.verifyToken,
     AuthMiddleware.checkVerifiedUser,
@@ -387,31 +155,6 @@ router.post('/grant-admin/:userID',
         }
     });
 
-/**
- * @swagger
- * /users/reset-password:
- *   post:
- *     summary: Demander une réinitialisation de mot de passe
- *     description: Envoie un email de réinitialisation de mot de passe si l'utilisateur existe.
- *     tags: [users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: user@example.com
- *     responses:
- *       200:
- *         description: Email de réinitialisation envoyé si l'utilisateur existe
- *       400:
- *         description: Validation échouée
- *       404:
- *         description: Utilisateur non trouvé
- */
 router.post('/reset-password',
     body('email').isEmail().withMessage('invalid_email'),
     async (req, res) => {
@@ -431,38 +174,6 @@ router.post('/reset-password',
     }
 );
 
-/**
- * @swagger
- * /users/reset-password/{token}:
- *   post:
- *     summary: Réinitialiser le mot de passe
- *     description: Permet à un utilisateur de définir un nouveau mot de passe après avoir demandé une réinitialisation.
- *     tags: [users]
- *     parameters:
- *       - in: path
- *         name: token
- *         required: true
- *         schema:
- *           type: string
- *         description: Token de réinitialisation du mot de passe
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               newPassword:
- *                 type: string
- *                 example: SecurePassword123!
- *     responses:
- *       200:
- *         description: Mot de passe mis à jour avec succès
- *       400:
- *         description: Erreur de validation ou token invalide
- *       404:
- *         description: Utilisateur non trouvé
- */
 router.post('/reset-password/:token', async (req, res) => {
     try {
         await UsersService.resetPassword(req.params.token, req.body.newPassword);

@@ -1,60 +1,50 @@
 [
   {
-    "userID": "550e8400-e29b-41d4-a716-446655440000",
     "username": "alice_dupont",
     "bio": "Bienvenue sur le profil d'Alice Dupont !",
     "avatar_url": null
   },
   {
-    "userID": "550e8400-e29b-41d4-a716-446655440001",
     "username": "bob_martin",
     "bio": "Administrateur du système, prêt à vous aider.",
     "avatar_url": "https://example.com/avatar1.jpg"
   },
   {
-    "userID": "550e8400-e29b-41d4-a716-446655440002",
     "username": "charlie_bernard",
     "bio": "Passionné de technologie et de gaming.",
     "avatar_url": null
   },
   {
-    "userID": "550e8400-e29b-41d4-a716-446655440003",
     "username": "david_morel",
     "bio": "Modérateur du serveur, ici pour assurer un espace sûr.",
     "avatar_url": "https://example.com/avatar2.png"
   },
   {
-    "userID": "550e8400-e29b-41d4-a716-446655440004",
     "username": "emma_lefevre",
     "bio": "Fan de musique et de photographie.",
     "avatar_url": null
   },
   {
-    "userID": "550e8400-e29b-41d4-a716-446655440005",
     "username": "francois_lambert",
     "bio": "Administrateur expérimenté, passionné par l’optimisation.",
     "avatar_url": "https://example.com/avatar3.jpg"
   },
   {
-    "userID": "550e8400-e29b-41d4-a716-446655440006",
     "username": "gabriel_roche",
     "bio": "Toujours curieux et en quête de nouvelles connaissances.",
     "avatar_url": null
   },
   {
-    "userID": "550e8400-e29b-41d4-a716-446655440007",
     "username": "hugo_fontaine",
     "bio": "Modérateur et expert en sécurité informatique.",
     "avatar_url": "https://example.com/avatar4.jpg"
   },
   {
-    "userID": "550e8400-e29b-41d4-a716-446655440008",
     "username": "isabelle_girard",
     "bio": "Développeuse et passionnée d’intelligence artificielle.",
     "avatar_url": null
   },
   {
-    "userID": "550e8400-e29b-41d4-a716-446655440009",
     "username": "julien_perrot",
     "bio": "Amateur de jeux vidéos et de programmation.",
     "avatar_url": null
