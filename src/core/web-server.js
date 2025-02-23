@@ -1,8 +1,5 @@
 const express = require("express");
-const fs = require("fs");
-const yaml = require("js-yaml");
-const swaggerUi = require("swagger-ui-express");
-const { initializeConfigMiddlewares, initializeErrorMiddlewares } = require("./middlewares");
+const { initializeConfigMiddlewares } = require("./middlewares");
 const usersRoute = require("../route/users.route");
 const followsRoute = require("../route/follows.route");
 const profilesRoute = require("../route/profiles.route");

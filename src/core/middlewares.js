@@ -2,11 +2,10 @@ const express = require('express');
 const fileUpload = require('express-fileupload');
 const { DateTime } = require('luxon');
 let cors = require('cors');
-const swaggerjsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express')
-var { expressjwt: jwt } = require("express-jwt");
+const {expressjwt: jwt} = require("express-jwt");
 const yaml = require("js-yaml");
-const fs = require("fs"); // Import du JWT
+const fs = require("fs");
 
 
 const initJsonHandlerMiddleware = (app) => app.use(express.json());
