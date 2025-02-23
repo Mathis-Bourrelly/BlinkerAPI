@@ -18,36 +18,13 @@ class WebServer {
     constructor() {
         this.app = express();
         initializeConfigMiddlewares(this.app);
-        this._initializeSwagger();  // Ajout de Swagger
         this._initializeRoutes();
     }
 
     start() {
         this.server = this.app.listen(this.port, () => {
-            console.log(`🚀 App listening on port ${this.port}`);
-            console.log(`📄 Swagger docs available at http://localhost:${this.port}/api-docs`);
+            console.log(`App listening on port ${this.port}`);
         });
-    }
-
-    stop() {
-        if (this.server) {
-            this.server.close(() => {
-                console.log("Server stopped");
-            });
-        } else {
-            console.warn("Server is not running");
-        }
-    }
-
-        try {
-            console.log("Loading Swagger documentation...");
-            const swaggerFile = "./docs/swagger.yaml";
-            const swaggerDocument = yaml.load(fs.readFileSync(swaggerFile, "utf8"));
-            this.app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-            console.log("✅ Swagger initialized at /api-docs");
-        } catch (error) {
-            console.error("❌ Error loading Swagger:", error.message);
-        }
     }
 
     _initializeRoutes() {

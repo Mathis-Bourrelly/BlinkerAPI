@@ -4,7 +4,9 @@ const { DateTime } = require('luxon');
 let cors = require('cors');
 const swaggerjsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express')
-var { expressjwt: jwt } = require("express-jwt"); // Import du JWT
+var { expressjwt: jwt } = require("express-jwt");
+const yaml = require("js-yaml");
+const fs = require("fs"); // Import du JWT
 
 
 const initJsonHandlerMiddleware = (app) => app.use(express.json());
@@ -90,37 +92,15 @@ const initLoggerMiddleware = (app) => {
 };
 
 const initSwaggerMiddleware = (app) => {
-    const swaggerOptions = {
-        swaggerDefinition: {
-            openapi: '3.0.0',
-            info: {
-                title: 'Blinker API',
-                description: 'Blinker API Information',
-            },
-            servers: [
-                {url: "http://localhost:3011/"},
-                {url: "http://dev.blinker.eterny.fr/"}
-            ],
-            components: {
-                securitySchemes: {
-                    BearerAuth: {
-                        type: "http",
-                        scheme: "bearer",
-                        bearerFormat: "JWT",
-                        description: "Ajoutez un token JWT en cliquant sur 'Authorize'."
-                    }
-                }
-            },
-            security: [
-                {
-                    BearerAuth: [],
-                },
-            ],
-        },
-        apis: ['./src/route/*.js']
+    try {
+        console.log("Loading Swagger documentation...");
+        const swaggerFile = "./docs/swagger.yaml";
+        const swaggerDocument = yaml.load(fs.readFileSync(swaggerFile, "utf8"));
+        app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+        console.log("✅ Swagger initialized at /api-docs");
+    } catch (error) {
+        console.error("❌ Error loading Swagger:", error.message);
     }
-    const swaggerDocs = swaggerjsdoc(swaggerOptions)
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs))
 }
 
 exports.initializeConfigMiddlewares = (app) => {

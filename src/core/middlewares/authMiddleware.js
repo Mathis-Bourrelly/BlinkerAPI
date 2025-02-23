@@ -8,7 +8,7 @@ exports.verifyToken = (req, res, next) => {
         const authHeader = req.header('Authorization');
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            console.log('🚨 Aucun token trouvé ou format incorrect');
+            console.log('Aucun token trouvé ou format incorrect');
             return res.status(401).json({ error: 'Accès non autorisé : Aucun token fourni' });
         }
 
@@ -21,7 +21,7 @@ exports.verifyToken = (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        console.log('🚨 Erreur lors de la vérification du token:', error.message);
+        console.log('Erreur lors de la vérification du token:', error.message);
         return res.status(401).json({ error: 'Token invalide ou expiré' });
     }
 };
