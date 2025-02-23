@@ -23,9 +23,7 @@ function initJwtMiddleware(app) {
             secret: process.env.JWT_SECRET,
             algorithms: ['HS256'],
         }).unless({
-            path: [
-                '/login','/auth','/status','/auth/google','/api-docs'
-            ],
+            path: ['/login','/auth','/status','/auth/google','/api-docs'],
         }),
     );
 }
