@@ -14,27 +14,23 @@ class ProfilesRepository {
             attributes: [
                 'userID',
                 'username',
+                'display_name', // Utilisation du nouveau champ display_name présent dans Profiles
                 'bio',
                 'avatar_url',
                 'score',
-                [sequelize.col('User.name'), 'name'], // Récupération du name depuis User
                 [sequelize.literal(`(
-                    SELECT COUNT(*) FROM "Follows" WHERE "Follows"."fromUserID" = "Profiles"."userID"
-                )`), 'followingCount'], // Nombre de follows
+                SELECT COUNT(*) FROM "Follows" WHERE "Follows"."fromUserID" = "Profiles"."userID"
+            )`), 'followingCount'], // Nombre de follows
                 [sequelize.literal(`(
-                    SELECT COUNT(*) FROM "Follows" WHERE "Follows"."targetUserID" = "Profiles"."userID"
-                )`), 'followersCount'], // Nombre de followers
+                SELECT COUNT(*) FROM "Follows" WHERE "Follows"."targetUserID" = "Profiles"."userID"
+            )`), 'followersCount'], // Nombre de followers
                 [sequelize.literal(`(
-                    SELECT COUNT(*) FROM "Blinks" WHERE "Blinks"."userID" = "Profiles"."userID"
-                )`), 'blinksCount'] // Nombre de blinks publiés
-            ],
-            include: [{
-                model: User,
-                attributes: [] // On inclut User pour récupérer le `name` sans exposer d'autres infos
-            }]
+                SELECT COUNT(*) FROM "Blinks" WHERE "Blinks"."userID" = "Profiles"."userID"
+            )`), 'blinksCount'] // Nombre de blinks publiés
+            ]
+            // L'inclusion du modèle User n'est plus nécessaire puisque le champ name n'existe plus dans User.
         });
     }
-
     /**
      * Trouve un profil par username.
      * @param {string} username - Nom d'utilisateur.
@@ -42,6 +38,25 @@ class ProfilesRepository {
      */
     async findByUsername(username) {
         return await Profiles.findOne({ where: { username } });
+    }
+
+    /**
+     * Récupère un profil basique par userID.
+     * @param {string} userID - UUID de l'utilisateur.
+     * @returns {Promise<Object|null>} Le profil complet ou null s'il n'existe pas.
+     */
+    async getProfileByUserID(userID) {
+        return await Profiles.findOne({
+            where: { userID },
+            attributes: [
+                'userID',
+                'username',
+                'display_name', // Champ affichant le nom de l'utilisateur
+                'bio',
+                'avatar_url',
+                'score'
+            ]
+        });
     }
 
     /**

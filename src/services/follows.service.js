@@ -1,5 +1,6 @@
 const FollowsRepository = require("../repository/follows.repository");
 const UsersRepository = require("../repository/users.repository");
+const ProfilesRepository = require("../repository/profiles.repository");
 
 class FollowsService {
     /**
@@ -55,18 +56,29 @@ class FollowsService {
     /**
      * Récupérer les followers d'un utilisateur
      */
-    async getFollowers(targetUserID) {
-        const followers = await FollowsRepository.getFollowers(targetUserID);
-        return followers.map(follow => follow.fromUserID);
+    async getFollowers(targetUserID, page = 1, limit = 10) {
+        const { total, followers } = await FollowsRepository.getFollowers(targetUserID, page, limit);
+        const followersData = await Promise.all(
+            followers.map(follow => ProfilesRepository.getProfileByUserID(follow.fromUserID))
+        );
+        return { page, limit, total, data: followersData };
     }
+
 
     /**
      * Récupérer les utilisateurs suivis par un utilisateur
      */
-    async getFollowedUsers(fromUserID) {
-        const followed = await FollowsRepository.getFollowedUsers(fromUserID);
-        return followed.map(follow => follow.targetUserID);
+    async getFollowedUsers(fromUserID, page = 1, limit = 10) {
+        const { total, followedUsers } = await FollowsRepository.getFollowedUsers(fromUserID, page, limit);
+
+        const followedUsersData = await Promise.all(
+            followedUsers.map(follow => ProfilesRepository.findByUserID(follow.targetUserID))
+        );
+
+        return { page, limit, total, data: followedUsersData };
     }
+
+
 }
 
 module.exports = new FollowsService();

@@ -10,6 +10,10 @@ module.exports = function(sequelize, DataTypes) {
         key: 'userID'
       }
     },
+    display_name: {
+      type: DataTypes.STRING(100),
+      allowNull: false
+    },
     username: {
       type: DataTypes.STRING(50),
       allowNull: false

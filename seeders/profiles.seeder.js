@@ -23,21 +23,19 @@ const seedProfiles = async () => {
         let skippedCount = 0;
 
         for (const user of users) {
-            console.log(user)
             const index = users.indexOf(user);
             const profileInfo = profilesData[index % profilesData.length];
-
 
 
             // Construire le profil avec les données du JSON
             const profileData = {
                 userID: user.userID,
+                display_name: profileInfo.display_name,
                 username: profileInfo.username,
                 bio: profileInfo.bio || null,
                 avatar_url: profileInfo.avatar_url || null,
                 score: 0, // Valeur par défaut
             };
-
             // Création du profil
             try {
                 await ProfilesService.createProfile(profileData);

@@ -6,13 +6,14 @@ class ProfilesService {
      * Crée un profil pour un utilisateur existant.
      * @param {Object} data - Données du profil.
      * @param {string} data.userID - UUID de l'utilisateur.
+     * @param {string} data.display_name - Nom d'utilisateur affiché.
      * @param {string} data.username - Nom d'utilisateur unique.
      * @param {string} [data.bio] - Bio de l'utilisateur.
      * @param {string} [data.avatar_url] - URL de l'avatar.
      * @returns {Promise<Object>} Le profil créé.
      * @throws {Error} Si l'utilisateur n'existe pas, si le username est pris ou si une erreur interne survient.
      */
-    async createProfile({ userID, username, bio, avatar_url }) {
+    async createProfile({ userID, username, display_name, bio, avatar_url }) {
         // Vérifie si l'utilisateur existe
         const user = await UsersRepository.getUserById(userID);
         if (!user) {
@@ -26,6 +27,7 @@ class ProfilesService {
 
         return await ProfilesRepository.create({
             userID,
+            display_name,
             username,
             bio: bio || null,
             avatar_url: avatar_url || null,

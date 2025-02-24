@@ -305,7 +305,7 @@ paths:
       tags:
         - Follow
       summary: Obtenir la liste des abonnés d'un utilisateur
-      description: Renvoie la liste des utilisateurs qui suivent un utilisateur donné.
+      description: Renvoie la liste paginée des utilisateurs qui suivent un utilisateur donné, avec des informations simplifiées sur chaque abonné (avatar, nom et nom d'utilisateur).
       security:
         - BearerAuth: []
       parameters:
@@ -315,15 +315,51 @@ paths:
           schema:
             type: string
           description: ID de l'utilisateur cible.
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à retourner.
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
       responses:
         '200':
-          description: Liste des abonnés retournée avec succès.
+          description: Liste paginée des abonnés retournée avec succès.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  total:
+                    type: integer
+                    example: 42
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        avatar_url:
+                          type: string
+                          example: "https://example.com/avatar.jpg"
+                        name:
+                          type: string
+                          example: "John Doe"
+                        username:
+                          type: string
+                          example: "johndoe"
         '404':
           description: Utilisateur non trouvé.
           content:
@@ -340,7 +376,7 @@ paths:
       tags:
         - Follow
       summary: Obtenir la liste des utilisateurs suivis par un utilisateur
-      description: Renvoie la liste des utilisateurs suivis par un utilisateur donné.
+      description: Renvoie la liste paginée des utilisateurs suivis par un utilisateur donné, avec des informations simplifiées sur chaque utilisateur suivi (avatar, nom et nom d'utilisateur).
       security:
         - BearerAuth: []
       parameters:
@@ -350,15 +386,51 @@ paths:
           schema:
             type: string
           description: ID de l'utilisateur cible.
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à retourner.
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
       responses:
         '200':
-          description: Liste des utilisateurs suivis retournée avec succès.
+          description: Liste paginée des utilisateurs suivis retournée avec succès.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  total:
+                    type: integer
+                    example: 35
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        avatar_url:
+                          type: string
+                          example: "https://example.com/avatar.jpg"
+                        name:
+                          type: string
+                          example: "Jane Doe"
+                        username:
+                          type: string
+                          example: "janedoe"
         '404':
           description: Utilisateur non trouvé.
           content:
@@ -955,9 +1027,6 @@ components:
           type: string
           format: email
           example: "user@example.com"
-        name:
-          type: string
-          example: "John Doe"
     Profile:
       type: object
       properties:
@@ -965,6 +1034,9 @@ components:
           type: string
           format: uuid
           example: "550e8400-e29b-41d4-a716-446655440000"
+        display_name:
+          type: string
+          example: "John Doe"
         username:
           type: string
           example: "user123"

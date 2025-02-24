@@ -13,6 +13,10 @@ const Profiles = sequelize.define('Profiles', {
         },
         onDelete: "CASCADE"
     },
+    display_name: {
+        type: DataTypes.STRING(100),
+        allowNull: true
+    },
     username: {
         type: DataTypes.STRING(50),
         allowNull: false,

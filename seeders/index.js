@@ -6,8 +6,8 @@ const runSeeders = async () => {
     try {
         console.log('Démarrage du seeding...');
         await seedUsers();
-        await seedFollows();
         await seedProfiles();
+        await seedFollows();
         console.log('Tous les seeders ont été exécutés avec succès !');
         process.exit(0);
     } catch (error) {
