@@ -14,14 +14,25 @@ class BlinkRepository {
      * Ajoute du contenu à un Blink
      */
     async addBlinkContents(blinkID, contents, transaction) {
-        const formattedContents = contents.map((content, index) => ({
+        const allowedContentTypes = ['text', 'image', 'video'];
+
+        // Vérification des types de contenu
+        contents.forEach(content => {
+            if (!allowedContentTypes.includes(content.contentType)) {
+                throw new Error(`Type de contenu invalide : ${content.contentType}`);
+            }
+        });
+
+        const mappedContents = contents.map(content => ({
             blinkID,
-            contentType: content.type,
-            content: content.value,
-            position: index
+            contentType: content.contentType,
+            content: content.content,
+            position: content.position
         }));
 
-        return await BlinkContents.bulkCreate(formattedContents, { transaction });
+        console.log("Données insérées dans BlinkContents :", JSON.stringify(mappedContents, null, 2));
+
+        await BlinkContents.bulkCreate(mappedContents, { transaction });
     }
 
     /**
@@ -34,11 +45,25 @@ class BlinkRepository {
         });
     }
 
+    async getBlinkHeaderById(blinkID) {
+        return await Blinks.findOne({
+            where: { blinkID } // Récupère uniquement l'entête du Blink, sans contenu
+        });
+    }
+
+
+    /**
+     * Récupère tous les Blinks
+     */
+    async getAllBlinks(transaction) {
+        return await Blinks.findAll({ transaction });
+    }
+
     /**
      * Supprime tous les contenus d’un Blink
      */
     async deleteBlinkContents(blinkID, transaction) {
-        return await BlinkContents.destroy({ where: { blinkID } }, { transaction });
+        return await BlinkContents.destroy({ where: { blinkID }, transaction });
     }
 
     /**

@@ -202,6 +202,86 @@ paths:
                   error:
                     type: string
                     example: "Erreur interne du serveur"
+  /blinks/remaining-time/{blinkID}:
+    get:
+      tags:
+        - Blinks
+      summary: Vérifier la durée de vie restante d'un Blink
+      description: Retourne le temps restant avant l'expiration d'un Blink.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: blinkID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du Blink dont on veut connaître la durée de vie restante.
+      responses:
+        '200':
+          description: Durée de vie restante récupérée avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  blinkID:
+                    type: string
+                    example: "blink123"
+                  remainingTime:
+                    type: number
+                    example: 43200
+        '404':
+          description: Blink non trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Blink non trouvé"
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /blinks/expired:
+    delete:
+      tags:
+        - Blinks
+      summary: Supprimer manuellement les Blinks expirés
+      description: Supprime tous les Blinks dont la durée de vie est écoulée.
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Blinks expirés supprimés avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Blinks expirés supprimés avec succès."
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
 
   # ---------------------------
   # Endpoints Follow

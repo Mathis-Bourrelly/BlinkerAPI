@@ -19,6 +19,15 @@ router.post('/', AuthMiddleware.verifyToken, async (req, res) => {
     }
 });
 
+router.delete('/expired', AuthMiddleware.verifyToken, async (req, res) => {
+    try {
+        await BlinkService.deleteExpiredBlinks();
+        return res.status(200).json({ message: "Blinks expirés supprimés avec succès." });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
 router.get('/:blinkID', AuthMiddleware.verifyToken, async (req, res) => {
     try {
         const { blinkID } = req.params;
@@ -55,6 +64,17 @@ router.delete('/:blinkID', AuthMiddleware.verifyToken, async (req, res) => {
         const { blinkID } = req.params;
         await BlinkService.deleteBlink(blinkID);
         return res.status(204).send();
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/remaining-time/:blinkID', AuthMiddleware.verifyToken, async (req, res) => {
+    try {
+        const { blinkID } = req.params;
+        const remainingTime = await BlinkService.calculateRemainingTime(blinkID);
+
+        return res.status(200).json({ blinkID, remainingTime });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
