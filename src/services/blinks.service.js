@@ -1,5 +1,6 @@
 const BlinkRepository = require('../repository/blinks.repository.js');
 const { sequelize } = require('../core/postgres');
+const ErrorCodes = require('../../constants/errorCodes');
 
 class BlinkService {
     /**
@@ -14,7 +15,7 @@ class BlinkService {
             return blink;
         } catch (error) {
             await transaction.rollback();
-            throw error;
+            throw { code: error.code || ErrorCodes.Base.UnknownError };
         }
     }
 
@@ -32,7 +33,7 @@ class BlinkService {
         const transaction = await sequelize.transaction();
         try {
             const blink = await BlinkRepository.getBlinkById(blinkID);
-            if (!blink) throw new Error('Blink non trouvé');
+            if (!blink) throw { code: ErrorCodes.Blinks.NotFound };
 
             await BlinkRepository.deleteBlinkContents(blinkID, transaction);
             await BlinkRepository.addBlinkContents(blinkID, contents, transaction);
@@ -41,7 +42,7 @@ class BlinkService {
             return blink;
         } catch (error) {
             await transaction.rollback();
-            throw error;
+            throw { code: error.code || ErrorCodes.Base.UnknownError };
         }
     }
 
@@ -52,9 +53,12 @@ class BlinkService {
         return await BlinkRepository.deleteBlink(blinkID);
     }
 
+    /**
+     * Calcule le temps restant avant expiration d'un Blink
+     */
     async calculateRemainingTime(blinkID) {
         const blink = await BlinkRepository.getBlinkHeaderById(blinkID);
-        if (!blink) throw new Error('Blink non trouvé');
+        if (!blink) throw { code: ErrorCodes.Blinks.NotFound };
 
         const elapsedTime = (new Date() - blink.createdAt) / 1000; // Temps écoulé en secondes
         const initialLifetime = 86400; // 24h en secondes
@@ -65,6 +69,9 @@ class BlinkService {
         return Math.max(0, Math.min(initialLifetime + likeBonus + commentBonus - dislikePenalty - elapsedTime, initialLifetime));
     }
 
+    /**
+     * Supprime les Blinks expirés
+     */
     async deleteExpiredBlinks() {
         const transaction = await sequelize.transaction();
         try {
@@ -80,7 +87,7 @@ class BlinkService {
             await transaction.commit();
         } catch (error) {
             await transaction.rollback();
-            throw error;
+            throw { code: error.code || ErrorCodes.Base.UnknownError };
         }
     }
 }

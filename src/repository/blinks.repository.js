@@ -1,13 +1,18 @@
 const Blinks = require('../models/blinks');
 const BlinkContents = require('../models/blinkContents');
 const { sequelize } = require('../core/postgres');
+const ErrorCodes = require('../../constants/errorCodes');
 
 class BlinkRepository {
     /**
      * Crée un Blink
      */
     async createBlink(userID, transaction) {
-        return await Blinks.create({ userID }, { transaction });
+        try {
+            return await Blinks.create({ userID }, { transaction });
+        } catch (error) {
+            throw { code: ErrorCodes.Blinks.CreationFailed };
+        }
     }
 
     /**
@@ -19,7 +24,7 @@ class BlinkRepository {
         // Vérification des types de contenu
         contents.forEach(content => {
             if (!allowedContentTypes.includes(content.contentType)) {
-                throw new Error(`Type de contenu invalide : ${content.contentType}`);
+                throw { code: ErrorCodes.Blinks.InvalidContentType };
             }
         });
 
@@ -30,27 +35,43 @@ class BlinkRepository {
             position: content.position
         }));
 
-        console.log("Données insérées dans BlinkContents :", JSON.stringify(mappedContents, null, 2));
-
-        await BlinkContents.bulkCreate(mappedContents, { transaction });
+        try {
+            await BlinkContents.bulkCreate(mappedContents, { transaction });
+        } catch (error) {
+            throw { code: ErrorCodes.Blinks.ContentAdditionFailed };
+        }
     }
 
     /**
      * Récupère un Blink avec son contenu
      */
     async getBlinkById(blinkID) {
-        return await Blinks.findOne({
+        const blink = await Blinks.findOne({
             where: { blinkID },
             include: [{ model: BlinkContents, as: 'contents' }]
         });
+
+        if (!blink) {
+            throw { code: ErrorCodes.Blinks.NotFound };
+        }
+
+        return blink;
     }
 
+    /**
+     * Récupère uniquement l'entête d'un Blink
+     */
     async getBlinkHeaderById(blinkID) {
-        return await Blinks.findOne({
-            where: { blinkID } // Récupère uniquement l'entête du Blink, sans contenu
+        const blink = await Blinks.findOne({
+            where: { blinkID }
         });
-    }
 
+        if (!blink) {
+            throw { code: ErrorCodes.Blinks.NotFound };
+        }
+
+        return blink;
+    }
 
     /**
      * Récupère tous les Blinks
@@ -63,14 +84,22 @@ class BlinkRepository {
      * Supprime tous les contenus d’un Blink
      */
     async deleteBlinkContents(blinkID, transaction) {
-        return await BlinkContents.destroy({ where: { blinkID }, transaction });
+        try {
+            return await BlinkContents.destroy({ where: { blinkID }, transaction });
+        } catch (error) {
+            throw { code: ErrorCodes.Blinks.ContentsDeletionFailed };
+        }
     }
 
     /**
      * Supprime un Blink
      */
     async deleteBlink(blinkID) {
-        return await Blinks.destroy({ where: { blinkID } });
+        try {
+            return await Blinks.destroy({ where: { blinkID } });
+        } catch (error) {
+            throw { code: ErrorCodes.Blinks.DeletionFailed };
+        }
     }
 }
 
