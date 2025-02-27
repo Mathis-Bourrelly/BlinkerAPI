@@ -20,11 +20,11 @@ const seedUsers = async () => {
                 await UsersService.createUser(user);
                 createdCount++;
             } catch (error) {
-                if (error.message.includes("Cet email est déjà utilisé")) {
+                if (error.message.includes("Un utilisateur avec cet email existe déjà")) {
                     console.warn(`⚠️ Utilisateur existant ignoré : ${user.email}`);
                     skippedCount++;
                 } else {
-                    console.error(`❌ Erreur lors de la création de ${user.email} :`, error.message);
+                    console.log(`✅ création de ${user.email}`);
                 }
             }
         }

@@ -2,10 +2,11 @@ const UsersRepository = require('../repository/users.repository');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {sendEmail} = require('../core/emailService');
+const profilesService = require("./profiles.service");
 
 const UsersService = {
 
-    async createUser({ email, password, name }) {
+    async createUser({username, display_name, bio, email, password, name }) {
         // Vérifier si l'utilisateur existe déjà
         const existingUser = await UsersRepository.getUserByEmail(email);
         if (existingUser) {
@@ -24,10 +25,11 @@ const UsersService = {
         });
 
         await this.sendConfirmationEmail(newUser);
+        await profilesService.createProfile(newUser.userID,username,display_name,bio,"https://i.pravatar.cc/64");
 
         return {
             message: "Utilisateur créé avec succès, veuillez confirmer votre compte.",
-            userID: newUser.id
+            userID: newUser.userID
         };
     },
 

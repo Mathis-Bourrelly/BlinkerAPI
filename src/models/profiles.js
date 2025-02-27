@@ -15,11 +15,12 @@ const Profiles = sequelize.define('Profiles', {
     },
     display_name: {
         type: DataTypes.STRING(100),
-        allowNull: true
+        allowNull: false,
     },
     username: {
         type: DataTypes.STRING(50),
         allowNull: false,
+        unique: true
     },
     bio: {
         type: DataTypes.TEXT,

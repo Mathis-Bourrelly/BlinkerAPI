@@ -7,6 +7,7 @@ class FollowsService {
      * Suivre un utilisateur
      */
     async followUser(fromUserID, targetUserID) {
+        console.log("fromUserID: ", fromUserID, "targetUserID: ", targetUserID);
         if (fromUserID === targetUserID) {
             const error = new Error("Vous ne pouvez pas vous suivre vous-même.");
             error.status = 400;

@@ -8,7 +8,6 @@ const router = express.Router();
 
 router.post('/register',
     body('email').isEmail().withMessage('invalid_email'),
-    body('name').notEmpty().withMessage('name_required'),
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -64,7 +63,6 @@ router.post('/',
         minNumbers: 1,
         minSymbols: 1
     }).withMessage("Le mot de passe doit contenir au moins 12 caractères, une majuscule, une minuscule, un chiffre et un symbole"),
-    body('name').notEmpty().withMessage("Le nom ne peut pas être vide"),
     async (req, res) => {
         try {
             const result = await UsersService.createUser(req.body);
@@ -77,7 +75,6 @@ router.post('/',
 
 router.put('/:id',
     AuthMiddleware.verifyToken,
-    body('name').optional().notEmpty().withMessage('Le nom ne peut pas être vide'),
     body('email').optional().isEmail().withMessage('L\'email doit être valide'),
     body('password').optional().isLength({ min: 8 }).withMessage('Le mot de passe doit contenir au moins 8 caractères'),
     async (req, res) => {

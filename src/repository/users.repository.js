@@ -2,9 +2,8 @@ const User = require('../models/users');
 
 const UsersRepository = {
     // Créer un utilisateur
-    async createUser({ name, email, password, isVerified }) {
+    async createUser({ email, password, isVerified }) {
         return await User.create({
-            name,
             email,
             password, // Le mot de passe est déjà hashé dans la couche service
             isVerified,

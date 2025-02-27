@@ -20,7 +20,6 @@ const seedFollows = async () => {
         // Générer des relations de follow aléatoires
         for (const follower of users) {
             const followedUsers = users
-                .filter(u => u.userID !== follower.userID) // Évite l'auto-follow
                 .sort(() => Math.random() - 0.5) // Mélange les utilisateurs
                 .slice(0, Math.floor(Math.random() * 4) + 1); // Chaque utilisateur suit entre 1 et 4 autres
 
@@ -29,6 +28,8 @@ const seedFollows = async () => {
 
                 if (!followRelations.has(relationKey)) {
                     try {
+                        console.log("--- follower : ", follower.userID)
+                        console.log("--- followed : ", followed.userID)
                         await FollowsService.followUser(follower.userID, followed.userID);
                         followRelations.add(relationKey);
                         followCount++;
