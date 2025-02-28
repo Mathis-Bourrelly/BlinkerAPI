@@ -1,9 +1,10 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const {OAuth2Client} = require("google-auth-library");
+const { OAuth2Client } = require("google-auth-library");
 const UsersService = require("./users.service");
 const UsersRepository = require("../repository/users.repository");
 const ProfilesService = require("../services/profiles.service");
+const ErrorCodes = require("../../constants/errorCodes");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -11,33 +12,32 @@ class AuthService {
     /**
      * Authentifie un utilisateur et génère un JWT.
      */
-    async login({email, password}) {
+    async login({ email, password }) {
         if (!email || !password) {
-            throw this.createError(400, "Email et mot de passe sont requis.");
+            throw { code: ErrorCodes.Login.FieldEmailRequired };
         }
 
         const user = await UsersService.getUserByEmail(email);
         if (!user || !(await bcrypt.compare(password, user.password))) {
-            throw this.createError(401, "Adresse e-mail ou mot de passe incorrect.");
+            throw { code: ErrorCodes.Login.IncorrectPassword };
         }
 
         if (!user.isVerified) {
-            throw this.createError(403, "Votre compte n'est pas encore confirmé.");
+            throw { code: ErrorCodes.Login.AccountLocked };
         }
 
         if (!process.env.JWT_SECRET) {
-            throw this.createError(500, "Configuration serveur invalide : clé secrète JWT manquante.");
+            throw { code: ErrorCodes.Base.UnknownError };
         }
 
         const token = jwt.sign(
-            {userID: user.userID, email: user.email, role: user.role},
+            { userID: user.userID, email: user.email, role: user.role },
             process.env.JWT_SECRET,
-            {expiresIn: "1d"}
+            { expiresIn: "1d" }
         );
 
         return {
             token,
-            message: "Connexion réussie !",
             userID: user.userID
         };
     }
@@ -47,18 +47,18 @@ class AuthService {
      */
     async verifyToken(token) {
         if (!token) {
-            throw this.createError(400, "Aucun jeton fourni.");
+            throw { code: ErrorCodes.Login.InvalidToken };
         }
 
         if (!process.env.JWT_SECRET) {
-            throw this.createError(500, "Configuration serveur invalide : clé secrète JWT manquante.");
+            throw { code: ErrorCodes.Base.UnknownError };
         }
 
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            return {message: "Jeton valide.", decoded};
+            return { decoded };
         } catch (error) {
-            throw this.createError(401, "Jeton invalide ou expiré.");
+            throw { code: ErrorCodes.Login.InvalidToken };
         }
     }
 
@@ -67,7 +67,7 @@ class AuthService {
      */
     async loginWithGoogle(token) {
         if (!token) {
-            throw this.createError(400, "Token Google manquant.");
+            throw { code: ErrorCodes.Login.InvalidToken };
         }
 
         const ticket = await client.verifyIdToken({
@@ -77,7 +77,7 @@ class AuthService {
 
         const payload = ticket.getPayload();
         if (!payload || !payload.email) {
-            throw this.createError(401, "Token invalide ou adresse e-mail manquante.");
+            throw { code: ErrorCodes.Login.InvalidEmail };
         }
 
         const { email, given_name, name, picture } = payload;
@@ -89,7 +89,6 @@ class AuthService {
                 email,
                 isVerified: true
             });
-            console.log(user.userID);
 
             // Crée le profil associé
             await ProfilesService.createProfile({
@@ -102,23 +101,12 @@ class AuthService {
         }
 
         const appToken = jwt.sign(
-            { userID: user.userID},
+            { userID: user.userID },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
 
         return { token: appToken, userID: user.userID };
-    }
-
-
-
-    /**
-     * Fonction utilitaire pour créer une erreur avec un statut HTTP.
-     */
-    createError(statusCode, message) {
-        const error = new Error(message);
-        error.statusCode = statusCode;
-        return error;
     }
 }
 

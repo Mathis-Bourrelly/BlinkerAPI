@@ -17,12 +17,19 @@ const ErrorCodes = {
         AccountLocked: "Login.AccountLocked",
         InvalidEmail: "Login.InvalidEmail",
         FieldEmailRequired: "Login.FieldEmailRequired",
-        FieldPasswordRequired: "Login.FieldPasswordRequired"
+        FieldPasswordRequired: "Login.FieldPasswordRequired",
+        AccessDenied: "Login.AccessDenied",
     },
     User: {
         NotFound: "User.NotFound",
         EmailAlreadyExists: "User.EmailAlreadyExists",
-        InvalidToken: "User.InvalidToken"
+        CreationFailed: "User.CreationFailed",
+        UpdateFailed: "User.UpdateFailed",
+        DeletionFailed: "User.DeletionFailed",
+        AccountAlreadyVerified: "User.AccountAlreadyVerified",
+        InvalidResetToken: "User.InvalidResetToken",
+        WeakPassword: "User.WeakPassword",
+        AlreadyAdmin: "User.AlreadyAdmin"
     },
     Follows: {
         AlreadyFollowing: "Follows.AlreadyFollowing",
@@ -31,6 +38,11 @@ const ErrorCodes = {
         NotFollowing: "Follows.NotFollowing",
         FetchFailed: "Follows.FetchFailed",
         SelfFollowNotAllowed: "Follows.SelfFollowNotAllowed"
+    },
+    Profiles: {
+        NotFound: "Profiles.NotFound",
+        UsernameTaken: "Profiles.UsernameTaken",
+        CreationFailed: "Profiles.CreationFailed"
     }
 };
 
