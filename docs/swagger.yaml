@@ -19,6 +19,8 @@ tags:
     description: Gestion des utilisateurs
   - name: Authentification
     description: Gestion des connexions
+  - name: Interactions
+    description: Gestion des likes et dislikes sur les Blinks
 
 paths:
   # ---------------------------
@@ -1072,6 +1074,83 @@ paths:
           description: Erreur de validation ou token invalide.
         '404':
           description: Utilisateur non trouvé.
+  # ---------------------------
+  # Endpoints Blinks
+  # ---------------------------
+
+  /interactions/like/{postID}:
+    post:
+      tags:
+        - Interactions
+      summary: Liker un Blink
+      description: Ajoute un like à un Blink ou annule un like existant.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: postID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du Blink à liker.
+      responses:
+        '200':
+          description: Like ajouté, supprimé ou mis à jour avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: boolean
+                    example: true
+                  removed:
+                    type: boolean
+                    example: false
+                  updated:
+                    type: boolean
+                    example: false
+        '401':
+          description: Utilisateur non authentifié.
+        '500':
+          description: Erreur interne du serveur.
+
+  /interactions/dislike/{postID}:
+    post:
+      tags:
+        - Interactions
+      summary: Disliker un Blink
+      description: Ajoute un dislike à un Blink ou annule un dislike existant.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: postID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du Blink à disliker.
+      responses:
+        '200':
+          description: Dislike ajouté, supprimé ou mis à jour avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: boolean
+                    example: true
+                  removed:
+                    type: boolean
+                    example: false
+                  updated:
+                    type: boolean
+                    example: false
+        '401':
+          description: Utilisateur non authentifié.
+        '500':
+          description: Erreur interne du serveur.
 
 components:
   securitySchemes:

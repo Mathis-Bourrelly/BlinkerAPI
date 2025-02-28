@@ -5,6 +5,7 @@ const followsRoute = require("../route/follows.route");
 const profilesRoute = require("../route/profiles.route");
 const loginRoute = require("../route/login.route");
 const blinksRoute = require("../route/blinks.route");
+const interactionsRoute = require("../route/interactions.route");
 const { sequelize } = require("./postgres");
 
 class WebServer {
@@ -36,6 +37,8 @@ class WebServer {
         console.log("✅ profiles route initialized");
         this.app.use("/blinks", blinksRoute.initializeRoutes());
         console.log("✅ blinks route initialized");
+        this.app.use("/interactions", interactionsRoute.initializeRoutes());
+        console.log("✅ interactions route initialized");
     }
 }
 
