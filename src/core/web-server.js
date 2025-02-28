@@ -18,21 +18,41 @@ class WebServer {
         this.app = express();
         initializeConfigMiddlewares(this.app);
         this._initializeRoutes();
+        this._initializeErrorHandler();
     }
 
     start() {
         this.server = this.app.listen(this.port, () => {
-            console.log(`App listening on port ${this.port}`);
+            console.log(`✅ App listening on port ${this.port}`);
         });
     }
 
     _initializeRoutes() {
+        console.log("🚀 Initialisation des routes...");
+
         this.app.use("/", loginRoute.initializeRoutes());
+        console.log("✅ Route login initialisée");
+
+        this.app.use(authMiddleware.verifyToken);
+
         this.app.use("/users", usersRoute.initializeRoutes());
         this.app.use("/follows", followsRoute.initializeRoutes());
         this.app.use("/profiles", profilesRoute.initializeRoutes());
         this.app.use("/blinks", blinksRoute.initializeRoutes());
         this.app.use("/interactions", interactionsRoute.initializeRoutes());
+
+        console.log("✅ Routes protégées initialisées");
+    }
+
+    _initializeErrorHandler() {
+        this.app.use((err, req, res, next) => {
+            console.error("❌ Erreur interceptée :", err);
+
+            const statusCode = err.statusCode || 500;
+            res.status(statusCode).json({
+                error: err.message || "Erreur interne du serveur"
+            });
+        });
     }
 }
 
