@@ -28,11 +28,6 @@ class WebServer {
 
     _initializeRoutes() {
         this.app.use("/", loginRoute.initializeRoutes());
-
-// Appliquer l'authentification à toutes les routes suivantes
-        this.app.use(authMiddleware.verifyToken);
-
-// Routes nécessitant une authentification
         this.app.use("/users", usersRoute.initializeRoutes());
         this.app.use("/follows", followsRoute.initializeRoutes());
         this.app.use("/profiles", profilesRoute.initializeRoutes());
