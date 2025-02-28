@@ -1,5 +1,6 @@
 const express = require("express");
 const { initializeConfigMiddlewares } = require("./middlewares");
+const authMiddleware = require("./middlewares/authMiddleware");
 const usersRoute = require("../route/users.route");
 const followsRoute = require("../route/follows.route");
 const profilesRoute = require("../route/profiles.route");
@@ -26,19 +27,17 @@ class WebServer {
     }
 
     _initializeRoutes() {
-        console.log("Initializing routes...");
-        this.app.use("/users", usersRoute.initializeRoutes());
-        console.log("✅ users route initialized");
         this.app.use("/", loginRoute.initializeRoutes());
-        console.log("✅ login route initialized");
+
+// Appliquer l'authentification à toutes les routes suivantes
+        this.app.use(authMiddleware.verifyToken);
+
+// Routes nécessitant une authentification
+        this.app.use("/users", usersRoute.initializeRoutes());
         this.app.use("/follows", followsRoute.initializeRoutes());
-        console.log("✅ follows route initialized");
         this.app.use("/profiles", profilesRoute.initializeRoutes());
-        console.log("✅ profiles route initialized");
         this.app.use("/blinks", blinksRoute.initializeRoutes());
-        console.log("✅ blinks route initialized");
         this.app.use("/interactions", interactionsRoute.initializeRoutes());
-        console.log("✅ interactions route initialized");
     }
 }
 
