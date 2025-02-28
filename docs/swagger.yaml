@@ -26,7 +26,72 @@ paths:
   # ---------------------------
   # Endpoints Blinks
   # ---------------------------
+
   /blinks:
+    get:
+      tags:
+        - Blinks
+      summary: Récupérer les blinks avec pagination
+      description: Récupère une liste paginée de blinks, triés par date de création (du plus récent au plus ancien).
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à récupérer.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
+      responses:
+        '200':
+          description: Liste paginée des blinks retournée avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  total:
+                    type: integer
+                    example: 100
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Blink'
+        '400':
+          description: Requête invalide (ex. paramètre non valide).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Paramètres de pagination invalides."
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
     post:
       tags:
         - Blinks
@@ -51,7 +116,7 @@ paths:
                   type: array
                   items:
                     type: string
-                  example: ["Contenu du blink"]
+                  example: [ "Contenu du blink" ]
       responses:
         '201':
           description: Blink créé avec succès.

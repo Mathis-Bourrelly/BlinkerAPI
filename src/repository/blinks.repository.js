@@ -81,6 +81,22 @@ class BlinkRepository {
     }
 
     /**
+     * Récupère les Blinks avec pagination
+     */
+    async getPaginatedBlinks(page, limit) {
+        const offset = (page - 1) * limit;
+
+        const { count, rows } = await Blinks.findAndCountAll({
+            limit,
+            offset,
+            order: [['createdAt', 'DESC']],
+            include: [{ model: BlinkContents, as: 'contents' }]
+        });
+
+        return { total: count, blinks: rows };
+    }
+
+    /**
      * Supprime tous les contenus d’un Blink
      */
     async deleteBlinkContents(blinkID, transaction) {

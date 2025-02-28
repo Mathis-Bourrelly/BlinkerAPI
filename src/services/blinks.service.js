@@ -27,6 +27,18 @@ class BlinkService {
     }
 
     /**
+     * Récupère les Blinks paginés
+     */
+    async getPaginatedBlinks(page = 1, limit = 10) {
+        try {
+            const { total, blinks } = await BlinkRepository.getPaginatedBlinks(page, limit);
+            return { page, limit, total, data: blinks };
+        } catch (error) {
+            throw { code: ErrorCodes.Blinks.FetchFailed };
+        }
+    }
+
+    /**
      * Met à jour un Blink et son contenu
      */
     async updateBlink(blinkID, { contents }) {

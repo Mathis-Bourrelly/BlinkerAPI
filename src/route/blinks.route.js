@@ -3,10 +3,20 @@ const router = express.Router();
 const BlinkService = require('../services/blinks.service.js');
 const AuthMiddleware = require("../../src/core/middlewares/authMiddleware");
 
+router.get("/", AuthMiddleware.verifyToken, async (req, res, next) => {
+    try {
+        const { page = 1, limit = 10 } = req.query;
+        const result = await BlinkService.getPaginatedBlinks(Number(page), Number(limit));
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+
 router.post('/', AuthMiddleware.verifyToken, async (req, res) => {
     try {
         const { contents } = req.body;
-        const userID = req.user.userID; // Récupération du userID depuis le token
+        const userID = req.user.userID;
 
         if (!contents || !Array.isArray(contents)) {
             return res.status(400).json({ error: 'Données invalides' });

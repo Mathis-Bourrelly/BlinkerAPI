@@ -40,9 +40,6 @@ module.exports = {
       }
     });
 
-    await queryInterface.addIndex("Interactions", ["postID", "userID"], {
-      unique: true
-    });
   },
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable("Interactions");
