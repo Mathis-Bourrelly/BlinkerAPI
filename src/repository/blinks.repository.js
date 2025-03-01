@@ -1,5 +1,6 @@
 const Blinks = require('../models/blinks');
 const BlinkContents = require('../models/blinkContents');
+const Profiles = require('../models/profiles');
 const { sequelize } = require('../core/postgres');
 const ErrorCodes = require('../../constants/errorCodes');
 
@@ -90,11 +91,22 @@ class BlinkRepository {
             limit,
             offset,
             order: [['createdAt', 'DESC']],
-            include: [{ model: BlinkContents, as: 'contents' }]
+            include: [
+                {
+                    model: BlinkContents,
+                    as: 'contents'
+                },
+                {
+                    model: Profiles,
+                    as: 'profile',
+                    attributes: ['display_name', 'username', 'avatar_url']
+                }
+            ]
         });
 
         return { total: count, blinks: rows };
     }
+
 
     /**
      * Supprime tous les contenus d’un Blink

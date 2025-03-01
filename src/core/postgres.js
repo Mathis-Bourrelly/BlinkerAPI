@@ -22,12 +22,16 @@ exports.sequelize = new Sequelize({
 // Importer les modèles
 const modelDefiners = [
     require('../models/users'),
-    require('../models/follows'),
     require('../models/profiles'),
+    require('../models/follows'),
+    require('../models/blinks'),
+    require('../models/blinkContents'),
+    require('../models/interactions'),
 ];
 
 (async () => {
     try {
+        // Synchronisation des modèles
         for (const modelDefiner of modelDefiners) {
             if (modelDefiner && typeof modelDefiner.sync === 'function') {
                 console.log(`Synchronisation du modèle : ${modelDefiner.name || 'Inconnu'}`);
@@ -37,10 +41,13 @@ const modelDefiners = [
             }
         }
 
+        // Définition des associations après la synchronisation des modèles
+        require('../models/associations'); // Importer le fichier des associations
+
         // Synchronisation globale de la base avec `alter` pour ajuster les tables existantes
         await exports.sequelize.sync();
         console.log('Base de données synchronisée avec succès !');
-        console.log('http://localhost:3011/api-docs')
+        console.log('http://localhost:3011/api-docs');
     } catch (error) {
         console.error('Erreur de synchronisation des modèles :', error);
     }

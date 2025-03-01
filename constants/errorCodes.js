@@ -9,6 +9,7 @@ const ErrorCodes = {
         CreationFailed: "Blinks.CreationFailed",
         ContentAdditionFailed: "Blinks.ContentAdditionFailed",
         DeletionFailed: "Blinks.DeletionFailed",
+        FetchFailed: "Blinks.FetchFailed",
         ContentsDeletionFailed: "Blinks.ContentsDeletionFailed"
     },
     Login: {

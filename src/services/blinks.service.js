@@ -34,6 +34,7 @@ class BlinkService {
             const { total, blinks } = await BlinkRepository.getPaginatedBlinks(page, limit);
             return { page, limit, total, data: blinks };
         } catch (error) {
+            console.error(error);
             throw { code: ErrorCodes.Blinks.FetchFailed };
         }
     }
