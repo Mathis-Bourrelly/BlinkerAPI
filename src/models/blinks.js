@@ -1,5 +1,7 @@
 const { sequelize } = require('../core/postgres');
 const { DataTypes } = require("sequelize");
+const BlinkContents = require("./blinkContents");
+const Profiles = require("./profiles");
 
 const Blinks = sequelize.define('Blinks', {
     blinkID: {

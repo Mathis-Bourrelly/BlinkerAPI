@@ -49,11 +49,11 @@ class WebServer {
             console.error("❌ Erreur interceptée :", err);
 
             const statusCode = err.statusCode || 500;
+
             const errorResponse = {
                 code: err.code || "Server.InternalError",
                 message: err.message || "Erreur interne du serveur"
             };
-
             res.status(statusCode).json(errorResponse);
         });
     }

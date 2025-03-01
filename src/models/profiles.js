@@ -1,6 +1,7 @@
 const { sequelize } = require('../core/postgres');
 const { DataTypes } = require("sequelize");
 const Users = require("./Users");
+const Blinks = require("./Blinks");
 
 const Profiles = sequelize.define('Profiles', {
     userID: {
@@ -39,9 +40,5 @@ const Profiles = sequelize.define('Profiles', {
     createdAt: false,
     updatedAt: false,
 });
-
-// Associer `Profiles` à `Users`
-Users.hasOne(Profiles, { foreignKey: "userID", onDelete: "CASCADE" });
-Profiles.belongsTo(Users, { foreignKey: "userID" });
 
 module.exports = Profiles;
