@@ -111,12 +111,26 @@ paths:
               properties:
                 userID:
                   type: string
-                  example: "user123"
+                  example: "4a6d0b7e-2d79-46de-aec5-18ece11d3966"
                 contents:
                   type: array
                   items:
-                    type: string
-                  example: [ "Contenu du blink" ]
+                    type: object
+                    required:
+                      - contentType
+                      - content
+                      - position
+                    properties:
+                      contentType:
+                        type: string
+                        enum: [ text, image, video ]
+                        example: "text"
+                      content:
+                        type: string
+                        example: "Ceci est un blink avec du texte."
+                      position:
+                        type: integer
+                        example: 1
       responses:
         '201':
           description: Blink créé avec succès.
@@ -629,10 +643,10 @@ paths:
                 email:
                   type: string
                   format: email
-                  example: "user@example.com"
+                  example: "test@test.com"
                 password:
                   type: string
-                  example: "Password123!"
+                  example: "test"
       responses:
         '200':
           description: Authentification réussie.
