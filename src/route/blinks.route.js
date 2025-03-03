@@ -3,10 +3,25 @@ const router = express.Router();
 const BlinkService = require('../services/blinks.service.js');
 const AuthMiddleware = require("../../src/core/middlewares/authMiddleware");
 
+router.get('/search', AuthMiddleware.verifyToken, async (req, res, next) => {
+    try {
+        const { query, page = 1, limit = 10 } = req.query;
+
+        if (!query) {
+            return res.status(400).json({ error: "Le paramètre 'query' est requis." });
+        }
+
+        const result = await BlinkService.searchBlinksAndUsers(query, Number(page), Number(limit));
+        return res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+
 router.get("/", AuthMiddleware.verifyToken, async (req, res, next) => {
     try {
-        const { page = 1, limit = 10 } = req.query;
-        const result = await BlinkService.getPaginatedBlinks(Number(page), Number(limit));
+        const { page = 1, limit = 10, userId } = req.query;
+        const result = await BlinkService.getPaginatedBlinks(Number(page), Number(limit), userId || null);
         res.status(200).json(result);
     } catch (error) {
         next(error);

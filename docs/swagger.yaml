@@ -31,8 +31,10 @@ paths:
     get:
       tags:
         - Blinks
-      summary: Récupérer les blinks avec pagination
-      description: Récupère une liste paginée de blinks, triés par date de création (du plus récent au plus ancien).
+      summary: Récupérer les blinks avec pagination et filtrage par utilisateur
+      description: |
+        Récupère une liste paginée de blinks, triés par date de création (du plus récent au plus ancien).
+        Possibilité de filtrer les résultats en fonction de l'utilisateur qui a créé le blink.
       security:
         - BearerAuth: [ ]
       parameters:
@@ -50,6 +52,13 @@ paths:
             type: integer
             default: 10
           description: Nombre d'éléments par page.
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: ID de l'utilisateur pour filtrer les blinks (optionnel).
       responses:
         '200':
           description: Liste paginée des blinks retournée avec succès.
@@ -95,8 +104,8 @@ paths:
     post:
       tags:
         - Blinks
-      summary: Créer un nouveau blink
-      description: Création d'un blink avec un userID et un tableau de contenus.
+      summary: Créer un nouveau Blink
+      description: Création d'un Blink avec un contenu, l'utilisateur est déterminé via le token.
       security:
         - BearerAuth: [ ]
       requestBody:
@@ -106,24 +115,16 @@ paths:
             schema:
               type: object
               required:
-                - userID
                 - contents
               properties:
-                userID:
-                  type: string
-                  example: "4a6d0b7e-2d79-46de-aec5-18ece11d3966"
                 contents:
                   type: array
                   items:
                     type: object
-                    required:
-                      - contentType
-                      - content
-                      - position
                     properties:
                       contentType:
                         type: string
-                        enum: [ text, image, video ]
+                        enum: [ "text", "image", "video" ]
                         example: "text"
                       content:
                         type: string
@@ -148,6 +149,110 @@ paths:
                   error:
                     type: string
                     example: "Données invalides"
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+  /blinks/search:
+    get:
+      tags:
+        - Blinks
+      summary: Rechercher dans les blinks et les profils d'utilisateurs
+      description: |
+        Effectue une recherche sur les profils (display_name, username) et les blinks (contenu texte uniquement).
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Texte à rechercher.
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à récupérer.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
+      responses:
+        '200':
+          description: Résultats de la recherche.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        userID:
+                          type: string
+                          example: "123e4567-e89b-12d3-a456-426614174000"
+                        display_name:
+                          type: string
+                          example: "John Doe"
+                        username:
+                          type: string
+                          example: "john_doe"
+                        avatar_url:
+                          type: string
+                          example: "https://example.com/avatar.jpg"
+                  blinks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        content:
+                          type: string
+                          example: "Ceci est un blink intéressant."
+                        blink:
+                          type: object
+                          properties:
+                            blinkID:
+                              type: string
+                              example: "19e4cfbe-ea7d-4733-9b21-25bc6b77578a"
+                            createdAt:
+                              type: string
+                              format: date-time
+                            profile:
+                              type: object
+                              properties:
+                                display_name:
+                                  type: string
+                                  example: "John Doe"
+                                username:
+                                  type: string
+                                  example: "john_doe"
+                                avatar_url:
+                                  type: string
+                                  example: "https://example.com/avatar.jpg"
+        '400':
+          description: Requête invalide.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Le paramètre 'query' est requis."
         '500':
           description: Erreur interne du serveur.
           content:

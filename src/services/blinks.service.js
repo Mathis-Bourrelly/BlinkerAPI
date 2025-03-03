@@ -29,9 +29,9 @@ class BlinkService {
     /**
      * Récupère les Blinks paginés
      */
-    async getPaginatedBlinks(page = 1, limit = 10) {
+    async getPaginatedBlinks(page = 1, limit = 10, userId = null) {
         try {
-            const { total, blinks } = await BlinkRepository.getPaginatedBlinks(page, limit);
+            const { total, blinks } = await BlinkRepository.getPaginatedBlinks(page, limit, userId);
             return { page, limit, total, data: blinks };
         } catch (error) {
             console.error(error);
@@ -89,18 +89,35 @@ class BlinkService {
         const transaction = await sequelize.transaction();
         try {
             const blinks = await BlinkRepository.getAllBlinks(transaction);
+            let deletedCount = 0;
 
             for (const blink of blinks) {
                 const remainingTime = await this.calculateRemainingTime(blink.blinkID);
                 if (remainingTime === 0) {
+                    console.log(`🗑️ Suppression du Blink ${blink.blinkID} (temps restant : ${remainingTime}s)`);
                     await BlinkRepository.deleteBlink(blink.blinkID, transaction);
+                    deletedCount++;
                 }
             }
 
             await transaction.commit();
+            console.log(`✅ ${deletedCount} Blink(s) expiré(s) supprimé(s).`);
         } catch (error) {
             await transaction.rollback();
-            throw { code: error.code || ErrorCodes.Base.UnknownError };
+            console.error("❌ Erreur lors de la suppression des Blinks expirés :", error);
+        }
+    }
+
+    async searchBlinksAndUsers(query, page = 1, limit = 10) {
+        try {
+            if (!query || query.trim() === "") {
+                throw { code: ErrorCodes.Blinks.InvalidSearchQuery };
+            }
+
+            return await BlinkRepository.searchBlinksAndUsers(query, Number(page), Number(limit));
+        } catch (error) {
+            console.error(error);
+            throw { code: ErrorCodes.Blinks.SearchFailed };
         }
     }
 }

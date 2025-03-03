@@ -3,6 +3,7 @@ const BlinkContents = require('../models/blinkContents');
 const Profiles = require('../models/profiles');
 const { sequelize } = require('../core/postgres');
 const ErrorCodes = require('../../constants/errorCodes');
+const {Op} = require("sequelize");
 
 class BlinkRepository {
     /**
@@ -84,10 +85,12 @@ class BlinkRepository {
     /**
      * Récupère les Blinks avec pagination
      */
-    async getPaginatedBlinks(page, limit) {
+    async getPaginatedBlinks(page, limit, userId = null) {
         const offset = (page - 1) * limit;
+        const whereClause = userId ? { userID: userId } : {};
 
         const { count, rows } = await Blinks.findAndCountAll({
+            where: whereClause,
             limit,
             offset,
             order: [['createdAt', 'DESC']],
@@ -106,7 +109,6 @@ class BlinkRepository {
 
         return { total: count, blinks: rows };
     }
-
 
     /**
      * Supprime tous les contenus d’un Blink
@@ -128,6 +130,49 @@ class BlinkRepository {
         } catch (error) {
             throw { code: ErrorCodes.Blinks.DeletionFailed };
         }
+    }
+
+    async searchBlinksAndUsers(query, page = 1, limit = 10) {
+        const offset = (page - 1) * limit;
+
+        // Recherche dans les profils (display_name et username)
+        const users = await Profiles.findAll({
+            where: {
+                [Op.or]: [
+                    { display_name: { [Op.iLike]: `%${query}%` } },
+                    { username: { [Op.iLike]: `%${query}%` } }
+                ]
+            },
+            attributes: ['userID', 'display_name', 'username', 'avatar_url'],
+            limit,
+            offset
+        });
+
+        // Recherche dans les Blinks (contenu texte uniquement)
+        const blinks = await BlinkContents.findAll({
+            where: {
+                contentType: 'text', // On ne recherche que dans les Blinks texte
+                content: { [Op.iLike]: `%${query}%` }
+            },
+            include: [
+                {
+                    model: Blinks,
+                    as: 'Blink',
+                    attributes: ['blinkID', 'createdAt'],
+                    include: [
+                        {
+                            model: Profiles,
+                            as: 'profile',
+                            attributes: ['display_name', 'username', 'avatar_url']
+                        }
+                    ]
+                }
+            ],
+            limit,
+            offset
+        });
+
+        return { users, blinks };
     }
 }
 

@@ -1,4 +1,5 @@
 const express = require("express");
+require("dotenv").config(); // Charge les variables d'environnement depuis .env
 const { initializeConfigMiddlewares } = require("./middlewares");
 const authMiddleware = require("./middlewares/authMiddleware");
 const usersRoute = require("../route/users.route");
@@ -8,6 +9,8 @@ const loginRoute = require("../route/login.route");
 const blinksRoute = require("../route/blinks.route");
 const interactionsRoute = require("../route/interactions.route");
 const { sequelize } = require("./postgres");
+const { AUTO_DELETE_INTERVAL } = require("../../config/blinks.config");
+require("../../src/core/cron");
 
 class WebServer {
     app = undefined;
@@ -24,6 +27,7 @@ class WebServer {
     start() {
         this.server = this.app.listen(this.port, () => {
             console.log(`✅ App listening on port ${this.port}`);
+            console.log(`⏳ Suppression automatique des Blinks activée toutes les ${AUTO_DELETE_INTERVAL / 1000} secondes.`);
         });
     }
 
