@@ -23,7 +23,7 @@ const UsersService = {
                 isVerified: false
             });
 
-            await this.sendConfirmationEmail(newUser);
+            //await this.sendConfirmationEmail(newUser);
             await ProfilesService.createProfile(newUser.userID, username, display_name, bio, "https://i.pravatar.cc/64");
 
             return { userID: newUser.userID };
