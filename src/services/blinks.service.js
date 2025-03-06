@@ -1,6 +1,7 @@
 const BlinkRepository = require('../repository/blinks.repository.js');
 const { sequelize } = require('../core/postgres');
 const ErrorCodes = require('../../constants/errorCodes');
+const TIER_LEVELS = require('../../constants/tierLevels');
 
 class BlinkService {
     /**
@@ -51,6 +52,8 @@ class BlinkService {
             await BlinkRepository.deleteBlinkContents(blinkID, transaction);
             await BlinkRepository.addBlinkContents(blinkID, contents, transaction);
 
+            await this.updateBlinkTier(blinkID);
+
             await transaction.commit();
             return blink;
         } catch (error) {
@@ -67,23 +70,47 @@ class BlinkService {
     }
 
     /**
-     * Calcule le temps restant avant expiration d'un Blink
+     * Calcule le temps restant avant expiration d'un Blink en fonction du palier
      */
     async calculateRemainingTime(blinkID) {
         const blink = await BlinkRepository.getBlinkHeaderById(blinkID);
         if (!blink) throw { code: ErrorCodes.Blinks.NotFound };
 
+        if (blink.tier === 'gold') return Infinity;
+
         const elapsedTime = (new Date() - blink.createdAt) / 1000; // Temps écoulé en secondes
-        const initialLifetime = 86400; // 24h en secondes
+        let baseLifetime = 86400; // 24h en secondes
+
+        switch (blink.tier) {
+            case 'bronze': baseLifetime += 30 * 86400; break; // +1 mois
+            case 'silver': baseLifetime += 365 * 86400; break; // +1 an
+        }
+
         const likeBonus = blink.likeCount * 86.4;
         const commentBonus = blink.commentCount * 172.8;
         const dislikePenalty = blink.dislikeCount * 43.2;
 
-        return Math.max(0, Math.min(initialLifetime + likeBonus + commentBonus - dislikePenalty - elapsedTime, initialLifetime));
+        return Math.max(0, baseLifetime + likeBonus + commentBonus - dislikePenalty - elapsedTime);
     }
 
     /**
-     * Supprime les Blinks expirés
+     * Met à jour le palier (tier) d'un Blink en fonction de son nombre de likes
+     */
+    async updateBlinkTier(blinkID) {
+        const blink = await BlinkRepository.getBlinkById(blinkID);
+        if (!blink) return;
+
+        for (const { tier, likes } of TIER_LEVELS) {
+            if (blink.likeCount >= likes && blink.tier !== tier) {
+                blink.tier = tier;
+                await blink.save();
+                break;
+            }
+        }
+    }
+
+    /**
+     * Supprime les Blinks expirés (sauf ceux avec le palier "gold")
      */
     async deleteExpiredBlinks() {
         const transaction = await sequelize.transaction();
@@ -93,7 +120,8 @@ class BlinkService {
 
             for (const blink of blinks) {
                 const remainingTime = await this.calculateRemainingTime(blink.blinkID);
-                if (remainingTime === 0) {
+
+                if (remainingTime === 0 && blink.tier !== 'gold') {
                     console.log(`🗑️ Suppression du Blink ${blink.blinkID} (temps restant : ${remainingTime}s)`);
                     await BlinkRepository.deleteBlink(blink.blinkID, transaction);
                     deletedCount++;
@@ -108,6 +136,9 @@ class BlinkService {
         }
     }
 
+    /**
+     * Recherche des Blinks et des utilisateurs par mot-clé
+     */
     async searchBlinksAndUsers(query, page = 1, limit = 10) {
         try {
             if (!query || query.trim() === "") {
@@ -120,6 +151,21 @@ class BlinkService {
             throw { code: ErrorCodes.Blinks.SearchFailed };
         }
     }
+
+    async getUserScore(userID) {
+        const blinks = await BlinkRepository.getBlinksByUser(userID);
+        if (!blinks || blinks.length === 0) return 0;
+
+        let totalDuration = 0;
+
+        for (const blink of blinks) {
+            const remainingTime = await this.calculateRemainingTime(blink.blinkID);
+            totalDuration += remainingTime;
+        }
+
+        return Math.round(totalDuration / blinks.length);
+    }
+
 }
 
 module.exports = new BlinkService();

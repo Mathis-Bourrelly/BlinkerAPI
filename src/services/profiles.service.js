@@ -1,5 +1,6 @@
 const UsersRepository = require("../repository/users.repository");
 const ProfilesRepository = require("../repository/profiles.repository");
+const BlinkService = require("./blinks.service"); // Import du service des Blinks
 const ErrorCodes = require("../../constants/errorCodes");
 
 class ProfilesService {
@@ -30,8 +31,7 @@ class ProfilesService {
                 display_name,
                 username,
                 bio: bio || null,
-                avatar_url: avatar_url || null,
-                score: 0
+                avatar_url: avatar_url || null
             });
         } catch (error) {
             throw { code: ErrorCodes.Profiles.CreationFailed };
@@ -39,9 +39,9 @@ class ProfilesService {
     }
 
     /**
-     * Récupère un profil par userID.
+     * Récupère un profil par userID, en ajoutant le score calculé.
      * @param {string} userID - UUID de l'utilisateur.
-     * @returns {Promise<Object>} Le profil trouvé.
+     * @returns {Promise<Object>} Le profil trouvé avec le score mis à jour.
      * @throws {Error} Si le profil n'existe pas.
      */
     async getProfileByUserID(userID) {
@@ -49,6 +49,9 @@ class ProfilesService {
         if (!profile) {
             throw { code: ErrorCodes.Profiles.NotFound };
         }
+
+        profile.score = await BlinkService.getUserScore(userID);
+
         return profile;
     }
 }

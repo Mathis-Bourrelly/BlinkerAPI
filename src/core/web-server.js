@@ -1,5 +1,5 @@
 const express = require("express");
-require("dotenv").config(); // Charge les variables d'environnement depuis .env
+require("dotenv").config();
 const { initializeConfigMiddlewares } = require("./middlewares");
 const authMiddleware = require("./middlewares/authMiddleware");
 const usersRoute = require("../route/users.route");
@@ -11,6 +11,8 @@ const interactionsRoute = require("../route/interactions.route");
 const { sequelize } = require("./postgres");
 const { AUTO_DELETE_INTERVAL } = require("../../config/blinks.config");
 require("../../src/core/cron");
+const SocketManager = require("./socket");
+const http = require("http");
 
 class WebServer {
     app = undefined;
@@ -25,10 +27,15 @@ class WebServer {
     }
 
     start() {
-        this.server = this.app.listen(this.port, () => {
+        this.server = http.createServer(this.app);
+
+        // Démarrer le serveur HTTP + WebSocket
+        this.server.listen(this.port, () => {
             console.log(`✅ App listening on port ${this.port}`);
             console.log(`⏳ Suppression automatique des Blinks activée toutes les ${AUTO_DELETE_INTERVAL / 1000} secondes.`);
         });
+
+        SocketManager.initialize(this.server);
     }
 
     _initializeRoutes() {
@@ -53,7 +60,6 @@ class WebServer {
             console.error("❌ Erreur interceptée :", err);
 
             const statusCode = err.statusCode || 500;
-
             const errorResponse = {
                 code: err.code || "Server.InternalError",
                 message: err.message || "Erreur interne du serveur"

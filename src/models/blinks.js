@@ -1,7 +1,5 @@
 const { sequelize } = require('../core/postgres');
 const { DataTypes } = require("sequelize");
-const BlinkContents = require("./blinkContents");
-const Profiles = require("./profiles");
 
 const Blinks = sequelize.define('Blinks', {
     blinkID: {
@@ -24,7 +22,7 @@ const Blinks = sequelize.define('Blinks', {
         allowNull: false,
         defaultValue: 0
     },
-    dislikeCount: {  // Ajout de la colonne dislikeCount
+    dislikeCount: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0
@@ -38,6 +36,11 @@ const Blinks = sequelize.define('Blinks', {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0
+    },
+    tier: {
+        type: DataTypes.ENUM('none', 'bronze', 'silver', 'gold'),
+        defaultValue: 'none',
+        allowNull: false
     },
     createdAt: {
         type: DataTypes.DATE,

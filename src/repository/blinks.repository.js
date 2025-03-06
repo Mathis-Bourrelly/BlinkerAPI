@@ -174,6 +174,13 @@ class BlinkRepository {
 
         return { users, blinks };
     }
+
+    async getBlinksByUser(userID) {
+        return await Blinks.findAll({
+            where: { userID },
+            attributes: ['blinkID', 'createdAt', 'likeCount', 'commentCount', 'dislikeCount', 'tier']
+        });
+    }
 }
 
 module.exports = new BlinkRepository();

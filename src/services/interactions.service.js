@@ -1,10 +1,11 @@
 const InteractionsRepository = require("../repository/interactions.repository");
 const Blinks = require("../models/blinks");
 const { Op } = require("sequelize");
+const { updateBlinkTier } = require("./blinks.service");
 
 class InteractionsService {
     /**
-     * Met à jour le compteur de likes/dislikes sur un post en fonction de l'action effectuée.
+     * Met à jour le compteur de likes/dislikes sur un Blink en fonction de l'action effectuée.
      */
     async updateReactionCount(postID, reactionType, action) {
         const updateValues = {};
@@ -27,10 +28,14 @@ class InteractionsService {
                 [reactionType === "like" ? "likeCount" : "dislikeCount"]: { [Op.gt]: 0 }
             }
         });
+
+        if (reactionType === "like") {
+            await updateBlinkTier(postID);
+        }
     }
 
     /**
-     * Gère l'ajout, la suppression ou la mise à jour d'un like sur un post.
+     * Gère l'ajout, la suppression ou la mise à jour d'un like sur un Blink.
      */
     async toggleLike(postID, userID) {
         const result = await InteractionsRepository.toggleReaction(postID, userID, "like");
@@ -47,7 +52,7 @@ class InteractionsService {
     }
 
     /**
-     * Gère l'ajout, la suppression ou la mise à jour d'un dislike sur un post.
+     * Gère l'ajout, la suppression ou la mise à jour d'un dislike sur un Blink.
      */
     async toggleDislike(postID, userID) {
         const result = await InteractionsRepository.toggleReaction(postID, userID, "dislike");
