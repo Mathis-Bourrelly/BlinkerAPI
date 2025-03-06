@@ -16,7 +16,7 @@ class BlinkService {
             return blink;
         } catch (error) {
             await transaction.rollback();
-            throw { code: error.code || ErrorCodes.Base.UnknownError };
+            throw { message: error.message || ErrorCodes.Base.UnknownError };
         }
     }
 
@@ -36,7 +36,7 @@ class BlinkService {
             return { page, limit, total, data: blinks };
         } catch (error) {
             console.error(error);
-            throw { code: ErrorCodes.Blinks.FetchFailed };
+            throw { message: ErrorCodes.Blinks.FetchFailed };
         }
     }
 
@@ -47,7 +47,7 @@ class BlinkService {
         const transaction = await sequelize.transaction();
         try {
             const blink = await BlinkRepository.getBlinkById(blinkID);
-            if (!blink) throw { code: ErrorCodes.Blinks.NotFound };
+            if (!blink) throw { message: ErrorCodes.Blinks.NotFound };
 
             await BlinkRepository.deleteBlinkContents(blinkID, transaction);
             await BlinkRepository.addBlinkContents(blinkID, contents, transaction);
@@ -58,7 +58,7 @@ class BlinkService {
             return blink;
         } catch (error) {
             await transaction.rollback();
-            throw { code: error.code || ErrorCodes.Base.UnknownError };
+            throw { message: error.message || ErrorCodes.Base.UnknownError };
         }
     }
 
@@ -74,7 +74,7 @@ class BlinkService {
      */
     async calculateRemainingTime(blinkID) {
         const blink = await BlinkRepository.getBlinkHeaderById(blinkID);
-        if (!blink) throw { code: ErrorCodes.Blinks.NotFound };
+        if (!blink) throw { message: ErrorCodes.Blinks.NotFound };
 
         if (blink.tier === 'gold') return Infinity;
 
@@ -142,13 +142,13 @@ class BlinkService {
     async searchBlinksAndUsers(query, page = 1, limit = 10) {
         try {
             if (!query || query.trim() === "") {
-                throw { code: ErrorCodes.Blinks.InvalidSearchQuery };
+                throw { message: ErrorCodes.Blinks.InvalidSearchQuery };
             }
 
             return await BlinkRepository.searchBlinksAndUsers(query, Number(page), Number(limit));
         } catch (error) {
             console.error(error);
-            throw { code: ErrorCodes.Blinks.SearchFailed };
+            throw { message: ErrorCodes.Blinks.SearchFailed };
         }
     }
 

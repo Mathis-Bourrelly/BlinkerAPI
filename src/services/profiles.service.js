@@ -15,14 +15,18 @@ class ProfilesService {
      * @throws {Error} Si l'utilisateur n'existe pas, si le username est pris ou si une erreur interne survient.
      */
     async createProfile(userID, username, display_name, bio, avatar_url) {
+        console.log("Creating new profile", userID, username, display_name, bio, avatar_url);
         const user = await UsersRepository.getUserById(userID);
         if (!user) {
-            throw { code: ErrorCodes.User.NotFound };
+            throw {message: ErrorCodes.User.NotFound};
         }
+        let existingProfile
 
-        const existingProfile = await ProfilesRepository.findByUsername(username);
+        existingProfile = await ProfilesRepository.findByUsername(username);
+
         if (existingProfile) {
-            throw { code: ErrorCodes.Profiles.UsernameTaken };
+            throw {message: ErrorCodes.Profiles.UsernameTaken};
+
         }
 
         try {
@@ -34,7 +38,8 @@ class ProfilesService {
                 avatar_url: avatar_url || null
             });
         } catch (error) {
-            throw { code: ErrorCodes.Profiles.CreationFailed };
+            console.log(error);
+            throw {message: ErrorCodes.Profiles.CreationFailed};
         }
     }
 
@@ -47,7 +52,7 @@ class ProfilesService {
     async getProfileByUserID(userID) {
         const profile = await ProfilesRepository.findByUserID(userID);
         if (!profile) {
-            throw { code: ErrorCodes.Profiles.NotFound };
+            throw {message: ErrorCodes.Profiles.NotFound};
         }
 
         profile.score = await BlinkService.getUserScore(userID);

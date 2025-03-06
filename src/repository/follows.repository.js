@@ -15,13 +15,13 @@ class FollowsRepository {
     async followUser(fromUserID, targetUserID) {
         const existingFollow = await this.isFollowing(fromUserID, targetUserID);
         if (existingFollow) {
-            throw { code: ErrorCodes.Follows.AlreadyFollowing };
+            throw { message: ErrorCodes.Follows.AlreadyFollowing };
         }
 
         try {
             return await Follows.create({ fromUserID, targetUserID });
         } catch (error) {
-            throw { code: ErrorCodes.Follows.FollowFailed };
+            throw { message: ErrorCodes.Follows.FollowFailed };
         }
     }
 
@@ -31,13 +31,13 @@ class FollowsRepository {
     async unfollowUser(fromUserID, targetUserID) {
         const existingFollow = await this.isFollowing(fromUserID, targetUserID);
         if (!existingFollow) {
-            throw { code: ErrorCodes.Follows.NotFollowing };
+            throw { message: ErrorCodes.Follows.NotFollowing };
         }
 
         try {
             return await Follows.destroy({ where: { fromUserID, targetUserID } });
         } catch (error) {
-            throw { code: ErrorCodes.Follows.UnfollowFailed };
+            throw { message: ErrorCodes.Follows.UnfollowFailed };
         }
     }
 
@@ -55,7 +55,7 @@ class FollowsRepository {
 
             return { total: count, followers: rows };
         } catch (error) {
-            throw { code: ErrorCodes.Follows.FetchFailed };
+            throw { message: ErrorCodes.Follows.FetchFailed };
         }
     }
 
@@ -73,7 +73,7 @@ class FollowsRepository {
 
             return { total: count, followedUsers: rows };
         } catch (error) {
-            throw { code: ErrorCodes.Follows.FetchFailed };
+            throw { message: ErrorCodes.Follows.FetchFailed };
         }
     }
 }

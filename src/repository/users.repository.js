@@ -13,7 +13,7 @@ const UsersRepository = {
                 isVerified,
             });
         } catch (error) {
-            throw { code: ErrorCodes.User.CreationFailed };
+            throw { message: ErrorCodes.User.CreationFailed };
         }
     },
 
@@ -35,7 +35,7 @@ const UsersRepository = {
         });
 
         if (!user) {
-            throw { code: ErrorCodes.User.NotFound };
+            throw { message: ErrorCodes.User.NotFound };
         }
 
         return user;
@@ -54,14 +54,14 @@ const UsersRepository = {
     async updateUser(userID, updates) {
         const user = await User.findByPk(userID);
         if (!user) {
-            throw { code: ErrorCodes.User.NotFound };
+            throw { message: ErrorCodes.User.NotFound };
         }
 
         try {
             await user.update(updates);
             return user;
         } catch (error) {
-            throw { code: ErrorCodes.User.UpdateFailed };
+            throw { message: ErrorCodes.User.UpdateFailed };
         }
     },
 
@@ -72,10 +72,10 @@ const UsersRepository = {
         try {
             const deleted = await User.destroy({ where: { userID } });
             if (!deleted) {
-                throw { code: ErrorCodes.User.NotFound };
+                throw { message: ErrorCodes.User.NotFound };
             }
         } catch (error) {
-            throw { code: ErrorCodes.User.DeletionFailed };
+            throw { message: ErrorCodes.User.DeletionFailed };
         }
     }
 };

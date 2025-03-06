@@ -136,3 +136,5 @@ package-lock.json
 #base pour travail proxy bureau
 BLINKER_DB.sqlite
 /sql/
+
+/config/config.json

@@ -31,7 +31,7 @@ class ProfilesRepository {
         });
 
         if (!profile) {
-            throw { code: ErrorCodes.Profiles.NotFound };
+            throw { message: ErrorCodes.Profiles.NotFound };
         }
 
         return profile;
@@ -43,13 +43,7 @@ class ProfilesRepository {
      * @returns {Promise<Object|null>} Le profil ou null si inexistant.
      */
     async findByUsername(username) {
-        const profile = await Profiles.findOne({ where: { username } });
-
-        if (!profile) {
-            throw { code: ErrorCodes.Profiles.NotFound };
-        }
-
-        return profile;
+        return await Profiles.findOne({where: {username}});
     }
 
     /**
@@ -71,7 +65,7 @@ class ProfilesRepository {
         });
 
         if (!profile) {
-            throw { code: ErrorCodes.Profiles.NotFound };
+            throw { message: ErrorCodes.Profiles.NotFound };
         }
 
         return profile;
@@ -86,7 +80,7 @@ class ProfilesRepository {
         try {
             return await Profiles.create(profileData);
         } catch (error) {
-            throw { code: ErrorCodes.Profiles.CreationFailed };
+            throw { message: ErrorCodes.Profiles.CreationFailed };
         }
     }
 }

@@ -22,9 +22,14 @@ function initJwtMiddleware(app) {
         jwt({
             secret: process.env.JWT_SECRET,
             algorithms: ['HS256'],
-        }).unless({
+            onExpired: async (req, err) => {
+                if (new Date() - err.inner.expiredAt < 5000) { return;}
+                throw err;
+            },
+            }).unless({
             path: ['/login','/auth','/status','/auth/google','/api-docs'],
         }),
+
     );
 }
 

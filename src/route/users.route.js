@@ -17,7 +17,13 @@ router.post('/register',
         }
 
         try {
-            const user = await UsersService.createUser(req.body);
+            const user = await UsersService.createUser(
+                req.body.username,
+                req.body.display_name,
+                req.body.bio,
+                req.body.email,
+                req.body.password,
+                false);
             res.status(201).json({
                 success: true, message: 'Utilisateur créé avec succès, email de confirmation envoyé', data: user,
             });
@@ -65,7 +71,13 @@ router.post('/',
     }).withMessage("Le mot de passe doit contenir au moins 12 caractères, une majuscule, une minuscule, un chiffre et un symbole"),
     async (req, res) => {
         try {
-            const result = await UsersService.createUser(req.body);
+            const result = await UsersService.createUser(
+                req.body.username,
+                req.body.display_name,
+                req.body.bio,
+                req.body.email,
+                req.body.password,
+                false);
             res.status(201).json(result);
         } catch (error) {
             res.status(error.status || 400).json({ message: error.message });

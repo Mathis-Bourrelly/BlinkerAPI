@@ -15,6 +15,7 @@ const ErrorCodes = {
         SearchFailed: "Blinks.SearchFailed"
     },
     Login: {
+        InvalidToken: "Login.InvalidToken",
         IncorrectPassword: "Login.IncorrectPassword",
         UserNotFound: "Login.UserNotFound",
         AccountLocked: "Login.AccountLocked",

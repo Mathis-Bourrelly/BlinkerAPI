@@ -57,11 +57,13 @@ class WebServer {
 
     _initializeErrorHandler() {
         this.app.use((err, req, res, next) => {
-            console.error("❌ Erreur interceptée :", err);
-
+            if (err.name === "UnauthorizedError") {
+                res.status(401).send("invalid token");
+            }
+            console.error("❌ ErrorHandler :", err);
+            console.error("❌ ErrorHandler :", err.message);
             const statusCode = err.statusCode || 500;
             const errorResponse = {
-                code: err.code || "Server.InternalError",
                 message: err.message || "Erreur interne du serveur"
             };
             res.status(statusCode).json(errorResponse);

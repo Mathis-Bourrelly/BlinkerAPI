@@ -13,7 +13,7 @@ class BlinkRepository {
         try {
             return await Blinks.create({ userID }, { transaction });
         } catch (error) {
-            throw { code: ErrorCodes.Blinks.CreationFailed };
+            throw { message: ErrorCodes.Blinks.CreationFailed };
         }
     }
 
@@ -26,7 +26,7 @@ class BlinkRepository {
         // Vérification des types de contenu
         contents.forEach(content => {
             if (!allowedContentTypes.includes(content.contentType)) {
-                throw { code: ErrorCodes.Blinks.InvalidContentType };
+                throw { message: ErrorCodes.Blinks.InvalidContentType };
             }
         });
 
@@ -40,7 +40,7 @@ class BlinkRepository {
         try {
             await BlinkContents.bulkCreate(mappedContents, { transaction });
         } catch (error) {
-            throw { code: ErrorCodes.Blinks.ContentAdditionFailed };
+            throw { message: ErrorCodes.Blinks.ContentAdditionFailed };
         }
     }
 
@@ -54,7 +54,7 @@ class BlinkRepository {
         });
 
         if (!blink) {
-            throw { code: ErrorCodes.Blinks.NotFound };
+            throw { message: ErrorCodes.Blinks.NotFound };
         }
 
         return blink;
@@ -69,7 +69,7 @@ class BlinkRepository {
         });
 
         if (!blink) {
-            throw { code: ErrorCodes.Blinks.NotFound };
+            throw { message: ErrorCodes.Blinks.NotFound };
         }
 
         return blink;
@@ -106,7 +106,6 @@ class BlinkRepository {
                 }
             ]
         });
-
         return { total: count, blinks: rows };
     }
 
@@ -117,7 +116,7 @@ class BlinkRepository {
         try {
             return await BlinkContents.destroy({ where: { blinkID }, transaction });
         } catch (error) {
-            throw { code: ErrorCodes.Blinks.ContentsDeletionFailed };
+            throw { message: ErrorCodes.Blinks.ContentsDeletionFailed };
         }
     }
 
@@ -128,7 +127,7 @@ class BlinkRepository {
         try {
             return await Blinks.destroy({ where: { blinkID } });
         } catch (error) {
-            throw { code: ErrorCodes.Blinks.DeletionFailed };
+            throw { message: ErrorCodes.Blinks.DeletionFailed };
         }
     }
 

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const { OAuth2Client } = require("google-auth-library");
+const {OAuth2Client} = require("google-auth-library");
 const UsersService = require("./users.service");
 const UsersRepository = require("../repository/users.repository");
 const ProfilesService = require("../services/profiles.service");
@@ -12,28 +12,28 @@ class AuthService {
     /**
      * Authentifie un utilisateur et génère un JWT.
      */
-    async login({ email, password }) {
+    async login({email, password}) {
         if (!email || !password) {
-            throw { code: ErrorCodes.Login.FieldEmailRequired };
+            throw {message: ErrorCodes.Login.FieldEmailRequired};
         }
 
         const user = await UsersService.getUserByEmail(email);
         if (!user || !(await bcrypt.compare(password, user.password))) {
-            throw { code: ErrorCodes.Login.IncorrectPassword };
+            throw {message: ErrorCodes.Login.IncorrectPassword};
         }
 
         if (!user.isVerified) {
-            throw { code: ErrorCodes.Login.AccountLocked };
+            throw {message: ErrorCodes.Login.AccountLocked};
         }
 
         if (!process.env.JWT_SECRET) {
-            throw { code: ErrorCodes.Base.UnknownError };
+            throw {message: ErrorCodes.Base.UnknownError};
         }
 
         const token = jwt.sign(
-            { userID: user.userID, email: user.email, role: user.role },
+            {userID: user.userID, email: user.email, role: user.role},
             process.env.JWT_SECRET,
-            { expiresIn: "1d" }
+            {expiresIn: "1d"}
         );
 
         return {
@@ -47,66 +47,64 @@ class AuthService {
      */
     async verifyToken(token) {
         if (!token) {
-            throw { code: ErrorCodes.Login.InvalidToken };
+            throw {message: ErrorCodes.Login.InvalidToken};
         }
 
         if (!process.env.JWT_SECRET) {
-            throw { code: ErrorCodes.Base.UnknownError };
+            throw {message: ErrorCodes.Base.UnknownError};
         }
 
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            return { decoded };
+            return {decoded};
         } catch (error) {
-            throw { code: ErrorCodes.Login.InvalidToken };
+            throw {message: ErrorCodes.Login.InvalidToken};
         }
     }
 
     /**
      * Authentification avec Google OAuth.
      */
-    async loginWithGoogle(token) {
-        if (!token) {
-            throw { code: ErrorCodes.Login.InvalidToken };
+    async loginWithGoogle(google_token) {
+        if (!google_token) {
+            throw {message: ErrorCodes.Login.InvalidToken};
         }
 
         const ticket = await client.verifyIdToken({
-            idToken: token,
+            idToken: google_token,
             audience: process.env.GOOGLE_CLIENT_ID,
         });
 
         const payload = ticket.getPayload();
         if (!payload || !payload.email) {
-            throw { code: ErrorCodes.Login.InvalidEmail };
+            throw {message: ErrorCodes.Login.InvalidEmail};
         }
 
-        const { email, given_name, name, picture } = payload;
+        const {email, given_name, name, picture} = payload;
 
         let user = await UsersRepository.getUserByEmail(email);
         if (!user) {
             // Crée l'utilisateur
-            user = await UsersRepository.createUser({
+            const emptyBio = ""
+            const emptyPassword = ""
+            console.log("GOOGLE +++++++++",given_name, name)
+            user = await UsersService.createUser(
+                given_name,
+                name,
+                emptyBio,
                 email,
-                isVerified: true
-            });
-
-            // Crée le profil associé
-            await ProfilesService.createProfile({
-                userID: user.userID,
-                username: given_name,
-                display_name: name,
-                bio: "",
-                avatar_url: picture
-            });
+                emptyPassword,
+                //picture,
+            true);
         }
 
         const appToken = jwt.sign(
-            { userID: user.userID },
+            {userID: user.userID},
             process.env.JWT_SECRET,
-            { expiresIn: "7d" }
+            {expiresIn: "7d"}
         );
 
-        return { token: appToken, userID: user.userID };
+        return {token: appToken, userID: user.userID};
     }
 }
 

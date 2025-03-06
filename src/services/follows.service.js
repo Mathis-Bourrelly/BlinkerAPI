@@ -11,26 +11,26 @@ class FollowsService {
         console.log("fromUserID: ", fromUserID, "targetUserID: ", targetUserID);
 
         if (fromUserID === targetUserID) {
-            throw { code: ErrorCodes.Follows.SelfFollowNotAllowed };
+            throw { message: ErrorCodes.Follows.SelfFollowNotAllowed };
         }
 
         // Vérifier si l'utilisateur cible existe
         const targetUser = await UsersRepository.getUserById(targetUserID);
         if (!targetUser) {
-            throw { code: ErrorCodes.User.NotFound };
+            throw { message: ErrorCodes.User.NotFound };
         }
 
         // Vérifier si l'utilisateur suit déjà cette personne
         const alreadyFollowing = await FollowsRepository.isFollowing(fromUserID, targetUserID);
         if (alreadyFollowing) {
-            throw { code: ErrorCodes.Follows.AlreadyFollowing };
+            throw { message: ErrorCodes.Follows.AlreadyFollowing };
         }
 
         // Ajouter le lien de follow
         try {
             await FollowsRepository.followUser(fromUserID, targetUserID);
         } catch (error) {
-            throw { code: ErrorCodes.Follows.FollowFailed };
+            throw { message: ErrorCodes.Follows.FollowFailed };
         }
 
         return { success: true };
@@ -43,14 +43,14 @@ class FollowsService {
         const follow = await FollowsRepository.isFollowing(fromUserID, targetUserID);
 
         if (!follow) {
-            throw { code: ErrorCodes.Follows.NotFollowing };
+            throw { message: ErrorCodes.Follows.NotFollowing };
         }
 
         // Supprimer la relation de follow
         try {
             await FollowsRepository.unfollowUser(fromUserID, targetUserID);
         } catch (error) {
-            throw { code: ErrorCodes.Follows.UnfollowFailed };
+            throw { message: ErrorCodes.Follows.UnfollowFailed };
         }
 
         return { success: true };
@@ -67,7 +67,7 @@ class FollowsService {
             );
             return { page, limit, total, data: followersData };
         } catch (error) {
-            throw { code: ErrorCodes.Follows.FetchFailed };
+            throw { message: ErrorCodes.Follows.FetchFailed };
         }
     }
 
@@ -83,7 +83,7 @@ class FollowsService {
 
             return { page, limit, total, data: followedUsersData };
         } catch (error) {
-            throw { code: ErrorCodes.Follows.FetchFailed };
+            throw { message: ErrorCodes.Follows.FetchFailed };
         }
     }
 }
