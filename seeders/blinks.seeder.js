@@ -31,9 +31,9 @@ const seedBlinks = async () => {
                 if (randomType === 'text') {
                     contentValue = "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ad adipisci alias asperiores at debitis esse unde. Accusantium aliquid doloremque fugit illum impedit ipsa magni officia, perspiciatis quaerat quasi repudiandae tempora.";
                 } else if (randomType === 'image') {
-                    contentValue = `https://picsum.photos/1500/600`;
+                    contentValue = `https://picsum.photos/960/540?random=${Math.floor(Math.random() * 20 + 1)}`;
                 } else if (randomType === 'video') {
-                    contentValue = `https://www.youtube.com/embed/7Go9qIxotkk?si=nshtUTnNafBdruAM`;
+                    contentValue = Math.floor(Math.random() * 4 + 1);
                 }
 
                 contents.push({
