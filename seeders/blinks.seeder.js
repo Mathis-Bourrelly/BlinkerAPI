@@ -44,9 +44,10 @@ const seedBlinks = async () => {
             }
 
             // Utiliser le service pour créer le blink avec son contenu
-            await BlinkService.createBlinkWithContent({
+            await BlinkService.createBlinkWithContentAndDate({
                 userID: randomUser.userID,
-                contents: contents
+                contents: contents,
+                date: getRandomDate(),
             });
             console.log(`🔹 Blink créé pour l'utilisateur ${randomUser.userID}`);
             blinkCount++;
@@ -57,5 +58,18 @@ const seedBlinks = async () => {
         console.error("❌ Erreur lors du seeding des blinks :", error);
     }
 };
+
+function getRandomDate() {
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    const minOffset = 10 * 1000;
+    const maxOffset = 24 * 60 * 60 * 1000;
+
+    const randomOffset = Math.floor(Math.random() * (maxOffset - minOffset)) + minOffset;
+
+    return new Date(yesterday.getTime() + randomOffset);
+}
+
 
 module.exports = seedBlinks;

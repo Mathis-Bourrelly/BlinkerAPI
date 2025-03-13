@@ -17,6 +17,14 @@ class BlinkRepository {
         }
     }
 
+    async createBlinkWithDate(userID, createdAt, transaction) {
+        try {
+            return await Blinks.create({ userID, createdAt}, { transaction });
+        } catch (error) {
+            throw { message: ErrorCodes.Blinks.CreationFailed };
+        }
+    }
+
     /**
      * Ajoute du contenu à un Blink
      */

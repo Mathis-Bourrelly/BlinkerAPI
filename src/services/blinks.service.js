@@ -20,6 +20,19 @@ class BlinkService {
         }
     }
 
+    async createBlinkWithContentAndDate({ userID, contents, date }) {
+        const transaction = await sequelize.transaction();
+        try {
+            const blink = await BlinkRepository.createBlinkWithDate(userID, date, transaction);
+            await BlinkRepository.addBlinkContents(blink.blinkID, contents, transaction);
+            await transaction.commit();
+            return blink;
+        } catch (error) {
+            await transaction.rollback();
+            throw { message: error.message || ErrorCodes.Base.UnknownError };
+        }
+    }
+
     /**
      * Récupère un Blink par son ID
      */
