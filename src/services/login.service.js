@@ -8,7 +8,7 @@ const ErrorCodes = require("../../constants/errorCodes");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-class AuthService {
+class LoginService {
     /**
      * Authentifie un utilisateur et génère un JWT.
      */
@@ -29,9 +29,10 @@ class AuthService {
         if (!process.env.JWT_SECRET) {
             throw {message: ErrorCodes.Base.UnknownError};
         }
+        const profile = await ProfilesService.getProfileByUserID(user.userID)
 
         const token = jwt.sign(
-            {userID: user.userID, email: user.email, role: user.role},
+            {userID: user.userID, email: user.email, role: user.role, avatar_url: profile.avatar_url },
             process.env.JWT_SECRET,
             {expiresIn: "1d"}
         );
@@ -40,26 +41,6 @@ class AuthService {
             token,
             userID: user.userID
         };
-    }
-
-    /**
-     * Vérifie un jeton JWT et retourne les données décodées.
-     */
-    async verifyToken(token) {
-        if (!token) {
-            throw {message: ErrorCodes.Login.InvalidToken};
-        }
-
-        if (!process.env.JWT_SECRET) {
-            throw {message: ErrorCodes.Base.UnknownError};
-        }
-
-        try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            return {decoded};
-        } catch (error) {
-            throw {message: ErrorCodes.Login.InvalidToken};
-        }
     }
 
     /**
@@ -87,14 +68,13 @@ class AuthService {
             // Crée l'utilisateur
             const emptyBio = ""
             const emptyPassword = ""
-            console.log("GOOGLE +++++++++",given_name, name)
             user = await UsersService.createUser(
                 given_name,
                 name,
                 emptyBio,
                 email,
                 emptyPassword,
-                //picture,
+                picture,
             true);
         }
 
@@ -108,4 +88,4 @@ class AuthService {
     }
 }
 
-module.exports = new AuthService();
+module.exports = new LoginService();

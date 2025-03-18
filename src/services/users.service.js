@@ -6,26 +6,23 @@ const ProfilesService = require("./profiles.service");
 const ErrorCodes = require("../../constants/errorCodes");
 
 const UsersService = {
-    async createUser(username, display_name, bio, email, password, is_google) {
+    async createUser(username, display_name, bio, email, password, file, is_google) {
 
         const existingUser = await UsersRepository.getUserByEmail(email);
         if (existingUser) {
             throw {message: ErrorCodes.User.EmailAlreadyExists};
         }
-        console.log(is_google)
         if (is_google) {
-            console.log({username, display_name, bio, email, password})
             try {
                 const newUser = await UsersRepository.createUser({
                     email,
                     isVerified: true
                 });
 
-                await ProfilesService.createProfile(newUser.userID, username, display_name, bio, "https://i.pravatar.cc/64");
+                await ProfilesService.createProfile(newUser.userID, username, display_name, bio, file);
 
                 return {userID: newUser.userID};
             } catch (error) {
-                console.log("bbbbbbbbb",error);
                 throw {message: ErrorCodes.User.CreationFailed};
             }
 
@@ -39,7 +36,7 @@ const UsersService = {
                     isVerified: false
                 });
                 //await this.sendConfirmationEmail(newUser);
-                await ProfilesService.createProfile(newUser.userID, username, display_name, bio, "https://i.pravatar.cc/64");
+                await ProfilesService.createProfile(newUser.userID, username, display_name, bio, file);
 
                 return {userID: newUser.userID};
             } catch (error) {

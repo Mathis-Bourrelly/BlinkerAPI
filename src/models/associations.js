@@ -23,4 +23,8 @@ Follows.belongsTo(Users, { foreignKey: "fromUserID" });
 Users.hasMany(Follows, { foreignKey: "targetUserID", onDelete: "CASCADE" });
 Follows.belongsTo(Users, { foreignKey: "targetUserID" });
 
+Users.belongsToMany(Blinks, { through: Interactions, foreignKey: 'userID', as: 'likedBlinks' });
+Blinks.belongsToMany(Users, { through: Interactions, foreignKey: 'postID', as: 'likedByUsers' });
+
+
 module.exports = {};

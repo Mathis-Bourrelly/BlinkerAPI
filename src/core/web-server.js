@@ -44,8 +44,6 @@ class WebServer {
         this.app.use("/", loginRoute.initializeRoutes());
         console.log("✅ Route login initialisée");
 
-        this.app.use(authMiddleware.verifyToken);
-
         this.app.use("/users", usersRoute.initializeRoutes());
         this.app.use("/follows", followsRoute.initializeRoutes());
         this.app.use("/profiles", profilesRoute.initializeRoutes());

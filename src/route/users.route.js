@@ -23,6 +23,7 @@ router.post('/register',
                 req.body.bio,
                 req.body.email,
                 req.body.password,
+                undefined,
                 false);
             res.status(201).json({
                 success: true, message: 'Utilisateur créé avec succès, email de confirmation envoyé', data: user,

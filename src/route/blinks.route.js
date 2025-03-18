@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const BlinkService = require('../services/blinks.service.js');
-const AuthMiddleware = require("../../src/core/middlewares/authMiddleware");
+const AuthMiddleware = require("../core/middlewares/authMiddleware");
 
 router.get('/search', AuthMiddleware.verifyToken, async (req, res, next) => {
     try {

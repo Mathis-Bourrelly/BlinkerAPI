@@ -22,13 +22,13 @@ class InteractionsService {
             }
         }
 
-        await Blinks.increment(updateValues, {
+        const test = await Blinks.increment(updateValues, {
             where: {
                 blinkID: postID,
                 [reactionType === "like" ? "likeCount" : "dislikeCount"]: { [Op.gt]: 0 }
             }
         });
-
+        console.log('test', test);
         if (reactionType === "like") {
             await updateBlinkTier(postID);
         }

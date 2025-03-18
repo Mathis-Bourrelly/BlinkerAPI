@@ -1,12 +1,12 @@
 const express = require("express");
 const InteractionsService = require("../services/interactions.service");
-const AuthMiddleware = require("../../src/core/middlewares/authMiddleware");
+const AuthMiddleware = require("../core/middlewares/authMiddleware");
 
 const router = express.Router();
 
 router.post("/like/:postID", AuthMiddleware.verifyToken, async (req, res, next) => {
     try {
-        console.log("🔍 req.user dans le contrôleur (like):", req.user); // DEBUG
+        //console.log("🔍 req.user dans le contrôleur (like):", req.user); // DEBUG
 
         if (!req.user || !req.user.userID) {
             return res.status(401).json({ error: "Utilisateur non authentifié" });
@@ -25,7 +25,7 @@ router.post("/like/:postID", AuthMiddleware.verifyToken, async (req, res, next) 
 
 router.post("/dislike/:postID", AuthMiddleware.verifyToken, async (req, res, next) => {
     try {
-        console.log("🔍 req.user dans le contrôleur (dislike):", req.user); // DEBUG
+        //console.log("🔍 req.user dans le contrôleur (dislike):", req.user); // DEBUG
 
         if (!req.user || !req.user.userID) {
             return res.status(401).json({ error: "Utilisateur non authentifié" });

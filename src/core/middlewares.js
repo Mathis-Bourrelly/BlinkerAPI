@@ -1,5 +1,4 @@
 const express = require('express');
-const fileUpload = require('express-fileupload');
 const { DateTime } = require('luxon');
 let cors = require('cors');
 const swaggerUi = require('swagger-ui-express')
@@ -27,21 +26,14 @@ function initJwtMiddleware(app) {
                 throw err;
             },
             }).unless({
-            path: ['/login','/auth','/status','/auth/google','/api-docs'],
+            path: ['/login','/checkToken','/status','/login/google','/api-docs',/\/upload*/],
         }),
 
     );
 }
 
 const initFileUploadMiddleware = (app) => {
-    app.use(
-        fileUpload({
-            limits: {
-                fileSize: 10000000, // Limite de taille de fichier (10 Mo)
-            },
-            abortOnLimit: true, // Annule les uploads si la limite est atteinte
-        })
-    );
+    app.use('/uploads', express.static('uploads'));
 }
 
 const initCorsMiddleware = (app) => {

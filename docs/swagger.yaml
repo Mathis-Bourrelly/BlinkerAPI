@@ -775,7 +775,7 @@ paths:
                     items:
                       type: object
 
-  /auth:
+  /checkToken:
     post:
       tags:
         - Authentification
@@ -815,7 +815,7 @@ paths:
                     type: string
                     example: "Token invalide"
 
-  /auth/google:
+  /login/google:
     post:
       tags:
         - Authentification
@@ -868,10 +868,14 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: Fichier image de l'avatar à uploader.
                 userID:
                   type: string
                   format: uuid
@@ -882,9 +886,6 @@ paths:
                 bio:
                   type: string
                   example: "Développeur full-stack passionné."
-                avatar_url:
-                  type: string
-                  example: "https://example.com/avatar.png"
       responses:
         '201':
           description: Profil créé avec succès.
@@ -926,6 +927,54 @@ paths:
           description: Profil non trouvé.
         '500':
           description: Erreur interne.
+
+  /profiles/upload-avatar/{userID}:
+    post:
+      tags:
+        - Profiles
+      summary: Uploader un avatar pour un utilisateur
+      description: Met à jour l'avatar d'un utilisateur en uploadant une nouvelle image.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: UUID de l'utilisateur
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: Fichier image de l'avatar à uploader.
+      responses:
+        '200':
+          description: Avatar uploadé avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Avatar uploaded successfully"
+                  avatarUrl:
+                    type: string
+                    example: "/uploads/avatar.png"
+        '400':
+          description: Erreur de validation ou fichier manquant.
+        '404':
+          description: Utilisateur non trouvé.
+        '500':
+          description: Erreur interne du serveur.
 
   # ---------------------------
   # Endpoints Users

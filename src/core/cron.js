@@ -1,6 +1,7 @@
 const BlinkService = require('../services/blinks.service');
 const MessagesService = require('../services/messages.service');
 const { AUTO_DELETE_INTERVAL } = require('../../config/blinks.config');
+const seedBlinks = require("../../seeders/blinks.seeder");
 
 console.log(`🚀 Suppression automatique activée. Intervalle: ${AUTO_DELETE_INTERVAL / 1000} secondes.`);
 
@@ -18,6 +19,10 @@ async function deleteExpiredData() {
     }
 }
 
+
+
 setInterval(deleteExpiredData, AUTO_DELETE_INTERVAL);
+
+setInterval(seedBlinks, 3600000);
 
 module.exports = deleteExpiredData;

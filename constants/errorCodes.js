@@ -16,6 +16,8 @@ const ErrorCodes = {
     },
     Login: {
         InvalidToken: "Login.InvalidToken",
+        noToken: "Login.noToken",
+        InvalidSession: "Login.InvalidSession",
         IncorrectPassword: "Login.IncorrectPassword",
         UserNotFound: "Login.UserNotFound",
         AccountLocked: "Login.AccountLocked",

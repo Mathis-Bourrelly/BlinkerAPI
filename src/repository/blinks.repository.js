@@ -110,7 +110,7 @@ class BlinkRepository {
                 {
                     model: Profiles,
                     as: 'profile',
-                    attributes: ['display_name', 'username', 'avatar_url']
+                    attributes: ['display_name', 'username', 'avatar_url', "userID"]
                 }
             ]
         });

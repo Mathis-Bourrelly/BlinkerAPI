@@ -83,6 +83,20 @@ class ProfilesRepository {
             throw { message: ErrorCodes.Profiles.CreationFailed };
         }
     }
+
+    /**
+     * Met à jour l'URL de l'avatar pour un utilisateur donné.
+     * @param {string} userID - UUID de l'utilisateur.
+     * @param {string} avatar_url - URL de l'avatar.
+     * @returns {Promise<void>}
+     */
+     async updateAvatar(userID, avatar_url) {
+        try {
+        await Profiles.update({ avatar_url }, { where: { userID } });
+        } catch (error) {
+            throw { message: ErrorCodes.Profiles.UpdateFailed };
+        }
+    }
 }
 
 module.exports = new ProfilesRepository();

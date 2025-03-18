@@ -1,6 +1,7 @@
 const express = require("express");
 const { validationResult, body } = require("express-validator");
-const AuthService = require("../services/login.service");
+const AuthMiddleware = require("../core/middlewares/AuthMiddleware");
+const LoginService = require("../services/Login.service");
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.post(
         }
 
         try {
-            const result = await AuthService.login(req.body);
+            const result = await LoginService.login(req.body);
             res.status(200).json(result);
         } catch (error) {
             next(error);
@@ -28,24 +29,24 @@ router.post(
 );
 
 router.post(
-    "/auth",
+    "/checkToken", AuthMiddleware.verifyToken,
     body("token").notEmpty().withMessage("Le jeton est requis."),
     async (req, res, next) => {
         try {
-            const result = await AuthService.verifyToken(req.body.token);
-            res.status(200).json(result);
+            res.status(200);
         } catch (error) {
             next(error);
         }
     }
 );
 
+
 router.post(
-    "/auth/google",
+    "/login/google",
     body("id_token").notEmpty().withMessage("Le token Google est requis."),
     async (req, res, next) => {
         try {
-            const result = await AuthService.loginWithGoogle(req.body.id_token);
+            const result = await LoginService.loginWithGoogle(req.body.id_token);
             res.status(200).json(result);
         } catch (error) {
             next(error);
