@@ -1,0 +1,132 @@
+paths:
+  /profiles:
+    post:
+      tags:
+        - Profiles
+      summary: Création d'un profil
+      description: Crée un nouveau profil utilisateur
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                username:
+                  type: string
+                display_name:
+                  type: string
+                bio:
+                  type: string
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Profil créé avec succès
+        '400':
+          description: Données invalides
+        '409':
+          description: Username déjà utilisé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Ce nom d'utilisateur est déjà pris"
+
+  /profiles/{userID}:
+    get:
+      tags:
+        - Profiles
+      summary: Détails d'un profil
+      description: Récupère les détails du profil d'un utilisateur
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Profil récupéré avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/index.yaml#/components/schemas/Profile'
+        '404':
+          description: Profil non trouvé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Profil non trouvé"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /profiles/upload-avatar/{userID}:
+    post:
+      tags:
+        - Profiles
+      summary: Uploader un avatar pour un utilisateur
+      description: Met à jour l'avatar d'un utilisateur en uploadant une nouvelle image.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: UUID de l'utilisateur
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: Fichier image de l'avatar à uploader.
+      responses:
+        '200':
+          description: Avatar uploadé avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Avatar uploaded successfully"
+                  avatarUrl:
+                    type: string
+                    example: "/uploads/avatar.png"
+        '400':
+          description: Erreur de validation ou fichier manquant.
+        '404':
+          description: Utilisateur non trouvé.
+        '500':
+          description: Erreur interne du serveur. 

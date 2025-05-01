@@ -21,7 +21,17 @@ router.get('/search', AuthMiddleware.verifyToken, async (req, res, next) => {
 router.get("/", AuthMiddleware.verifyToken, async (req, res, next) => {
     try {
         const { page = 1, limit = 10, userId } = req.query;
-        const result = await BlinkService.getPaginatedBlinks(Number(page), Number(limit), userId || null);
+        const result = await BlinkService.getPaginatedBlinks(Number(page), Number(limit), userId || null, req.user.userID);
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.get("/liked", AuthMiddleware.verifyToken, async (req, res, next) => {
+    try {
+        const { page = 1, limit = 10 } = req.query;
+        const result = await BlinkService.getLikedBlinks(req.user.userID, Number(page), Number(limit));
         res.status(200).json(result);
     } catch (error) {
         next(error);

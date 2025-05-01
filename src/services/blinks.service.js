@@ -2,6 +2,7 @@ const BlinkRepository = require('../repository/blinks.repository.js');
 const { sequelize } = require('../core/postgres');
 const ErrorCodes = require('../../constants/errorCodes');
 const TIER_LEVELS = require('../../constants/tierLevels');
+require('dotenv').config();
 
 class BlinkService {
     /**
@@ -41,12 +42,62 @@ class BlinkService {
     }
 
     /**
+     * Construit l'URL complète pour un avatar
+     * @param {string} avatarFilename - Nom du fichier de l'avatar
+     * @returns {string} URL complète de l'avatar
+     */
+    _constructProfileUrl(avatarFilename) {
+        if (!avatarFilename) return null;
+        const serverUrl = process.env.SERVER_URL;
+        return `${serverUrl}/uploads/${avatarFilename}`;
+    }
+
+    /**
      * Récupère les Blinks paginés
      */
-    async getPaginatedBlinks(page = 1, limit = 10, userId = null) {
+    async getPaginatedBlinks(page = 1, limit = 10, userId = null, currentUserId = null) {
         try {
-            const { total, blinks } = await BlinkRepository.getPaginatedBlinks(page, limit, userId);
-            return { page, limit, total, data: blinks };
+            const { total, blinks } = await BlinkRepository.getPaginatedBlinks(page, limit, userId, currentUserId);
+
+            // Transformer les URLs des avatars pour inclure l'URL complète
+            const transformedBlinks = blinks.map(blink => {
+                const blinkData = blink.toJSON ? blink.toJSON() : blink;
+
+                // Si le blink a un profil avec un avatar_url, construire l'URL complète
+                if (blinkData.profile && blinkData.profile.avatar_url) {
+                    blinkData.profile.avatar_url = this._constructProfileUrl(blinkData.profile.avatar_url);
+                }
+
+                return blinkData;
+            });
+
+            return { page, limit, total, data: transformedBlinks };
+        } catch (error) {
+            console.error(error);
+            throw { message: ErrorCodes.Blinks.FetchFailed };
+        }
+    }
+
+    /**
+     * Récupère les blinks likés par un utilisateur
+     */
+    async getLikedBlinks(userId, page = 1, limit = 10) {
+        try {
+            const { total, blinks } = await BlinkRepository.getLikedBlinks(userId, page, limit);
+
+            // Transformer les URLs des avatars pour inclure l'URL complète
+            const transformedBlinks = blinks.map(blink => {
+                const blinkData = blink.toJSON ? blink.toJSON() : blink;
+
+                // Si le blink a un profil avec un avatar_url, construire l'URL complète
+                if (blinkData.profile && blinkData.profile.avatar_url) {
+                    blinkData.profile.avatar_url = this._constructProfileUrl(blinkData.profile.avatar_url);
+                }
+
+                return blinkData;
+            });
+
+            return { page, limit, total, data: transformedBlinks };
         } catch (error) {
             console.error(error);
             throw { message: ErrorCodes.Blinks.FetchFailed };
@@ -158,7 +209,31 @@ class BlinkService {
                 throw { message: ErrorCodes.Blinks.InvalidSearchQuery };
             }
 
-            return await BlinkRepository.searchBlinksAndUsers(query, Number(page), Number(limit));
+            const results = await BlinkRepository.searchBlinksAndUsers(query, Number(page), Number(limit));
+
+            // Transformer les URLs des avatars pour les utilisateurs
+            if (results.users && results.users.length > 0) {
+                results.users = results.users.map(user => {
+                    const userData = user.toJSON ? user.toJSON() : user;
+                    if (userData.avatar_url) {
+                        userData.avatar_url = this._constructProfileUrl(userData.avatar_url);
+                    }
+                    return userData;
+                });
+            }
+
+            // Transformer les URLs des avatars pour les blinks
+            if (results.blinks && results.blinks.length > 0) {
+                results.blinks = results.blinks.map(blink => {
+                    const blinkData = blink.toJSON ? blink.toJSON() : blink;
+                    if (blinkData.Blink && blinkData.Blink.profile && blinkData.Blink.profile.avatar_url) {
+                        blinkData.Blink.profile.avatar_url = this._constructProfileUrl(blinkData.Blink.profile.avatar_url);
+                    }
+                    return blinkData;
+                });
+            }
+
+            return results;
         } catch (error) {
             console.error(error);
             throw { message: ErrorCodes.Blinks.SearchFailed };

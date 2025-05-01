@@ -3,9 +3,49 @@ const UsersRepository = require("../repository/users.repository");
 const ProfilesRepository = require("../repository/profiles.repository");
 const BlinkService = require("./blinks.service"); // Import du service des Blinks
 const ErrorCodes = require("../../constants/errorCodes");
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+require('dotenv').config();
 
 class ProfilesService {
+    /**
+     * Construit l'URL complète de l'avatar à partir du nom du fichier.
+     * @param {string} filename - Nom du fichier de l'avatar.
+     * @returns {string} URL complète de l'avatar.
+     */
+    buildAvatarUrl(filename) {
+        if (!filename) return null;
+        const serverUrl = process.env.SERVER_URL || 'http://localhost:3011';
+        return `${serverUrl}/uploads/${filename}`;
+    }
 
+
+    /**
+     * Télécharge et stocke la photo de profil Google
+     * @param {string} pictureUrl - URL de la photo de profil Google
+     * @returns {Promise<string>} Nom du fichier stocké
+     */
+    async downloadAndStoreGoogleProfilePicture(pictureUrl) {
+        return new Promise((resolve, reject) => {
+            const filename = `google_${Date.now()}.jpg`;
+            const filepath = path.join('uploads', filename);
+
+            const file = fs.createWriteStream(filepath);
+
+            https.get(pictureUrl, (response) => {
+                response.pipe(file);
+
+                file.on('finish', () => {
+                    file.close();
+                    resolve(filename);
+                });
+            }).on('error', (err) => {
+                fs.unlink(filepath, () => {}); // Supprime le fichier en cas d'erreur
+                reject(err);
+            });
+        });
+    }
 
     /**
      * Crée un profil pour un utilisateur existant.
@@ -13,7 +53,7 @@ class ProfilesService {
      * @param {string} display_name - Nom d'utilisateur affiché.
      * @param {string} username - Nom d'utilisateur unique.
      * @param {string} [bio] - Bio de l'utilisateur.
-     * @param file - profile picture file.
+     * @param {string|Object} file - Fichier de photo de profil ou URL Google.
      * @returns {Promise<Object>} Le profil créé.
      * @throws {Error} Si l'utilisateur n'existe pas, si le username est pris ou si une erreur interne survient.
      */
@@ -23,23 +63,35 @@ class ProfilesService {
         if (!user) {
             throw {message: ErrorCodes.User.NotFound};
         }
-        let existingProfile
 
-        existingProfile = await ProfilesRepository.findByUsername(username);
-
+        let existingProfile = await ProfilesRepository.findByUsername(username);
         if (existingProfile) {
             throw {message: ErrorCodes.Profiles.UsernameTaken};
-
         }
 
+        let avatar_url = null;
+
         try {
-            return await ProfilesRepository.create({
+            // Si file est une URL (photo Google), on la télécharge
+            if (typeof file === 'string' && file.startsWith('http')) {
+                avatar_url = await this.downloadAndStoreGoogleProfilePicture(file);
+            } else if (file && file.filename) {
+                // Si c'est un fichier uploadé normalement
+                avatar_url = file.filename;
+            }
+
+            const profile = await ProfilesRepository.create({
                 userID,
                 display_name,
                 username,
                 bio: bio || null,
-                avatar_url: file.filename || null
+                avatar_url
             });
+
+            // Construire l'URL complète de l'avatar si elle existe
+            profile.avatar_url = this.buildAvatarUrl(profile.avatar_url);
+
+            return profile;
         } catch (error) {
             console.log(error);
             throw {message: ErrorCodes.Profiles.CreationFailed};
@@ -47,9 +99,9 @@ class ProfilesService {
     }
 
     /**
-     * Récupère un profil par userID, en ajoutant le score calculé.
+     * Récupère un profil par userID, en ajoutant le score calculé et en construisant l'URL complète de l'avatar.
      * @param {string} userID - UUID de l'utilisateur.
-     * @returns {Promise<Object>} Le profil trouvé avec le score mis à jour.
+     * @returns {Promise<Object>} Le profil trouvé avec le score mis à jour et l'URL complète de l'avatar.
      * @throws {Error} Si le profil n'existe pas.
      */
     async getProfileByUserID(userID) {
@@ -60,6 +112,9 @@ class ProfilesService {
 
         profile.score = await BlinkService.getUserScore(userID);
 
+        // Construire l'URL complète de l'avatar si elle existe
+        profile.avatar_url = this.buildAvatarUrl(profile.avatar_url);
+
         return profile;
     }
 
@@ -67,7 +122,7 @@ class ProfilesService {
      * Met à jour l'URL de l'avatar pour un utilisateur donné.
      * @param {string} userID - UUID de l'utilisateur.
      * @param {Object} file - Objet file contenant les informations sur le fichier uploadé.
-     * @returns {Promise<string>} URL de l'avatar mis à jour.
+     * @returns {Promise<string>} URL complète de l'avatar mis à jour.
      * @throws {Error} Si le profil n'existe pas.
      */
      async updateAvatar(userID, file) {
@@ -76,10 +131,11 @@ class ProfilesService {
             throw { message: 'Profile not found' };
         }
 
-        const avatar_url = file.filename; // Chemin où le fichier est stocké
+        const avatar_url = file.filename; // Nom du fichier stocké
         await ProfilesRepository.updateAvatar(userID, avatar_url);
 
-        return avatar_url;
+        // Retourner l'URL complète de l'avatar
+        return this.buildAvatarUrl(avatar_url);
     }
 
 }

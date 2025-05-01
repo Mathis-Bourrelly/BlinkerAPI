@@ -93,7 +93,7 @@ class BlinkRepository {
     /**
      * Récupère les Blinks avec pagination
      */
-    async getPaginatedBlinks(page, limit, userId = null) {
+    async getPaginatedBlinks(page, limit, userId = null, currentUserId = null) {
         const offset = (page - 1) * limit;
         const whereClause = userId ? { userID: userId } : {};
 
@@ -111,14 +111,33 @@ class BlinkRepository {
                     model: Profiles,
                     as: 'profile',
                     attributes: ['display_name', 'username', 'avatar_url', "userID"]
+                },
+                {
+                    model: sequelize.models.Users,
+                    as: 'likedByUsers',
+                    attributes: ['userID'],
+                    through: {
+                        attributes: ['reactionType'],
+                        where: currentUserId ? { userID: currentUserId, reactionType: 'like' } : {}
+                    },
+                    required: false
                 }
             ]
         });
-        return { total: count, blinks: rows };
+
+        // Transformer les résultats pour avoir un champ isLiked
+        const blinks = rows.map(blink => {
+            const blinkJson = blink.toJSON();
+            blinkJson.isLiked = blinkJson.likedByUsers && blinkJson.likedByUsers.length > 0;
+            delete blinkJson.likedByUsers;
+            return blinkJson;
+        });
+
+        return { total: count, blinks };
     }
 
     /**
-     * Supprime tous les contenus d’un Blink
+     * Supprime tous les contenus d'un Blink
      */
     async deleteBlinkContents(blinkID, transaction) {
         try {
@@ -187,6 +206,50 @@ class BlinkRepository {
             where: { userID },
             attributes: ['blinkID', 'createdAt', 'likeCount', 'commentCount', 'dislikeCount', 'tier']
         });
+    }
+
+    /**
+     * Récupère les blinks likés par un utilisateur
+     */
+    async getLikedBlinks(userId, page = 1, limit = 10) {
+        const offset = (page - 1) * limit;
+
+        const { count, rows } = await Blinks.findAndCountAll({
+            include: [
+                {
+                    model: BlinkContents,
+                    as: 'contents'
+                },
+                {
+                    model: Profiles,
+                    as: 'profile',
+                    attributes: ['display_name', 'username', 'avatar_url', "userID"]
+                },
+                {
+                    model: sequelize.models.Users,
+                    as: 'likedByUsers',
+                    attributes: ['userID'],
+                    through: {
+                        attributes: ['reactionType'],
+                        where: { userID: userId, reactionType: 'like' }
+                    },
+                    required: true
+                }
+            ],
+            limit,
+            offset,
+            order: [['createdAt', 'DESC']]
+        });
+
+        // Transformer les résultats pour avoir un champ isLiked
+        const blinks = rows.map(blink => {
+            const blinkJson = blink.toJSON();
+            blinkJson.isLiked = true;
+            delete blinkJson.likedByUsers;
+            return blinkJson;
+        });
+
+        return { total: count, blinks };
     }
 }
 

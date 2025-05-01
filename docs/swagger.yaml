@@ -24,9 +24,270 @@ tags:
 
 paths:
   # ---------------------------
+  # Endpoints Authentication
+  # ---------------------------
+  /login:
+    post:
+      tags:
+        - Authentification
+      summary: Connexion utilisateur
+      description: Authentifie un utilisateur avec son email et mot de passe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '400':
+          description: Données invalides
+        '401':
+          description: Authentification échouée
+
+  /login/google:
+    post:
+      tags:
+        - Authentification
+      summary: Connexion avec Google
+      description: Authentifie un utilisateur avec son token Google
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id_token
+              properties:
+                id_token:
+                  type: string
+      responses:
+        '200':
+          description: Connexion réussie
+        '400':
+          description: Token invalide
+        '401':
+          description: Authentification échouée
+
+  /checkToken:
+    post:
+      tags:
+        - Authentification
+      summary: Vérification du token
+      description: Vérifie la validité du token d'authentification
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Token valide
+        '401':
+          description: Token invalide
+
+  # ---------------------------
+  # Endpoints Users
+  # ---------------------------
+  /users/register:
+    post:
+      tags:
+        - Users
+      summary: Inscription utilisateur
+      description: Crée un nouveau compte utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - display_name
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                display_name:
+                  type: string
+                bio:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '201':
+          description: Utilisateur créé avec succès
+        '400':
+          description: Données invalides
+        '409':
+          description: Email déjà utilisé
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Liste des utilisateurs
+      description: Récupère la liste de tous les utilisateurs
+      responses:
+        '200':
+          description: Liste des utilisateurs récupérée avec succès
+        '500':
+          description: Erreur serveur
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Détails d'un utilisateur
+      description: Récupère les détails d'un utilisateur spécifique
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Détails de l'utilisateur récupérés avec succès
+        '404':
+          description: Utilisateur non trouvé
+    delete:
+      tags:
+        - Users
+      summary: Suppression d'un utilisateur
+      description: Supprime un utilisateur spécifique
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Utilisateur supprimé avec succès
+        '404':
+          description: Utilisateur non trouvé
+        '403':
+          description: Non autorisé
+
+  # ---------------------------
+  # Endpoints Profiles
+  # ---------------------------
+  /profiles:
+    post:
+      tags:
+        - Profiles
+      summary: Création d'un profil
+      description: Crée un nouveau profil utilisateur
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                username:
+                  type: string
+                display_name:
+                  type: string
+                bio:
+                  type: string
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Profil créé avec succès
+        '400':
+          description: Données invalides
+
+  /profiles/{userID}:
+    get:
+      tags:
+        - Profiles
+      summary: Détails d'un profil
+      description: Récupère les détails du profil d'un utilisateur
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Profil récupéré avec succès
+        '404':
+          description: Profil non trouvé
+
+  # ---------------------------
+  # Endpoints Follows
+  # ---------------------------
+  /follows/{targetUserID}:
+    post:
+      tags:
+        - Follow
+      summary: Suivre un utilisateur
+      description: Permet de suivre un utilisateur spécifique
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: targetUserID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Abonnement réussi
+        '400':
+          description: Erreur lors de l'abonnement
+
+  # ---------------------------
   # Endpoints Blinks
   # ---------------------------
-
   /blinks:
     get:
       tags:
@@ -35,6 +296,7 @@ paths:
       description: |
         Récupère une liste paginée de blinks, triés par date de création (du plus récent au plus ancien).
         Possibilité de filtrer les résultats en fonction de l'utilisateur qui a créé le blink.
+        Inclut l'information si le blink est liké par l'utilisateur courant.
       security:
         - BearerAuth: [ ]
       parameters:
@@ -159,6 +421,58 @@ paths:
                   error:
                     type: string
                     example: "Erreur interne du serveur"
+
+  /blinks/liked:
+    get:
+      tags:
+        - Blinks
+      summary: Récupérer les blinks likés par l'utilisateur courant
+      description: |
+        Récupère une liste paginée des blinks que l'utilisateur courant a likés.
+        Les blinks sont triés par date de création (du plus récent au plus ancien).
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à récupérer.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
+      responses:
+        '200':
+          description: Liste paginée des blinks likés retournée avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  total:
+                    type: integer
+                    example: 50
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Blink'
+        '401':
+          description: Utilisateur non authentifié.
+        '500':
+          description: Erreur interne du serveur.
+
   /blinks/search:
     get:
       tags:
@@ -468,57 +782,9 @@ paths:
                     type: string
                     example: "Erreur interne du serveur"
 
-
   # ---------------------------
   # Endpoints Follow
   # ---------------------------
-  /follows/{targetUserID}:
-    post:
-      tags:
-        - Follow
-      summary: Suivre un utilisateur
-      description: Permet à un utilisateur authentifié de suivre un autre utilisateur.
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: targetUserID
-          required: true
-          schema:
-            type: string
-          description: ID de l'utilisateur à suivre.
-      responses:
-        '200':
-          description: L'utilisateur est maintenant suivi.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Utilisateur suivi"
-        '400':
-          description: Erreur de validation.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Erreur de validation"
-        '404':
-          description: Utilisateur non trouvé.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Utilisateur non trouvé"
-
   /unfollow/{targetUserID}:
     delete:
       tags:
@@ -709,225 +975,8 @@ paths:
                     example: "Utilisateur non trouvé"
 
   # ---------------------------
-  # Endpoints Authentification
-  # ---------------------------
-  /status:
-    get:
-      tags:
-        - Authentification
-      summary: Vérifier le statut du service
-      description: Retourne le statut du service.
-      responses:
-        '200':
-          description: Service prêt.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "ready"
-
-  /login:
-    post:
-      tags:
-        - Authentification
-      summary: Authentification via email/mot de passe
-      description: Authentifie un utilisateur à l'aide de son email et de son mot de passe.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - email
-                - password
-              properties:
-                email:
-                  type: string
-                  format: email
-                  example: "test@test.com"
-                password:
-                  type: string
-                  example: "test"
-      responses:
-        '200':
-          description: Authentification réussie.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                    example: "jwt_token"
-        '400':
-          description: Erreur de validation ou d'authentification.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  errors:
-                    type: array
-                    items:
-                      type: object
-
-  /checkToken:
-    post:
-      tags:
-        - Authentification
-      summary: Vérifier un token JWT
-      description: Vérifie la validité d'un token JWT.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - token
-              properties:
-                token:
-                  type: string
-                  example: "jwt_token"
-      responses:
-        '200':
-          description: Token valide.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  valid:
-                    type: boolean
-                    example: true
-        '400':
-          description: Token invalide.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Token invalide"
-
-  /login/google:
-    post:
-      tags:
-        - Authentification
-      summary: Authentification avec Google OAuth
-      description: Authentifie un utilisateur via Google OAuth.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - id_token
-              properties:
-                id_token:
-                  type: string
-                  example: "google_id_token"
-      responses:
-        '200':
-          description: Authentification réussie.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                    example: "jwt_token"
-        '400':
-          description: Erreur d'authentification.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-
-  # ---------------------------
   # Endpoints Profiles
   # ---------------------------
-  /profiles:
-    post:
-      tags:
-        - Profiles
-      summary: Créer un profil pour un utilisateur
-      description: Associe un profil à un utilisateur existant avec un username, une bio et une photo.
-      security:
-        - BearerAuth: [ ]
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                avatar:
-                  type: string
-                  format: binary
-                  description: Fichier image de l'avatar à uploader.
-                userID:
-                  type: string
-                  format: uuid
-                  example: "550e8400-e29b-41d4-a716-446655440000"
-                username:
-                  type: string
-                  example: "user123"
-                bio:
-                  type: string
-                  example: "Développeur full-stack passionné."
-      responses:
-        '201':
-          description: Profil créé avec succès.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profile'
-        '400':
-          description: Erreur de validation.
-        '409':
-          description: Username déjà utilisé.
-        '500':
-          description: Erreur interne.
-
-  /profiles/{userID}:
-    get:
-      tags:
-        - Profiles
-      summary: Récupérer le profil d'un utilisateur
-      description: Retourne le profil d'un utilisateur à partir de son userID.
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: userID
-          required: true
-          schema:
-            type: string
-            format: uuid
-          example: "550e8400-e29b-41d4-a716-446655440000"
-      responses:
-        '200':
-          description: Profil récupéré avec succès.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profile'
-        '404':
-          description: Profil non trouvé.
-        '500':
-          description: Erreur interne.
-
   /profiles/upload-avatar/{userID}:
     post:
       tags:
@@ -979,224 +1028,6 @@ paths:
   # ---------------------------
   # Endpoints Users
   # ---------------------------
-  /users/register:
-    post:
-      tags:
-        - Users
-      summary: Créer un nouvel utilisateur
-      description: Enregistrer un nouvel utilisateur avec un email, un mot de passe et un nom.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  format: email
-                  example: "user@example.com"
-                password:
-                  type: string
-                  example: "Password123!"
-                name:
-                  type: string
-                  example: "John Doe"
-      responses:
-        '201':
-          description: Utilisateur créé avec succès.
-        '400':
-          description: Validation échouée.
-        '409':
-          description: Conflit, utilisateur existant.
-
-  /users:
-    get:
-      tags:
-        - Users
-      summary: Obtenir tous les utilisateurs
-      description: Récupère une liste de tous les utilisateurs enregistrés.
-      security:
-        - BearerAuth: [ ]
-      responses:
-        '200':
-          description: Liste des utilisateurs récupérée avec succès.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-        '500':
-          description: Erreur interne du serveur.
-    post:
-      tags:
-        - Users
-      summary: Créer un utilisateur
-      description: Ajoute un nouvel utilisateur avec un email, un mot de passe sécurisé et un nom.
-      security:
-        - BearerAuth: [ ]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  format: email
-                  description: Adresse email de l'utilisateur
-                password:
-                  type: string
-                  description: Mot de passe sécurisé (minimum 12 caractères, majuscules, minuscules, chiffres et symboles requis)
-                name:
-                  type: string
-                  description: Nom de l'utilisateur
-      responses:
-        '201':
-          description: Utilisateur créé avec succès.
-        '400':
-          description: Erreur de validation.
-        '409':
-          description: Conflit - l'utilisateur existe déjà.
-
-  /users/{id}:
-    get:
-      tags:
-        - Users
-      summary: Obtenir un utilisateur par ID
-      description: Récupère un utilisateur à partir de son ID unique.
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-          description: ID de l'utilisateur à rechercher.
-      responses:
-        '200':
-          description: Utilisateur trouvé.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '404':
-          description: Utilisateur non trouvé.
-        '500':
-          description: Erreur interne du serveur.
-    put:
-      tags:
-        - Users
-      summary: Mettre à jour un utilisateur
-      description: Met à jour les informations d'un utilisateur (nom, email, mot de passe, etc.).
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-          description: ID de l'utilisateur à mettre à jour.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: Nouveau nom de l'utilisateur
-                email:
-                  type: string
-                  format: email
-                  description: Nouvelle adresse email
-                password:
-                  type: string
-                  description: Nouveau mot de passe (au moins 8 caractères)
-      responses:
-        '204':
-          description: Utilisateur mis à jour avec succès.
-        '400':
-          description: Erreur de validation.
-        '404':
-          description: Utilisateur non trouvé.
-    delete:
-      tags:
-        - Users
-      summary: Supprimer un utilisateur par ID
-      description: Supprime un utilisateur en utilisant son ID.
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-          description: ID de l'utilisateur.
-      responses:
-        '204':
-          description: Utilisateur supprimé avec succès.
-        '404':
-          description: Utilisateur non trouvé.
-        '500':
-          description: Erreur interne du serveur.
-
-  /users/email/{email}:
-    get:
-      tags:
-        - Users
-      summary: Obtenir un utilisateur par email
-      description: Récupère un utilisateur à partir de son adresse email.
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: email
-          required: true
-          schema:
-            type: string
-          description: Email de l'utilisateur à rechercher.
-      responses:
-        '200':
-          description: Utilisateur trouvé.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '404':
-          description: Utilisateur non trouvé.
-        '500':
-          description: Erreur interne du serveur.
-
-  /users/confirm/{token}:
-    get:
-      tags:
-        - Users
-      summary: Confirmer un compte utilisateur
-      description: Vérifie un compte utilisateur à l'aide d'un token de confirmation.
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: token
-          required: true
-          schema:
-            type: string
-          description: Token de confirmation.
-      responses:
-        '200':
-          description: Compte vérifié avec succès.
-        '400':
-          description: Lien de confirmation invalide ou expiré.
-        '404':
-          description: Utilisateur non trouvé.
-
   /users/send-test-email/:
     post:
       tags:
@@ -1307,16 +1138,19 @@ paths:
           description: Erreur de validation ou token invalide.
         '404':
           description: Utilisateur non trouvé.
-  # ---------------------------
-  # Endpoints Blinks
-  # ---------------------------
 
+  # ---------------------------
+  # Endpoints Interactions
+  # ---------------------------
   /interactions/like/{postID}:
     post:
       tags:
         - Interactions
       summary: Liker un Blink
-      description: Ajoute un like à un Blink ou annule un like existant.
+      description: |
+        Ajoute un like à un Blink ou annule un like existant.
+        Si le Blink n'est pas encore liké, ajoute un like.
+        Si le Blink est déjà liké, retire le like.
       security:
         - BearerAuth: [ ]
       parameters:
@@ -1325,6 +1159,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
           description: ID du Blink à liker.
       responses:
         '200':
@@ -1337,14 +1172,19 @@ paths:
                   created:
                     type: boolean
                     example: true
+                    description: Indique si un nouveau like a été créé
                   removed:
                     type: boolean
                     example: false
+                    description: Indique si un like existant a été supprimé
                   updated:
                     type: boolean
                     example: false
+                    description: Indique si un like a été mis à jour (changement de type de réaction)
         '401':
           description: Utilisateur non authentifié.
+        '404':
+          description: Blink non trouvé.
         '500':
           description: Erreur interne du serveur.
 
@@ -1390,25 +1230,79 @@ components:
     BearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: 'JWT'
-      in: 'header'
-      name: 'Authorization'
+      bearerFormat: JWT
 
   schemas:
     Blink:
       type: object
       properties:
-        id:
+        blinkID:
           type: string
-          example: "blink123"
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
         userID:
           type: string
-          example: "user123"
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
         contents:
           type: array
           items:
-            type: string
-          example: ["Contenu du blink"]
+            type: object
+            properties:
+              contentType:
+                type: string
+                enum: [text, image, video]
+                example: "text"
+              content:
+                type: string
+                example: "Contenu du blink"
+              position:
+                type: integer
+                example: 1
+        likeCount:
+          type: integer
+          example: 42
+        dislikeCount:
+          type: integer
+          example: 5
+        commentCount:
+          type: integer
+          example: 10
+        shareCount:
+          type: integer
+          example: 3
+        tier:
+          type: string
+          enum: [none, bronze, silver, gold]
+          example: "bronze"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-03-25T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-03-25T12:00:00Z"
+        profile:
+          type: object
+          properties:
+            display_name:
+              type: string
+              example: "John Doe"
+            username:
+              type: string
+              example: "john_doe"
+            avatar_url:
+              type: string
+              example: "/uploads/avatar.jpg"
+            userID:
+              type: string
+              format: uuid
+              example: "123e4567-e89b-12d3-a456-426614174000"
+        isLiked:
+          type: boolean
+          example: true
+          description: Indique si le blink est liké par l'utilisateur courant
     User:
       type: object
       properties:

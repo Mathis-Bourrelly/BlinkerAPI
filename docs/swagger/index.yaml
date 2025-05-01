@@ -1,0 +1,31 @@
+openapi: 3.0.0
+info:
+  title: Blinker API
+  description: Documentation globale de l'API Blinker
+  version: 1.0.0
+
+servers:
+  - url: "http://localhost:3011/"
+    description: "Serveur de développement"
+  - url: "https://dev.blinker.eterny.fr/"
+    description: "Serveur de production"
+
+tags:
+  - name: Blinks
+    description: Opérations liées aux Blinks
+  - name: Follows
+    description: Opérations liées aux abonnements
+  - name: Profiles
+    description: Opérations liées aux profils utilisateurs
+  - name: Users
+    description: Gestion des utilisateurs
+  - name: Auth
+    description: Gestion des connexions
+  - name: Interactions
+    description: Gestion des likes et dislikes sur les Blinks
+
+# Les chemins sont chargés dynamiquement dans le middleware
+paths: {}
+
+# Les composants sont chargés dynamiquement dans le middleware
+components: {} 

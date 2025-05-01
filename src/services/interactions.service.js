@@ -8,29 +8,49 @@ class InteractionsService {
      * Met à jour le compteur de likes/dislikes sur un Blink en fonction de l'action effectuée.
      */
     async updateReactionCount(postID, reactionType, action) {
-        const updateValues = {};
+        try {
+            // Récupérer le Blink actuel
+            const blink = await Blinks.findOne({
+                where: { blinkID: postID }
+            });
 
-        if (reactionType === "like") {
-            updateValues.likeCount = action === "increment" ? 1 : -1;
-            if (action === "switch") {
-                updateValues.dislikeCount = -1;
+            if (!blink) {
+                throw new Error('Blink not found');
             }
-        } else if (reactionType === "dislike") {
-            updateValues.dislikeCount = action === "increment" ? 1 : -1;
-            if (action === "switch") {
-                updateValues.likeCount = -1;
-            }
-        }
 
-        const test = await Blinks.increment(updateValues, {
-            where: {
-                blinkID: postID,
-                [reactionType === "like" ? "likeCount" : "dislikeCount"]: { [Op.gt]: 0 }
+            const updateValues = {};
+
+            if (reactionType === "like") {
+                if (action === "increment") {
+                    updateValues.likeCount = blink.likeCount + 1;
+                } else if (action === "decrement") {
+                    updateValues.likeCount = Math.max(0, blink.likeCount - 1);
+                } else if (action === "switch") {
+                    updateValues.likeCount = blink.likeCount + 1;
+                    updateValues.dislikeCount = Math.max(0, blink.dislikeCount - 1);
+                }
+            } else if (reactionType === "dislike") {
+                if (action === "increment") {
+                    updateValues.dislikeCount = blink.dislikeCount + 1;
+                } else if (action === "decrement") {
+                    updateValues.dislikeCount = Math.max(0, blink.dislikeCount - 1);
+                } else if (action === "switch") {
+                    updateValues.dislikeCount = blink.dislikeCount + 1;
+                    updateValues.likeCount = Math.max(0, blink.likeCount - 1);
+                }
             }
-        });
-        console.log('test', test);
-        if (reactionType === "like") {
-            await updateBlinkTier(postID);
+
+            // Mettre à jour le Blink avec les nouvelles valeurs
+            await Blinks.update(updateValues, {
+                where: { blinkID: postID }
+            });
+
+            if (reactionType === "like") {
+                await updateBlinkTier(postID);
+            }
+        } catch (error) {
+            console.error('Error updating reaction count:', error);
+            throw error;
         }
     }
 

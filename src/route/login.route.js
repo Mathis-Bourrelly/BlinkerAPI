@@ -29,17 +29,12 @@ router.post(
 );
 
 router.post(
-    "/checkToken", AuthMiddleware.verifyToken,
-    body("token").notEmpty().withMessage("Le jeton est requis."),
-    async (req, res, next) => {
-        try {
-            res.status(200);
-        } catch (error) {
-            next(error);
-        }
+    "/checkToken",
+    AuthMiddleware.verifyToken,
+    (req, res) => {
+        res.status(200).json({ valid: true });
     }
 );
-
 
 router.post(
     "/login/google",

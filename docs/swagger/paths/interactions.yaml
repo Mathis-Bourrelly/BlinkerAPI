@@ -1,0 +1,92 @@
+paths:
+  /interactions/like/{postID}:
+    post:
+      tags:
+        - Interactions
+      summary: Liker un Blink
+      description: |
+        Ajoute un like à un Blink ou annule un like existant.
+        Si le Blink n'est pas encore liké, ajoute un like.
+        Si le Blink est déjà liké, retire le like.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: postID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID du Blink à liker.
+      responses:
+        '200':
+          description: Like ajouté, supprimé ou mis à jour avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: boolean
+                    example: true
+                    description: Indique si un nouveau like a été créé
+                  removed:
+                    type: boolean
+                    example: false
+                    description: Indique si un like existant a été supprimé
+                  updated:
+                    type: boolean
+                    example: false
+                    description: Indique si un like a été mis à jour (changement de type de réaction)
+        '401':
+          description: Utilisateur non authentifié.
+        '404':
+          description: Blink non trouvé.
+        '500':
+          description: Erreur interne du serveur.
+
+  /interactions/dislike/{postID}:
+    post:
+      tags:
+        - Interactions
+      summary: Disliker un Blink
+      description: |
+        Ajoute un dislike à un Blink ou annule un dislike existant.
+        Si le Blink n'est pas encore disliké, ajoute un dislike.
+        Si le Blink est déjà disliké, retire le dislike.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: postID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID du Blink à disliker.
+      responses:
+        '200':
+          description: Dislike ajouté, supprimé ou mis à jour avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: boolean
+                    example: true
+                    description: Indique si un nouveau dislike a été créé
+                  removed:
+                    type: boolean
+                    example: false
+                    description: Indique si un dislike existant a été supprimé
+                  updated:
+                    type: boolean
+                    example: false
+                    description: Indique si un dislike a été mis à jour (changement de type de réaction)
+        '401':
+          description: Utilisateur non authentifié.
+        '404':
+          description: Blink non trouvé.
+        '500':
+          description: Erreur interne du serveur. 

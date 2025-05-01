@@ -1,0 +1,459 @@
+paths:
+  /blinks:
+    get:
+      tags:
+        - Blinks
+      summary: Récupérer les blinks avec pagination et filtrage par utilisateur
+      description: |
+        Récupère une liste paginée de blinks, triés par date de création (du plus récent au plus ancien).
+        Possibilité de filtrer les résultats en fonction de l'utilisateur qui a créé le blink.
+        Inclut l'information si le blink est liké par l'utilisateur courant.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à récupérer.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: ID de l'utilisateur pour filtrer les blinks (optionnel).
+      responses:
+        '200':
+          description: Liste paginée des blinks retournée avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  total:
+                    type: integer
+                    example: 100
+                  data:
+                    type: array
+                    items:
+                      $ref: '../schemas/index.yaml#/components/schemas/Blink'
+        '400':
+          description: Requête invalide (ex. paramètre non valide).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Paramètres de pagination invalides."
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+    post:
+      tags:
+        - Blinks
+      summary: Créer un nouveau Blink
+      description: Création d'un Blink avec un contenu, l'utilisateur est déterminé via le token.
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contents
+              properties:
+                contents:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      contentType:
+                        type: string
+                        enum: [ "text", "image", "video" ]
+                        example: "text"
+                      content:
+                        type: string
+                        example: "Ceci est un blink avec du texte."
+                      position:
+                        type: integer
+                        example: 1
+      responses:
+        '201':
+          description: Blink créé avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/index.yaml#/components/schemas/Blink'
+        '400':
+          description: Données invalides.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Données invalides"
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /blinks/{blinkID}:
+    get:
+      tags:
+        - Blinks
+      summary: Récupérer un blink par ID
+      description: Récupère un blink en fonction de son identifiant.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: blinkID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du blink à récupérer.
+      responses:
+        '200':
+          description: Blink récupéré avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/index.yaml#/components/schemas/Blink'
+        '404':
+          description: Blink non trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Blink non trouvé"
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+    put:
+      tags:
+        - Blinks
+      summary: Mettre à jour un blink existant
+      description: Met à jour les contenus d'un blink.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: blinkID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du blink à mettre à jour.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contents
+              properties:
+                contents:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Nouveau contenu"]
+      responses:
+        '200':
+          description: Blink mis à jour avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/index.yaml#/components/schemas/Blink'
+        '400':
+          description: Données invalides.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Données invalides"
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+    delete:
+      tags:
+        - Blinks
+      summary: Supprimer un blink par ID
+      description: Supprime un blink en fonction de son identifiant.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: blinkID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du blink à supprimer.
+      responses:
+        '204':
+          description: Blink supprimé avec succès (aucun contenu renvoyé).
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /blinks/remaining-time/{blinkID}:
+    get:
+      tags:
+        - Blinks
+      summary: Vérifier la durée de vie restante d'un Blink
+      description: Retourne le temps restant avant l'expiration d'un Blink.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: blinkID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du Blink dont on veut connaître la durée de vie restante.
+      responses:
+        '200':
+          description: Durée de vie restante récupérée avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  blinkID:
+                    type: string
+                    example: "blink123"
+                  remainingTime:
+                    type: number
+                    example: 43200
+        '404':
+          description: Blink non trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Blink non trouvé"
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /blinks/expired:
+    delete:
+      tags:
+        - Blinks
+      summary: Supprimer manuellement les Blinks expirés
+      description: Supprime tous les Blinks dont la durée de vie est écoulée.
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Blinks expirés supprimés avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Blinks expirés supprimés avec succès."
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /blinks/liked:
+    get:
+      tags:
+        - Blinks
+      summary: Récupérer les blinks likés par l'utilisateur courant
+      description: |
+        Récupère une liste paginée des blinks que l'utilisateur courant a likés.
+        Les blinks sont triés par date de création (du plus récent au plus ancien).
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à récupérer.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
+      responses:
+        '200':
+          description: Liste paginée des blinks likés retournée avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  total:
+                    type: integer
+                    example: 50
+                  data:
+                    type: array
+                    items:
+                      $ref: '../schemas/index.yaml#/components/schemas/Blink'
+        '401':
+          description: Utilisateur non authentifié.
+        '500':
+          description: Erreur interne du serveur.
+
+  /blinks/search:
+    get:
+      tags:
+        - Blinks
+      summary: Rechercher dans les blinks et les profils d'utilisateurs
+      description: |
+        Effectue une recherche sur les profils (display_name, username) et les blinks (contenu texte uniquement).
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Texte à rechercher.
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à récupérer.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
+      responses:
+        '200':
+          description: Résultats de la recherche.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '../schemas/index.yaml#/components/schemas/Profile'
+                  blinks:
+                    type: array
+                    items:
+                      $ref: '../schemas/index.yaml#/components/schemas/Blink'
+        '400':
+          description: Requête invalide.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Le paramètre 'query' est requis."
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur" 

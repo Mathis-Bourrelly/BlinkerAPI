@@ -1,0 +1,318 @@
+paths:
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Liste des utilisateurs
+      description: Récupère la liste de tous les utilisateurs
+      responses:
+        '200':
+          description: Liste des utilisateurs récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../schemas/index.yaml#/components/schemas/User'
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /users/register:
+    post:
+      tags:
+        - Users
+      summary: Création d'un utilisateur
+      description: Crée un nouvel utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - username
+                - display_name
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "Password123!"
+                username:
+                  type: string
+                  example: "john_doe"
+                display_name:
+                  type: string
+                  example: "John Doe"
+                bio:
+                  type: string
+                  example: "Développeur full-stack passionné"
+      responses:
+        '201':
+          description: Utilisateur créé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Utilisateur créé avec succès, email de confirmation envoyé"
+                  data:
+                    $ref: '../schemas/index.yaml#/components/schemas/User'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Email invalide"
+        '409':
+          description: Conflit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Cet email est déjà utilisé"
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Détails d'un utilisateur
+      description: Récupère les détails d'un utilisateur spécifique
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de l'utilisateur
+      responses:
+        '200':
+          description: Utilisateur récupéré avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/index.yaml#/components/schemas/User'
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Utilisateur non trouvé"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /users/confirm/{token}:
+    get:
+      tags:
+        - Users
+      summary: Confirmation d'un utilisateur
+      description: Confirme l'email d'un utilisateur avec le token reçu
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Token de confirmation
+      responses:
+        '200':
+          description: Utilisateur confirmé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Email confirmé avec succès"
+        '400':
+          description: Token invalide
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Token invalide ou expiré"
+
+  /users/grant-admin/{userID}:
+    post:
+      tags:
+        - Users
+      summary: Attribution des droits d'administrateur
+      description: Attribue les droits d'administrateur à un utilisateur
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de l'utilisateur à promouvoir
+      responses:
+        '200':
+          description: Droits d'administrateur attribués avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Droits d'administrateur attribués avec succès"
+        '403':
+          description: Accès refusé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Vous n'avez pas les droits nécessaires"
+
+  /users/send-test-email/:
+    post:
+      tags:
+        - Users
+      summary: Envoyer un email de test
+      description: Envoie un email de confirmation à l'utilisateur spécifié.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userID:
+                  type: string
+                  example: "user123"
+                subject:
+                  type: string
+                  example: "Confirmation de votre compte"
+                text:
+                  type: string
+                  example: "Cliquez sur le lien pour confirmer votre compte."
+      responses:
+        '200':
+          description: E-mail de confirmation envoyé avec succès.
+        '400':
+          description: Erreur de validation.
+        '500':
+          description: Erreur lors de l'envoi de l'e-mail.
+
+  /users/reset-password:
+    post:
+      tags:
+        - Users
+      summary: Demander une réinitialisation de mot de passe
+      description: Envoie un email de réinitialisation de mot de passe si l'utilisateur existe.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "user@example.com"
+      responses:
+        '200':
+          description: Email de réinitialisation envoyé si l'utilisateur existe.
+        '400':
+          description: Validation échouée.
+        '404':
+          description: Utilisateur non trouvé.
+
+  /users/reset-password/{token}:
+    post:
+      tags:
+        - Users
+      summary: Réinitialiser le mot de passe
+      description: Permet à un utilisateur de définir un nouveau mot de passe après avoir demandé une réinitialisation.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Token de réinitialisation du mot de passe.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+                  example: "SecurePassword123!"
+      responses:
+        '200':
+          description: Mot de passe mis à jour avec succès.
+        '400':
+          description: Erreur de validation ou token invalide.
+        '404':
+          description: Utilisateur non trouvé. 

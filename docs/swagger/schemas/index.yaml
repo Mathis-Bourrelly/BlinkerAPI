@@ -1,0 +1,114 @@
+components:
+  schemas:
+    Blink:
+      type: object
+      properties:
+        blinkID:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        userID:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              contentType:
+                type: string
+                enum: [text, image, video]
+                example: "text"
+              content:
+                type: string
+                example: "Contenu du blink"
+              position:
+                type: integer
+                example: 1
+        likeCount:
+          type: integer
+          example: 42
+        dislikeCount:
+          type: integer
+          example: 5
+        commentCount:
+          type: integer
+          example: 10
+        shareCount:
+          type: integer
+          example: 3
+        tier:
+          type: string
+          enum: [none, bronze, silver, gold]
+          example: "bronze"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-03-25T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-03-25T12:00:00Z"
+        profile:
+          type: object
+          properties:
+            display_name:
+              type: string
+              example: "John Doe"
+            username:
+              type: string
+              example: "john_doe"
+            avatar_url:
+              type: string
+              example: "/uploads/avatar.jpg"
+            userID:
+              type: string
+              format: uuid
+              example: "123e4567-e89b-12d3-a456-426614174000"
+        isLiked:
+          type: boolean
+          example: true
+          description: Indique si le blink est liké par l'utilisateur courant
+
+    User:
+      type: object
+      properties:
+        userID:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        role:
+          type: string
+          enum: [user, admin]
+          example: "user"
+        isVerified:
+          type: boolean
+          example: true
+
+    Profile:
+      type: object
+      properties:
+        userID:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        display_name:
+          type: string
+          example: "John Doe"
+        username:
+          type: string
+          example: "john_doe"
+        bio:
+          type: string
+          example: "Développeur full-stack passionné"
+        avatar_url:
+          type: string
+          example: "/uploads/avatar.jpg"
+        score:
+          type: integer
+          example: 100 

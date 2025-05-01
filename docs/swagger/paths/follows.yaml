@@ -1,0 +1,267 @@
+paths:
+  /follows/{targetUserID}:
+    post:
+      tags:
+        - Follows
+      summary: Suivre un utilisateur
+      description: Permet à l'utilisateur connecté de suivre un autre utilisateur
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: targetUserID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de l'utilisateur à suivre
+      responses:
+        '200':
+          description: Abonnement réussi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Vous suivez maintenant cet utilisateur"
+        '400':
+          description: Erreur de validation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Vous ne pouvez pas vous suivre vous-même"
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Utilisateur non trouvé"
+        '409':
+          description: Conflit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Vous suivez déjà cet utilisateur"
+    delete:
+      tags:
+        - Follows
+      summary: Se désabonner d'un utilisateur
+      description: Permet à l'utilisateur connecté de se désabonner d'un autre utilisateur
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: targetUserID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de l'utilisateur dont on veut se désabonner
+      responses:
+        '200':
+          description: Désabonnement réussi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Vous ne suivez plus cet utilisateur"
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Utilisateur non trouvé"
+        '409':
+          description: Conflit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Vous ne suivez pas cet utilisateur"
+
+  /follows/followers/{userID}:
+    get:
+      tags:
+        - Follows
+      summary: Obtenir la liste des abonnés d'un utilisateur
+      description: Renvoie la liste paginée des utilisateurs qui suivent un utilisateur donné, avec des informations simplifiées sur chaque abonné (avatar, nom et nom d'utilisateur).
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userID
+          required: true
+          schema:
+            type: string
+          description: ID de l'utilisateur cible.
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à retourner.
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
+      responses:
+        '200':
+          description: Liste paginée des abonnés retournée avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  total:
+                    type: integer
+                    example: 42
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        avatar_url:
+                          type: string
+                          example: "https://example.com/avatar.jpg"
+                        name:
+                          type: string
+                          example: "John Doe"
+                        username:
+                          type: string
+                          example: "johndoe"
+        '404':
+          description: Utilisateur non trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Utilisateur non trouvé"
+
+  /follows/following/{userID}:
+    get:
+      tags:
+        - Follows
+      summary: Obtenir la liste des utilisateurs suivis par un utilisateur
+      description: Renvoie la liste paginée des utilisateurs suivis par un utilisateur donné, avec des informations simplifiées sur chaque utilisateur suivi (avatar, nom et nom d'utilisateur).
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userID
+          required: true
+          schema:
+            type: string
+          description: ID de l'utilisateur cible.
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à retourner.
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
+      responses:
+        '200':
+          description: Liste paginée des utilisateurs suivis retournée avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  total:
+                    type: integer
+                    example: 35
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        avatar_url:
+                          type: string
+                          example: "https://example.com/avatar.jpg"
+                        name:
+                          type: string
+                          example: "Jane Doe"
+                        username:
+                          type: string
+                          example: "janedoe"
+        '404':
+          description: Utilisateur non trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Utilisateur non trouvé" 

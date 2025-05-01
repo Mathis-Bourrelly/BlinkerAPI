@@ -65,21 +65,34 @@ class LoginService {
 
         let user = await UsersRepository.getUserByEmail(email);
         if (!user) {
-            // Crée l'utilisateur
-            const emptyBio = ""
-            const emptyPassword = ""
+            // Crée l'utilisateur avec la photo de profil Google
+            const emptyBio = "";
+            const emptyPassword = "";
             user = await UsersService.createUser(
                 given_name,
                 name,
                 emptyBio,
                 email,
                 emptyPassword,
-                picture,
-            true);
+                picture, // L'URL de la photo de profil Google
+                true
+            );
+        }
+
+        // Récupérer le profil pour avoir l'avatar_url
+        const profile = await ProfilesService.getProfileByUserID(user.userID);
+
+        if (!process.env.JWT_SECRET) {
+            throw {message: ErrorCodes.Base.UnknownError};
         }
 
         const appToken = jwt.sign(
-            {userID: user.userID},
+            {
+                userID: user.userID,
+                email: user.email,
+                role: user.role,
+                avatar_url: profile.avatar_url
+            },
             process.env.JWT_SECRET,
             {expiresIn: "7d"}
         );
