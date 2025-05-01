@@ -48,8 +48,19 @@ class BlinkService {
      */
     _constructProfileUrl(avatarFilename) {
         if (!avatarFilename) return null;
-        const serverUrl = process.env.SERVER_URL;
-        return `${serverUrl}/uploads/${avatarFilename}`;
+
+        // Vérifier si nous sommes en environnement de développement local
+        const isDev = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
+        const useAbsoluteUrl = process.env.USE_ABSOLUTE_URL === 'true' || isDev;
+
+        if (useAbsoluteUrl) {
+            // En développement local, utiliser une URL absolue
+            const apiUrl = process.env.API_URL || 'http://localhost:3011';
+            return `${apiUrl}/uploads/${avatarFilename}`;
+        } else {
+            // En production, utiliser une URL relative (pour le proxy Apache)
+            return `/uploads/${avatarFilename}`;
+        }
     }
 
     /**
