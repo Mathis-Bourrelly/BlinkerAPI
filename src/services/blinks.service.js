@@ -49,18 +49,15 @@ class BlinkService {
     _constructProfileUrl(avatarFilename) {
         if (!avatarFilename) return null;
 
-        // Vérifier si nous sommes en environnement de développement local
-        const isDev = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
-        const useAbsoluteUrl = process.env.USE_ABSOLUTE_URL === 'true' || isDev;
+        // Toujours utiliser l'URL absolue du serveur API
+        // En développement: http://localhost:3011
+        // En production: https://dev.blinker.eterny.fr
+        const apiUrl = process.env.API_URL ||
+                      (process.env.NODE_ENV === 'production' ?
+                       'https://dev.blinker.eterny.fr' :
+                       'http://localhost:3011');
 
-        if (useAbsoluteUrl) {
-            // En développement local, utiliser une URL absolue
-            const apiUrl = process.env.API_URL || 'http://localhost:3011';
-            return `${apiUrl}/uploads/${avatarFilename}`;
-        } else {
-            // En production, utiliser une URL relative (pour le proxy Apache)
-            return `/uploads/${avatarFilename}`;
-        }
+        return `${apiUrl}/uploads/${avatarFilename}`;
     }
 
     /**
