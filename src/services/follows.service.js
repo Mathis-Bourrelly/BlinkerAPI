@@ -2,6 +2,7 @@ const FollowsRepository = require("../repository/follows.repository");
 const UsersRepository = require("../repository/users.repository");
 const ProfilesRepository = require("../repository/profiles.repository");
 const ErrorCodes = require('../../constants/errorCodes');
+const ProfilesService = require("./profiles.service");
 
 class FollowsService {
     /**
@@ -63,7 +64,7 @@ class FollowsService {
         try {
             const { total, followers } = await FollowsRepository.getFollowers(targetUserID, page, limit);
             const followersData = await Promise.all(
-                followers.map(follow => ProfilesRepository.getProfileByUserID(follow.fromUserID))
+                followers.map(follow => ProfilesService.getProfileByUserID(follow.fromUserID))
             );
             return { page, limit, total, data: followersData };
         } catch (error) {
@@ -78,7 +79,7 @@ class FollowsService {
         try {
             const { total, followedUsers } = await FollowsRepository.getFollowedUsers(fromUserID, page, limit);
             const followedUsersData = await Promise.all(
-                followedUsers.map(follow => ProfilesRepository.findByUserID(follow.targetUserID))
+                followedUsers.map(follow => ProfilesService.getProfileByUserID(follow.targetUserID))
             );
 
             return { page, limit, total, data: followedUsersData };
