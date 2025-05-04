@@ -4,6 +4,9 @@ const ErrorCodes = require('../../constants/errorCodes');
 const TIER_LEVELS = require('../../constants/tierLevels');
 require('dotenv').config();
 
+// Import du service utilisateur pour la mise à jour des scores
+const UsersService = require('./users.service');
+
 class BlinkService {
     /**
      * Crée un Blink avec son contenu
@@ -14,6 +17,10 @@ class BlinkService {
             const blink = await BlinkRepository.createBlink(userID, transaction);
             await BlinkRepository.addBlinkContents(blink.blinkID, contents, transaction);
             await transaction.commit();
+
+            // Mettre à jour le score de l'utilisateur après la création du blink
+            await UsersService.updateUserScore(userID);
+
             return blink;
         } catch (error) {
             await transaction.rollback();
@@ -27,6 +34,10 @@ class BlinkService {
             const blink = await BlinkRepository.createBlinkWithDate(userID, date, transaction);
             await BlinkRepository.addBlinkContents(blink.blinkID, contents, transaction);
             await transaction.commit();
+
+            // Mettre à jour le score de l'utilisateur après la création du blink
+            await UsersService.updateUserScore(userID);
+
             return blink;
         } catch (error) {
             await transaction.rollback();
@@ -127,6 +138,10 @@ class BlinkService {
             await this.updateBlinkTier(blinkID);
 
             await transaction.commit();
+
+            // Mettre à jour le score de l'utilisateur après la mise à jour du blink
+            await UsersService.updateUserScore(blink.userID);
+
             return blink;
         } catch (error) {
             await transaction.rollback();
@@ -136,9 +151,47 @@ class BlinkService {
 
     /**
      * Supprime un Blink et son contenu
+     * @param {string} blinkID - ID du blink à supprimer
+     * @param {Object} transaction - Transaction Sequelize (optionnelle)
+     * @returns {Promise<Object>} Résultat de la suppression
      */
-    async deleteBlink(blinkID) {
-        return await BlinkRepository.deleteBlink(blinkID);
+    async deleteBlink(blinkID, transaction = null) {
+        try {
+            // Récupérer le blink avant de le supprimer pour avoir ses informations
+            const blink = await BlinkRepository.getBlinkById(blinkID);
+            if (!blink) return null;
+
+            // Calculer la durée de vie réelle du blink (en secondes)
+            const createdAt = new Date(blink.createdAt);
+            const deletedAt = new Date();
+            const lifetime = Math.round((deletedAt - createdAt) / 1000);
+
+            // Enregistrer la durée de vie dans la table BlinkLifetimes
+            await sequelize.query(`
+                INSERT INTO "BlinkLifetimes" ("userID", "blinkID", "createdAt", "deletedAt", "lifetime")
+                VALUES (:userID, :blinkID, :createdAt, :deletedAt, :lifetime)
+            `, {
+                replacements: {
+                    userID: blink.userID,
+                    blinkID: blink.blinkID,
+                    createdAt: createdAt,
+                    deletedAt: deletedAt,
+                    lifetime: lifetime
+                },
+                type: sequelize.QueryTypes.INSERT,
+                transaction
+            });
+
+            // Mettre à jour le score de l'utilisateur
+            const UsersService = require('./users.service');
+            await UsersService.updateUserScore(blink.userID);
+
+            // Supprimer le blink
+            return await BlinkRepository.deleteBlink(blinkID, transaction);
+        } catch (error) {
+            console.error('Erreur lors de la suppression du blink:', error);
+            throw error;
+        }
     }
 
     /**
@@ -195,7 +248,7 @@ class BlinkService {
 
                 if (remainingTime === 0 && blink.tier !== 'gold') {
                     console.log(`🗑️ Suppression du Blink ${blink.blinkID} (temps restant : ${remainingTime}s)`);
-                    await BlinkRepository.deleteBlink(blink.blinkID, transaction);
+                    await this.deleteBlink(blink.blinkID, transaction);
                     deletedCount++;
                 }
             }

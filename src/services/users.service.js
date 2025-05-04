@@ -4,6 +4,9 @@ const jwt = require('jsonwebtoken');
 const {sendEmail} = require('../core/emailService');
 const ProfilesService = require("./profiles.service");
 const ErrorCodes = require("../../constants/errorCodes");
+const { sequelize } = require('../core/postgres');
+const Profiles = require('../models/profiles');
+const BlinkRepository = require('../repository/blinks.repository');
 
 const UsersService = {
     async createUser(username, display_name, bio, email, password, file, is_google) {
@@ -177,6 +180,101 @@ const UsersService = {
         } catch (error) {
             throw {message: ErrorCodes.User.InvalidResetToken};
         }
+    }
+};
+
+/**
+ * Calcule le score d'un utilisateur en fonction de la durée de vie moyenne de ses blinks
+ * @param {string} userID - ID de l'utilisateur
+ * @returns {Promise<number>} Le score calculé (durée de vie moyenne en secondes)
+ */
+UsersService.calculateUserScore = async function(userID) {
+    try {
+        // 1. Vérifier si nous avons des données de durée de vie pour cet utilisateur
+        const lifetimeData = await sequelize.query(`
+            SELECT AVG(lifetime) as "averageLifetime"
+            FROM "BlinkLifetimes"
+            WHERE "userID" = :userID
+        `, {
+            replacements: { userID },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        // Si nous avons des données de durée de vie, utiliser la moyenne comme score
+        if (lifetimeData && lifetimeData[0] && lifetimeData[0].averageLifetime) {
+            // Convertir en nombre entier (arrondi)
+            const averageLifetime = Math.round(parseFloat(lifetimeData[0].averageLifetime));
+            console.log(`Score calculé à partir de la durée de vie moyenne: ${averageLifetime} secondes`);
+            return averageLifetime;
+        }
+
+        // 2. Si nous n'avons pas de données de durée de vie, utiliser la méthode de calcul du temps restant
+        const BlinkService = require('./blinks.service');
+        const blinks = await BlinkRepository.getBlinksByUser(userID);
+
+        if (!blinks || blinks.length === 0) {
+            console.log(`Aucun blink trouvé pour l'utilisateur ${userID}, score par défaut: 86400 (24h)`);
+            return 86400; // 24h en secondes par défaut
+        }
+
+        let totalDuration = 0;
+
+        for (const blink of blinks) {
+            const remainingTime = await BlinkService.calculateRemainingTime(blink.blinkID);
+            totalDuration += remainingTime;
+        }
+
+        const averageScore = Math.round(totalDuration / blinks.length);
+        console.log(`Score calculé à partir du temps restant moyen: ${averageScore} secondes`);
+        return averageScore;
+    } catch (error) {
+        console.error('Erreur lors du calcul du score:', error);
+        return 86400; // 24h en secondes par défaut en cas d'erreur
+    }
+};
+
+/**
+ * Met à jour le score d'un utilisateur
+ * @param {string} userID - ID de l'utilisateur
+ * @returns {Promise<number>} Le nouveau score
+ */
+UsersService.updateUserScore = async function(userID) {
+    try {
+        // Calculer le nouveau score
+        const newScore = await this.calculateUserScore(userID);
+
+        // Mettre à jour le profil
+        await Profiles.update({ score: newScore }, {
+            where: { userID }
+        });
+
+        console.log(`Score de l'utilisateur ${userID} mis à jour: ${newScore}`);
+        return newScore;
+    } catch (error) {
+        console.error(`Erreur lors de la mise à jour du score de l'utilisateur ${userID}:`, error);
+        throw error;
+    }
+};
+
+/**
+ * Met à jour les scores de tous les utilisateurs
+ * @returns {Promise<number>} Le nombre d'utilisateurs mis à jour
+ */
+UsersService.updateAllUserScores = async function() {
+    try {
+        const users = await this.getAllUsers();
+        let updatedCount = 0;
+
+        for (const user of users) {
+            await this.updateUserScore(user.userID);
+            updatedCount++;
+        }
+
+        console.log(`Scores mis à jour pour ${updatedCount} utilisateurs`);
+        return updatedCount;
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour des scores:', error);
+        throw error;
     }
 };
 

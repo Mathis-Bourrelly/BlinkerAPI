@@ -5,6 +5,8 @@ const Follows = require('./follows');
 const Blinks = require('./blinks');
 const BlinkContents = require('./blinkContents');
 const Interactions = require('./interactions');
+const Conversations = require('./conversations');
+const Messages = require('./messages');
 
 // Associer Users et Profiles
 Users.hasOne(Profiles, { foreignKey: 'userID', onDelete: 'CASCADE' });
@@ -26,5 +28,8 @@ Follows.belongsTo(Users, { foreignKey: "targetUserID" });
 Users.belongsToMany(Blinks, { through: Interactions, foreignKey: 'userID', as: 'likedBlinks' });
 Blinks.belongsToMany(Users, { through: Interactions, foreignKey: 'postID', as: 'likedByUsers' });
 
+// Associations pour les conversations et messages
+Messages.belongsTo(Conversations, { foreignKey: 'conversationID' });
+Conversations.hasMany(Messages, { foreignKey: 'conversationID', onDelete: 'CASCADE' });
 
 module.exports = {};

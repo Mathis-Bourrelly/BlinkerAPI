@@ -23,9 +23,13 @@ tags:
     description: Gestion des connexions
   - name: Interactions
     description: Gestion des likes et dislikes sur les Blinks
+  - name: Messages
+    description: Gestion des messages entre utilisateurs
+  - name: Conversations
+    description: Gestion des conversations entre utilisateurs
 
 # Les chemins sont chargés dynamiquement dans le middleware
 paths: {}
 
 # Les composants sont chargés dynamiquement dans le middleware
-components: {} 
+components: {}

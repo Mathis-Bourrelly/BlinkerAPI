@@ -1,5 +1,6 @@
 const { sequelize } = require('../core/postgres');
 const { DataTypes } = require("sequelize");
+const Conversations = require('./conversations');
 
 const Messages = sequelize.define('Messages', {
     messageID: {
@@ -8,21 +9,12 @@ const Messages = sequelize.define('Messages', {
         allowNull: false,
         primaryKey: true
     },
-    senderID: {
+    conversationID: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: 'Users',
-            key: 'userID'
-        },
-        onDelete: 'CASCADE'
-    },
-    receiverID: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-            model: 'Users',
-            key: 'userID'
+            model: Conversations,
+            key: 'conversationID'
         },
         onDelete: 'CASCADE'
     },

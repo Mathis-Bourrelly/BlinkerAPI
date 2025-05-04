@@ -88,14 +88,14 @@ const initLoggerMiddleware = (app) => {
 const initSwaggerMiddleware = (app) => {
     try {
         console.log("Loading Swagger documentation...");
-        
+
         // Charger le document principal
         const swaggerDocument = yaml.load(fs.readFileSync("./docs/swagger/index.yaml", "utf8"));
-        
+
         // Charger les composants
         const securitySchemes = yaml.load(fs.readFileSync("./docs/swagger/components/security.yaml", "utf8"));
         const schemas = yaml.load(fs.readFileSync("./docs/swagger/schemas/index.yaml", "utf8"));
-        
+
         // Charger les chemins
         const blinksPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/blinks.yaml", "utf8"));
         const interactionsPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/interactions.yaml", "utf8"));
@@ -103,7 +103,9 @@ const initSwaggerMiddleware = (app) => {
         const followsPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/follows.yaml", "utf8"));
         const authPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/auth.yaml", "utf8"));
         const usersPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/users.yaml", "utf8"));
-        
+        const messagesPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/messages.yaml", "utf8"));
+        const conversationsPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/conversations.yaml", "utf8"));
+
         // Combiner tous les chemins
         const paths = {
             ...blinksPaths.paths,
@@ -111,16 +113,18 @@ const initSwaggerMiddleware = (app) => {
             ...profilesPaths.paths,
             ...followsPaths.paths,
             ...authPaths.paths,
-            ...usersPaths.paths
+            ...usersPaths.paths,
+            ...messagesPaths.paths,
+            ...conversationsPaths.paths
         };
-        
+
         // Mettre à jour le document Swagger
         swaggerDocument.paths = paths;
         swaggerDocument.components = {
             securitySchemes: securitySchemes.components.securitySchemes,
             schemas: schemas.components.schemas
         };
-        
+
         // Configurer Swagger UI avec les options
         const options = {
             explorer: true,
@@ -139,14 +143,14 @@ const initSwaggerMiddleware = (app) => {
                 }
             }
         };
-        
+
         // Servir le document Swagger
         app.use("/api-docs", swaggerUi.serve);
         app.get("/api-docs/swagger.json", (req, res) => {
             res.json(swaggerDocument);
         });
         app.use("/api-docs", swaggerUi.setup(swaggerDocument, options));
-        
+
         console.log("✅ Swagger initialized at /api-docs");
     } catch (error) {
         console.error("❌ Error loading Swagger:", error.message);

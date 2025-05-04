@@ -107,9 +107,9 @@ class ProfilesService {
     }
 
     /**
-     * Récupère un profil par userID, en ajoutant le score calculé et en construisant l'URL complète de l'avatar.
+     * Récupère un profil par userID, en utilisant le score stocké et en construisant l'URL complète de l'avatar.
      * @param {string} userID - UUID de l'utilisateur.
-     * @returns {Promise<Object>} Le profil trouvé avec le score mis à jour et l'URL complète de l'avatar.
+     * @returns {Promise<Object>} Le profil trouvé avec l'URL complète de l'avatar.
      * @throws {Error} Si le profil n'existe pas.
      */
     async getProfileByUserID(userID) {
@@ -118,7 +118,17 @@ class ProfilesService {
             throw {message: ErrorCodes.Profiles.NotFound};
         }
 
-        profile.score = await BlinkService.getUserScore(userID);
+        // Utiliser le score stocké dans le profil au lieu de le recalculer
+        // Si le score est 0, on peut le mettre à jour (cas d'un nouveau profil)
+        if (profile.score === 0) {
+            const UsersService = require('./users.service');
+            await UsersService.updateUserScore(userID);
+            // Récupérer le profil mis à jour
+            const updatedProfile = await ProfilesRepository.findByUserID(userID);
+            if (updatedProfile) {
+                profile.score = updatedProfile.score;
+            }
+        }
 
         // Construire l'URL complète de l'avatar si elle existe
         profile.avatar_url = this.buildAvatarUrl(profile.avatar_url);

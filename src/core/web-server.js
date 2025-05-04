@@ -7,6 +7,8 @@ const followsRoute = require("../route/follows.route");
 const profilesRoute = require("../route/profiles.route");
 const loginRoute = require("../route/login.route");
 const blinksRoute = require("../route/blinks.route");
+const messagesRoute = require("../route/messages.route");
+const conversationsRoute = require("../route/conversations.route");
 const interactionsRoute = require("../route/interactions.route");
 const { sequelize } = require("./postgres");
 const { AUTO_DELETE_INTERVAL } = require("../../config/blinks.config");
@@ -48,6 +50,8 @@ class WebServer {
         this.app.use("/follows", followsRoute.initializeRoutes());
         this.app.use("/profiles", profilesRoute.initializeRoutes());
         this.app.use("/blinks", blinksRoute.initializeRoutes());
+        this.app.use("/messages", messagesRoute.initializeRoutes());
+        this.app.use("/conversations", conversationsRoute.initializeRoutes());
         this.app.use("/interactions", interactionsRoute.initializeRoutes());
 
         console.log("✅ Routes protégées initialisées");

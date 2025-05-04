@@ -1,0 +1,230 @@
+paths:
+  /messages:
+    post:
+      tags:
+        - Messages
+      summary: Envoyer un message
+      description: |
+        Envoie un message à un autre utilisateur.
+        La durée de vie du message est calculée automatiquement en fonction des scores des utilisateurs.
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                receiverID:
+                  type: string
+                  format: uuid
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                  description: ID de l'utilisateur destinataire (optionnel si conversationID est fourni)
+                conversationID:
+                  type: string
+                  format: uuid
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                  description: ID de la conversation (optionnel, créé automatiquement si absent)
+                content:
+                  type: string
+                  example: "Bonjour, comment vas-tu ?"
+                  description: Contenu du message
+      responses:
+        '201':
+          description: Message envoyé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/index.yaml#/components/schemas/Message'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Données invalides. receiverID et content sont requis."
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /messages/between/{userID}:
+    get:
+      tags:
+        - Messages
+      summary: Récupérer les messages entre deux utilisateurs
+      description: |
+        Récupère tous les messages non expirés échangés entre l'utilisateur connecté et un autre utilisateur.
+        Les messages sont triés par date de création (du plus ancien au plus récent).
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de l'autre utilisateur
+      responses:
+        '200':
+          description: Messages récupérés avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../schemas/index.yaml#/components/schemas/Message'
+        '400':
+          description: ID utilisateur requis
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "ID utilisateur requis"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /messages/unread:
+    get:
+      tags:
+        - Messages
+      summary: Récupérer les messages non lus
+      description: |
+        Récupère tous les messages non lus et non expirés destinés à l'utilisateur connecté.
+        Les messages sont triés par date de création (du plus ancien au plus récent).
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Messages non lus récupérés avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../schemas/index.yaml#/components/schemas/Message'
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /messages/read/{senderID}:
+    put:
+      tags:
+        - Messages
+      summary: Marquer les messages comme lus
+      description: |
+        Marque tous les messages non lus et non expirés d'un expéditeur spécifique comme lus.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: senderID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de l'expéditeur
+      responses:
+        '200':
+          description: Messages marqués comme lus avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Messages marqués comme lus"
+        '400':
+          description: ID expéditeur requis
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "ID expéditeur requis"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"
+
+  /messages/expired:
+    delete:
+      tags:
+        - Messages
+      summary: Supprimer les messages expirés
+      description: |
+        Supprime tous les messages dont la date d'expiration est passée.
+        Cette opération est réservée aux administrateurs.
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Messages expirés supprimés avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Messages expirés supprimés avec succès"
+        '403':
+          description: Accès non autorisé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Accès non autorisé"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"

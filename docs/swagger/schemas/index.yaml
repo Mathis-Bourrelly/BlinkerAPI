@@ -111,4 +111,92 @@ components:
           example: "/uploads/avatar.jpg"
         score:
           type: integer
-          example: 100 
+          example: 100
+
+    Conversation:
+      type: object
+      properties:
+        conversationID:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        participants:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: ["123e4567-e89b-12d3-a456-426614174000", "456e7890-e89b-12d3-a456-426614174000"]
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-05-01T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-05-01T12:00:00Z"
+
+    ConversationSummary:
+      type: object
+      properties:
+        conversationID:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        userID:
+          type: string
+          format: uuid
+          example: "456e7890-e89b-12d3-a456-426614174000"
+        username:
+          type: string
+          example: "johndoe"
+        display_name:
+          type: string
+          example: "John Doe"
+        avatar_url:
+          type: string
+          example: "https://example.com/avatar.jpg"
+        lastMessage:
+          type: object
+          properties:
+            content:
+              type: string
+              example: "Bonjour, comment vas-tu ?"
+            createdAt:
+              type: string
+              format: date-time
+              example: "2024-05-01T12:00:00Z"
+            read:
+              type: boolean
+              example: false
+            isFromUser:
+              type: boolean
+              example: false
+        unreadCount:
+          type: integer
+          example: 3
+
+    Message:
+      type: object
+      properties:
+        messageID:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        conversationID:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        content:
+          type: string
+          example: "Bonjour, comment vas-tu ?"
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2024-06-01T12:00:00Z"
+        isRead:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-05-01T12:00:00Z"
