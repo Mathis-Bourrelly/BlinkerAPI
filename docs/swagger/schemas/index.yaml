@@ -112,6 +112,10 @@ components:
         score:
           type: integer
           example: 100
+        isFollowing:
+          type: boolean
+          example: false
+          description: "Indique si l'utilisateur courant suit ce profil"
 
     Conversation:
       type: object
@@ -196,7 +200,24 @@ components:
         isRead:
           type: boolean
           example: false
+        senderID:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+          description: "ID de l'utilisateur qui a envoyé le message"
         createdAt:
           type: string
           format: date-time
           example: "2024-05-01T12:00:00Z"
+        sender:
+          type: object
+          description: "Informations sur l'expéditeur du message"
+          properties:
+            userID:
+              type: string
+              format: uuid
+              example: "123e4567-e89b-12d3-a456-426614174000"
+            email:
+              type: string
+              format: email
+              example: "user@example.com"

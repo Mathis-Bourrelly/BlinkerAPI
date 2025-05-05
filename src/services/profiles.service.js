@@ -108,11 +108,12 @@ class ProfilesService {
 
     /**
      * Récupère un profil par userID, en utilisant le score stocké et en construisant l'URL complète de l'avatar.
-     * @param {string} userID - UUID de l'utilisateur.
-     * @returns {Promise<Object>} Le profil trouvé avec l'URL complète de l'avatar.
+     * @param {string} userID - UUID de l'utilisateur dont on veut le profil.
+     * @param {string} [requestingUserID] - UUID de l'utilisateur qui fait la demande (pour vérifier s'il suit le profil).
+     * @returns {Promise<Object>} Le profil trouvé avec l'URL complète de l'avatar et le statut de follow.
      * @throws {Error} Si le profil n'existe pas.
      */
-    async getProfileByUserID(userID) {
+    async getProfileByUserID(userID, requestingUserID) {
         const profile = await ProfilesRepository.findByUserID(userID);
         if (!profile) {
             throw {message: ErrorCodes.Profiles.NotFound};
@@ -132,6 +133,15 @@ class ProfilesService {
 
         // Construire l'URL complète de l'avatar si elle existe
         profile.avatar_url = this.buildAvatarUrl(profile.avatar_url);
+
+        // Vérifier si l'utilisateur qui fait la demande suit ce profil
+        if (requestingUserID && requestingUserID !== userID) {
+            const FollowsRepository = require('../repository/follows.repository');
+            const isFollowing = await FollowsRepository.isFollowing(requestingUserID, userID);
+            profile.dataValues.isFollowing = !!isFollowing;
+        } else {
+            profile.dataValues.isFollowing = false;
+        }
 
         return profile;
     }

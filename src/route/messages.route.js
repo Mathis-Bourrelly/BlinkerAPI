@@ -44,7 +44,14 @@ router.get('/between/:userID', AuthMiddleware.verifyToken, async (req, res) => {
         }
 
         const messages = await MessagesService.getMessagesBetweenUsers(currentUserID, otherUserID);
-        return res.status(200).json(messages);
+
+        // Transformer explicitement les objets Sequelize en objets JavaScript simples
+        const plainMessages = messages.map(message => {
+            const plainMessage = message.get({ plain: true });
+            return plainMessage;
+        });
+
+        return res.status(200).json(plainMessages);
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
@@ -71,7 +78,48 @@ router.get('/conversation/:conversationID', AuthMiddleware.verifyToken, async (r
         }
 
         const messages = await MessagesService.getConversationMessages(conversationID);
-        return res.status(200).json(messages);
+
+        // Transformer explicitement les objets Sequelize en objets JavaScript simples
+        const plainMessages = messages.map(message => {
+            const plainMessage = message.get({ plain: true });
+            return plainMessage;
+        });
+
+        return res.status(200).json(plainMessages);
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * @route POST /messages/conversation
+ * @desc Récupère les messages d'une conversation spécifique (alternative à la route GET)
+ * @access Private
+ */
+router.post('/conversation', AuthMiddleware.verifyToken, async (req, res) => {
+    try {
+        const userID = req.user.userID;
+        const { conversationID } = req.body;
+
+        if (!conversationID) {
+            return res.status(400).json({ error: 'ID conversation requis' });
+        }
+
+        // Vérifier que l'utilisateur fait partie de la conversation
+        const conversation = await ConversationService.findConversationById(conversationID);
+        if (!conversation || !conversation.participants.includes(userID)) {
+            return res.status(403).json({ error: 'Accès non autorisé à cette conversation' });
+        }
+
+        const messages = await MessagesService.getConversationMessages(conversationID);
+
+        // Transformer explicitement les objets Sequelize en objets JavaScript simples
+        const plainMessages = messages.map(message => {
+            const plainMessage = message.get({ plain: true });
+            return plainMessage;
+        });
+
+        return res.status(200).json(plainMessages);
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
@@ -86,7 +134,14 @@ router.get('/unread', AuthMiddleware.verifyToken, async (req, res) => {
     try {
         const userID = req.user.userID;
         const messages = await MessagesService.getUnreadMessages(userID);
-        return res.status(200).json(messages);
+
+        // Transformer explicitement les objets Sequelize en objets JavaScript simples
+        const plainMessages = messages.map(message => {
+            const plainMessage = message.get({ plain: true });
+            return plainMessage;
+        });
+
+        return res.status(200).json(plainMessages);
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }

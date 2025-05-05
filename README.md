@@ -62,4 +62,33 @@ npm run dev
 npm start
 ```
 
+## Tests
+
+Le projet utilise Jest pour les tests unitaires et d'intégration. Pour exécuter les tests :
+
+```bash
+# Exécuter tous les tests
+npm test
+
+# Exécuter les tests avec le mode watch (relance automatique des tests lors des modifications)
+npm run test:watch
+
+# Exécuter les tests avec la couverture de code
+npm run test:coverage
+
+# Exécuter les tests d'un domaine spécifique
+npm run test:messages    # Tests liés aux messages
+npm run test:conversations # Tests liés aux conversations
+npm run test:auth        # Tests liés à l'authentification
+npm run test:users       # Tests liés aux utilisateurs
+```
+
+Pour plus d'informations sur les tests, consultez la documentation dans le dossier `tests` :
+
+- `tests/README.md` : Documentation générale sur les tests
+- `tests/DOCUMENTATION.md` : Documentation détaillée sur les différents types de tests
+- `tests/EXAMPLES.md` : Exemples de tests pour différentes parties de l'application
+- `tests/BEST_PRACTICES.md` : Bonnes pratiques pour l'écriture de tests
+- `tests/JEST_CONFIG.md` : Configuration de Jest pour le projet
+
 ## Branche DEV

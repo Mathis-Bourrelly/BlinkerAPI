@@ -7,7 +7,26 @@ const yaml = require("js-yaml");
 const fs = require("fs");
 
 
-const initJsonHandlerMiddleware = (app) => app.use(express.json());
+const initJsonHandlerMiddleware = (app) => app.use(express.json({
+    // Ignorer les requêtes GET pour le parsing JSON
+    verify: (req, res, buf, encoding) => {
+        if (req.method === 'GET') {
+            req.rawBody = buf.toString(encoding || 'utf8');
+            throw new Error('No JSON parsing for GET requests');
+        }
+    }
+}));
+
+// Middleware pour gérer les erreurs de parsing JSON
+const handleJsonErrors = (app) => {
+    app.use((err, req, res, next) => {
+        if (err.message === 'No JSON parsing for GET requests') {
+            // Ignorer cette erreur spécifique pour les requêtes GET
+            return next();
+        }
+        next(err);
+    });
+};
 
 // Middleware JWT - Gère l'authentification des requêtes avec des tokens JWT
 function initJwtMiddleware(app) {
@@ -161,6 +180,7 @@ exports.initializeConfigMiddlewares = (app) => {
     initSwaggerMiddleware(app) // Middleware de la génération de docs
     initCorsMiddleware(app); // Initialisation du middleware CORS
     initJsonHandlerMiddleware(app); // Gestion des requêtes JSON
+    handleJsonErrors(app); // Gestion des erreurs de parsing JSON
     initJwtMiddleware(app); // Middleware JWT pour l'authentification
     initLoggerMiddleware(app); // Logger des requêtes
     staticMiddleware(app); // Fichiers statiques

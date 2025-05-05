@@ -5,10 +5,43 @@ const {sendEmail} = require('../core/emailService');
 const ProfilesService = require("./profiles.service");
 const ErrorCodes = require("../../constants/errorCodes");
 const { sequelize } = require('../core/postgres');
-const Profiles = require('../models/profiles');
 const BlinkRepository = require('../repository/blinks.repository');
+const BlinkLifetimesRepository = require('../repository/blinkLifetimes.repository');
 
 const UsersService = {
+    /**
+     * Recherche des utilisateurs par nom d'affichage ou nom d'utilisateur
+     * @param {string} query - Terme de recherche
+     * @param {number} page - Numéro de la page
+     * @param {number} limit - Nombre d'éléments par page
+     * @returns {Promise<{total: number, users: Array}>} Résultats de la recherche
+     */
+    async searchUsers(query, page = 1, limit = 10) {
+        if (!query || query.trim() === "") {
+            throw { message: ErrorCodes.User.InvalidSearchQuery };
+        }
+
+        try {
+            const results = await UsersRepository.searchUsers(query, Number(page), Number(limit));
+
+            // Transformer les URLs des avatars
+            if (results.users && results.users.length > 0) {
+                results.users = results.users.map(user => {
+                    const userData = user.toJSON ? user.toJSON() : user;
+                    if (userData.avatar_url) {
+                        userData.avatar_url = ProfilesService.buildAvatarUrl(userData.avatar_url);
+                    }
+                    return userData;
+                });
+            }
+
+            return results;
+        } catch (error) {
+            console.error('Erreur lors de la recherche d\'utilisateurs:', error);
+            throw { message: ErrorCodes.User.SearchFailed };
+        }
+    },
+
     async createUser(username, display_name, bio, email, password, file, is_google) {
 
         const existingUser = await UsersRepository.getUserByEmail(email);
@@ -191,19 +224,10 @@ const UsersService = {
 UsersService.calculateUserScore = async function(userID) {
     try {
         // 1. Vérifier si nous avons des données de durée de vie pour cet utilisateur
-        const lifetimeData = await sequelize.query(`
-            SELECT AVG(lifetime) as "averageLifetime"
-            FROM "BlinkLifetimes"
-            WHERE "userID" = :userID
-        `, {
-            replacements: { userID },
-            type: sequelize.QueryTypes.SELECT
-        });
+        const averageLifetime = await BlinkLifetimesRepository.getAverageLifetime(userID);
 
         // Si nous avons des données de durée de vie, utiliser la moyenne comme score
-        if (lifetimeData && lifetimeData[0] && lifetimeData[0].averageLifetime) {
-            // Convertir en nombre entier (arrondi)
-            const averageLifetime = Math.round(parseFloat(lifetimeData[0].averageLifetime));
+        if (averageLifetime) {
             console.log(`Score calculé à partir de la durée de vie moyenne: ${averageLifetime} secondes`);
             return averageLifetime;
         }
@@ -243,10 +267,9 @@ UsersService.updateUserScore = async function(userID) {
         // Calculer le nouveau score
         const newScore = await this.calculateUserScore(userID);
 
-        // Mettre à jour le profil
-        await Profiles.update({ score: newScore }, {
-            where: { userID }
-        });
+        // Mettre à jour le profil via le repository
+        const ProfilesRepository = require('../repository/profiles.repository');
+        await ProfilesRepository.updateScore(userID, newScore);
 
         console.log(`Score de l'utilisateur ${userID} mis à jour: ${newScore}`);
         return newScore;

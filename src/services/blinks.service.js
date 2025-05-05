@@ -1,4 +1,5 @@
 const BlinkRepository = require('../repository/blinks.repository.js');
+const BlinkLifetimesRepository = require('../repository/blinkLifetimes.repository.js');
 const { sequelize } = require('../core/postgres');
 const ErrorCodes = require('../../constants/errorCodes');
 const TIER_LEVELS = require('../../constants/tierLevels');
@@ -166,21 +167,14 @@ class BlinkService {
             const deletedAt = new Date();
             const lifetime = Math.round((deletedAt - createdAt) / 1000);
 
-            // Enregistrer la durée de vie dans la table BlinkLifetimes
-            await sequelize.query(`
-                INSERT INTO "BlinkLifetimes" ("userID", "blinkID", "createdAt", "deletedAt", "lifetime")
-                VALUES (:userID, :blinkID, :createdAt, :deletedAt, :lifetime)
-            `, {
-                replacements: {
-                    userID: blink.userID,
-                    blinkID: blink.blinkID,
-                    createdAt: createdAt,
-                    deletedAt: deletedAt,
-                    lifetime: lifetime
-                },
-                type: sequelize.QueryTypes.INSERT,
-                transaction
-            });
+            // Enregistrer la durée de vie dans la table BlinkLifetimes via le repository
+            await BlinkLifetimesRepository.recordBlinkLifetime({
+                userID: blink.userID,
+                blinkID: blink.blinkID,
+                createdAt: createdAt,
+                deletedAt: deletedAt,
+                lifetime: lifetime
+            }, transaction);
 
             // Mettre à jour le score de l'utilisateur
             const UsersService = require('./users.service');

@@ -97,6 +97,20 @@ class ProfilesRepository {
             throw { message: ErrorCodes.Profiles.UpdateFailed };
         }
     }
+
+    /**
+     * Met à jour le score d'un utilisateur
+     * @param {string} userID - UUID de l'utilisateur
+     * @param {number} score - Nouveau score
+     * @returns {Promise<void>}
+     */
+    async updateScore(userID, score) {
+        try {
+            await Profiles.update({ score }, { where: { userID } });
+        } catch (error) {
+            throw { message: ErrorCodes.Profiles.UpdateFailed };
+        }
+    }
 }
 
 module.exports = new ProfilesRepository();

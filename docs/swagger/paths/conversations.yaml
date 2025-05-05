@@ -36,6 +36,7 @@ paths:
       description: |
         Récupère tous les messages non expirés d'une conversation spécifique.
         Les messages sont triés par date de création (du plus ancien au plus récent).
+        Chaque message inclut les informations sur l'expéditeur (sender).
       security:
         - BearerAuth: [ ]
       parameters:

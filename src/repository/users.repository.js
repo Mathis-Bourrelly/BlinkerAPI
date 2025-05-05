@@ -1,4 +1,6 @@
 const User = require('../models/users');
+const Profiles = require('../models/profiles');
+const { Op } = require('sequelize');
 const ErrorCodes = require("../../constants/errorCodes");
 
 const UsersRepository = {
@@ -76,6 +78,38 @@ const UsersRepository = {
             }
         } catch (error) {
             throw { message: ErrorCodes.User.DeletionFailed };
+        }
+    },
+
+    /**
+     * Rechercher des utilisateurs par nom d'affichage ou nom d'utilisateur
+     * @param {string} query - Terme de recherche
+     * @param {number} page - Numéro de la page
+     * @param {number} limit - Nombre d'éléments par page
+     * @returns {Promise<{total: number, users: Array}>} Résultats de la recherche
+     */
+    async searchUsers(query, page = 1, limit = 10) {
+        try {
+            const offset = (page - 1) * limit;
+
+            // Recherche dans les profils (display_name et username)
+            const { count, rows } = await Profiles.findAndCountAll({
+                where: {
+                    [Op.or]: [
+                        { display_name: { [Op.iLike]: `%${query}%` } },
+                        { username: { [Op.iLike]: `%${query}%` } }
+                    ]
+                },
+                attributes: ['userID', 'display_name', 'username', 'avatar_url', 'bio', 'score'],
+                limit,
+                offset,
+                order: [['username', 'ASC']]
+            });
+
+            return { total: count, users: rows };
+        } catch (error) {
+            console.error('Erreur lors de la recherche d\'utilisateurs:', error);
+            throw { message: ErrorCodes.User.SearchFailed };
         }
     }
 };

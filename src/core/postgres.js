@@ -27,6 +27,9 @@ const modelDefiners = [
     require('../models/blinks'),
     require('../models/blinkContents'),
     require('../models/interactions'),
+    require('../models/blinkLifetimes'),
+    require('../models/conversations'),
+    require('../models/messages'),
 ];
 
 (async () => {

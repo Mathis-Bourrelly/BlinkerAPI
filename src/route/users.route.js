@@ -43,6 +43,21 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.get('/search', AuthMiddleware.verifyToken, async (req, res) => {
+    try {
+        const { query, page = 1, limit = 10 } = req.query;
+
+        if (!query) {
+            return res.status(400).json({ error: "Le paramètre 'query' est requis." });
+        }
+
+        const result = await UsersService.searchUsers(query, Number(page), Number(limit));
+        return res.status(200).json(result);
+    } catch (error) {
+        res.status(error.status || 500).json({ message: error.message });
+    }
+});
+
 router.get('/:id', async (req, res) => {
     try {
         const result = await UsersService.getUserById(req.params.id);

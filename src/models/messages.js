@@ -1,6 +1,7 @@
 const { sequelize } = require('../core/postgres');
 const { DataTypes } = require("sequelize");
 const Conversations = require('./conversations');
+const Users = require('./users');
 
 const Messages = sequelize.define('Messages', {
     messageID: {
@@ -29,6 +30,14 @@ const Messages = sequelize.define('Messages', {
     isRead: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
+    },
+    senderID: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+            model: Users,
+            key: 'userID'
+        }
     },
     createdAt: {
         type: DataTypes.DATE,

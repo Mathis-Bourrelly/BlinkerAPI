@@ -44,7 +44,7 @@ const getRandomMessage = () => {
 };
 
 // Fonction pour créer un message directement dans la base de données
-const createMessage = async (conversationID, content, isRead = false) => {
+const createMessage = async (conversationID, content, isRead = false, senderID = null) => {
     // Définir une date d'expiration (7 jours par défaut)
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
@@ -56,6 +56,7 @@ const createMessage = async (conversationID, content, isRead = false) => {
         content,
         expiresAt,
         isRead,
+        senderID, // Maintenant nous utilisons senderID dans le modèle
         createdAt: getRandomDate()
     });
 };
@@ -108,21 +109,43 @@ const seedMessages = async () => {
                         const conversation = await ConversationService.createConversation([user1.userID, user2.userID]);
                         conversationCount++;
 
-                        // Générer entre 3 et 6 messages pour cette conversation (réduit pour accélérer)
-                        const numMessages = Math.floor(Math.random() * 4) + 3;
+                        // Générer entre 4 et 8 messages pour cette conversation (nombre pair pour avoir des messages des deux côtés)
+                        const numMessages = (Math.floor(Math.random() * 3) + 2) * 2; // 4, 6 ou 8 messages
 
                         console.log(`🔄 Création de ${numMessages} messages pour la conversation ${conversationCount}...`);
 
+                        // Créer des messages alternés entre les deux participants
+                        const participants = [user1.userID, user2.userID];
+
+                        // Créer un tableau de dates croissantes pour simuler une conversation réelle
+                        const messageDates = [];
                         for (let k = 0; k < numMessages; k++) {
+                            messageDates.push(getRandomDate());
+                        }
+                        messageDates.sort((a, b) => a - b); // Trier par ordre chronologique
+
+                        for (let k = 0; k < numMessages; k++) {
+                            // Alterner les expéditeurs
+                            const senderIndex = k % 2;
+                            const senderID = participants[senderIndex];
+                            const receiverID = participants[1 - senderIndex];
+
                             // Créer un message avec une date spécifique
                             const content = getRandomMessage();
 
+                            // Déterminer si le message est lu (les messages plus anciens ont plus de chances d'être lus)
+                            const isRead = Math.random() > (k / numMessages * 0.7 + 0.1); // 90% de chance pour les premiers messages, 30% pour les derniers
+
                             // Créer le message directement sans passer par le service
-                            await createMessage(
+                            const message = await createMessage(
                                 conversation.conversationID,
                                 content,
-                                Math.random() > 0.3 // 70% de chance d'être lu
+                                isRead,
+                                senderID // Nous ne stockons pas cette information, mais elle est utile pour la logique
                             );
+
+                            // Mettre à jour la date de création pour avoir une chronologie réaliste
+                            await message.update({ createdAt: messageDates[k] });
 
                             messageCount++;
                         }
@@ -137,7 +160,7 @@ const seedMessages = async () => {
 
         console.log(`📊 Résumé du seeding des messages:`);
         console.log(`   - ${conversationCount} conversations créées`);
-        console.log(`   - ${messageCount} messages générés`);
+        console.log(`   - ${messageCount} messages générés (avec des messages des deux côtés)`);
 
         return { conversationCount, messageCount };
     } catch (error) {

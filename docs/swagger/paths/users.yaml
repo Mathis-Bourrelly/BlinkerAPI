@@ -25,6 +25,92 @@ paths:
                     type: string
                     example: "Erreur interne du serveur"
 
+  /users/search:
+    get:
+      tags:
+        - Users
+      summary: Rechercher des utilisateurs
+      description: Recherche des utilisateurs par nom d'affichage ou nom d'utilisateur
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Texte à rechercher dans les noms d'affichage et noms d'utilisateur
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à récupérer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'utilisateurs par page
+      responses:
+        '200':
+          description: Résultats de la recherche
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    example: 42
+                    description: Nombre total d'utilisateurs correspondant à la recherche
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        userID:
+                          type: string
+                          format: uuid
+                          example: "123e4567-e89b-12d3-a456-426614174000"
+                        display_name:
+                          type: string
+                          example: "John Doe"
+                        username:
+                          type: string
+                          example: "john_doe"
+                        avatar_url:
+                          type: string
+                          example: "http://localhost:3011/uploads/avatar.jpg"
+                        bio:
+                          type: string
+                          example: "Développeur full-stack passionné"
+                        score:
+                          type: integer
+                          example: 100
+        '400':
+          description: Paramètres de recherche invalides
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Le paramètre 'query' est requis."
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User.SearchFailed"
+
   /users/register:
     post:
       tags:
@@ -315,4 +401,4 @@ paths:
         '400':
           description: Erreur de validation ou token invalide.
         '404':
-          description: Utilisateur non trouvé. 
+          description: Utilisateur non trouvé.

@@ -35,7 +35,9 @@ const ErrorCodes = {
         AccountAlreadyVerified: "User.AccountAlreadyVerified",
         InvalidResetToken: "User.InvalidResetToken",
         WeakPassword: "User.WeakPassword",
-        AlreadyAdmin: "User.AlreadyAdmin"
+        AlreadyAdmin: "User.AlreadyAdmin",
+        SearchFailed: "User.SearchFailed",
+        InvalidSearchQuery: "User.InvalidSearchQuery"
     },
     Follows: {
         AlreadyFollowing: "Follows.AlreadyFollowing",

@@ -45,7 +45,7 @@ paths:
       tags:
         - Profiles
       summary: Détails d'un profil
-      description: Récupère les détails du profil d'un utilisateur
+      description: Récupère les détails du profil d'un utilisateur, incluant le statut de follow (isFollowing) par rapport à l'utilisateur authentifié
       security:
         - BearerAuth: []
       parameters:
@@ -57,7 +57,7 @@ paths:
             format: uuid
       responses:
         '200':
-          description: Profil récupéré avec succès
+          description: Profil récupéré avec succès. Inclut le champ 'isFollowing' qui indique si l'utilisateur authentifié suit ce profil
           content:
             application/json:
               schema:
@@ -129,4 +129,4 @@ paths:
         '404':
           description: Utilisateur non trouvé.
         '500':
-          description: Erreur interne du serveur. 
+          description: Erreur interne du serveur.

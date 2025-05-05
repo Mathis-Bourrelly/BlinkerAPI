@@ -7,6 +7,7 @@ const BlinkContents = require('./blinkContents');
 const Interactions = require('./interactions');
 const Conversations = require('./conversations');
 const Messages = require('./messages');
+const BlinkLifetimes = require('./blinkLifetimes');
 
 // Associer Users et Profiles
 Users.hasOne(Profiles, { foreignKey: 'userID', onDelete: 'CASCADE' });
@@ -28,8 +29,27 @@ Follows.belongsTo(Users, { foreignKey: "targetUserID" });
 Users.belongsToMany(Blinks, { through: Interactions, foreignKey: 'userID', as: 'likedBlinks' });
 Blinks.belongsToMany(Users, { through: Interactions, foreignKey: 'postID', as: 'likedByUsers' });
 
+// Associer Users et BlinkLifetimes
+Users.hasMany(BlinkLifetimes, { foreignKey: 'userID', onDelete: 'CASCADE' });
+BlinkLifetimes.belongsTo(Users, { foreignKey: 'userID' });
+
 // Associations pour les conversations et messages
 Messages.belongsTo(Conversations, { foreignKey: 'conversationID' });
 Conversations.hasMany(Messages, { foreignKey: 'conversationID', onDelete: 'CASCADE' });
 
-module.exports = {};
+// Association entre Messages et Users pour le champ senderID
+Messages.belongsTo(Users, { foreignKey: 'senderID', as: 'sender' });
+Users.hasMany(Messages, { foreignKey: 'senderID', as: 'sentMessages' });
+
+// Exporter les modèles avec leurs associations
+module.exports = {
+    Users,
+    Profiles,
+    Follows,
+    Blinks,
+    BlinkContents,
+    Interactions,
+    Conversations,
+    Messages,
+    BlinkLifetimes
+};

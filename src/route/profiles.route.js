@@ -17,7 +17,7 @@ router.post("/", AuthMiddleware.verifyToken, upload.single('avatar'), async (req
 
 router.get("/:userID", AuthMiddleware.verifyToken, async (req, res, next) => {
     try {
-        const profile = await ProfilesService.getProfileByUserID(req.params.userID);
+        const profile = await ProfilesService.getProfileByUserID(req.params.userID, req.user.userID);
         res.status(200).json(profile);
     } catch (error) {
         next(error);

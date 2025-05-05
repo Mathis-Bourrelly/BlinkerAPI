@@ -1,10 +1,27 @@
-const Conversations = require('../models/conversations');
-const Messages = require('../models/messages');
-const Profiles = require('../models/profiles');
+const ConversationsRepository = require('../repository/conversations.repository');
+const MessagesRepository = require('../repository/messages.repository');
 const { sequelize } = require('../core/postgres');
-const { Op } = require('sequelize');
+require('dotenv').config();
 
 class ConversationService {
+    /**
+     * Construit l'URL complète de l'avatar à partir du nom du fichier.
+     * @param {string} filename - Nom du fichier de l'avatar.
+     * @returns {string} URL complète de l'avatar.
+     */
+    buildAvatarUrl(filename) {
+        if (!filename) return null;
+
+        // Toujours utiliser l'URL absolue du serveur API
+        // En développement: http://localhost:3011
+        // En production: https://dev.blinker.eterny.fr
+        const apiUrl = process.env.API_URL ||
+                      (process.env.NODE_ENV === 'production' ?
+                       'https://dev.blinker.eterny.fr' :
+                       'http://localhost:3011');
+
+        return `${apiUrl}/uploads/${filename}`;
+    }
     /**
      * Crée une nouvelle conversation entre deux utilisateurs
      * @param {string[]} participants - Tableau des IDs des participants
@@ -22,10 +39,8 @@ class ConversationService {
             return existingConversation;
         }
 
-        // Créer une nouvelle conversation
-        return await Conversations.create({
-            participants
-        });
+        // Créer une nouvelle conversation via le repository
+        return await ConversationsRepository.createConversation(participants);
     }
 
     /**
@@ -34,7 +49,7 @@ class ConversationService {
      * @returns {Promise<Object|null>} La conversation trouvée ou null
      */
     async findConversationById(conversationID) {
-        return await Conversations.findByPk(conversationID);
+        return await ConversationsRepository.findById(conversationID);
     }
 
     /**
@@ -47,7 +62,7 @@ class ConversationService {
         const sortedParticipants = [...participants].sort();
 
         // Rechercher toutes les conversations qui pourraient correspondre
-        const conversations = await Conversations.findAll();
+        const conversations = await ConversationsRepository.findAll();
 
         // Filtrer pour trouver une conversation avec exactement ces participants
         return conversations.find(conversation => {
@@ -64,14 +79,7 @@ class ConversationService {
      */
     async getUserConversations(userID) {
         // Récupérer toutes les conversations où l'utilisateur est participant
-        const conversations = await Conversations.findAll({
-            where: {
-                participants: {
-                    [Op.contains]: [userID]
-                }
-            },
-            order: [['updatedAt', 'DESC']]
-        });
+        const conversations = await ConversationsRepository.findByParticipant(userID);
 
         // Pour chaque conversation, récupérer les informations supplémentaires
         const result = await Promise.all(conversations.map(async (conversation) => {
@@ -79,26 +87,13 @@ class ConversationService {
             const otherParticipantID = conversation.participants.find(p => p !== userID);
 
             // Récupérer le profil de l'autre participant
-            const profile = await Profiles.findOne({
-                where: { userID: otherParticipantID },
-                attributes: ['userID', 'username', 'display_name', 'avatar_url']
-            });
+            const profile = await ConversationsRepository.getParticipantProfile(otherParticipantID);
 
             // Récupérer le dernier message de la conversation
-            const lastMessage = await Messages.findOne({
-                where: { conversationID: conversation.conversationID },
-                order: [['createdAt', 'DESC']],
-                attributes: ['content', 'createdAt', 'isRead']
-            });
+            const lastMessage = await MessagesRepository.getLastMessage(conversation.conversationID);
 
             // Compter les messages non lus
-            const unreadCount = await Messages.count({
-                where: {
-                    conversationID: conversation.conversationID,
-                    isRead: false,
-                    expiresAt: { [Op.gt]: new Date() }
-                }
-            });
+            const unreadCount = await MessagesRepository.countUnreadMessages(conversation.conversationID);
 
             // Construire l'objet de réponse
             return {
@@ -106,7 +101,7 @@ class ConversationService {
                 userID: otherParticipantID,
                 username: profile?.username,
                 display_name: profile?.display_name,
-                avatar_url: profile?.avatar_url,
+                avatar_url: profile?.avatar_url ? this.buildAvatarUrl(profile.avatar_url) : null,
                 lastMessage: lastMessage ? {
                     content: lastMessage.content,
                     createdAt: lastMessage.createdAt,

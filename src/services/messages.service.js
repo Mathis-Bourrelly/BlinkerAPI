@@ -1,8 +1,5 @@
-const Messages = require('../models/messages');
-const Conversations = require('../models/conversations');
-const Profiles = require('../models/profiles');
+const MessagesRepository = require('../repository/messages.repository');
 const ConversationService = require('./conversations.service');
-const { Op } = require("sequelize");
 const { sequelize } = require('../core/postgres');
 
 class MessagesService {
@@ -43,10 +40,7 @@ class MessagesService {
             const participants = conversation.participants;
 
             // Récupérer les profils des participants avec leurs scores
-            const profiles = await Profiles.findAll({
-                where: { userID: { [Op.in]: participants } },
-                attributes: ['userID', 'score']
-            });
+            const profiles = await MessagesRepository.getParticipantsProfiles(participants);
 
             // Extraire les scores des profils
             const scores = profiles.map(p => p.score);
@@ -55,11 +49,12 @@ class MessagesService {
             const expiresAt = new Date(Date.now() + averageLifetime * 1000);
 
             // Créer le message
-            const message = await Messages.create({
+            const message = await MessagesRepository.createMessage({
                 conversationID,
                 content,
                 expiresAt,
-                isRead: false
+                isRead: false,
+                senderID: userID // Ajouter l'ID de l'expéditeur
             }, { transaction });
 
             // Mettre à jour la date de mise à jour de la conversation
@@ -97,13 +92,7 @@ class MessagesService {
      * @returns {Promise<Array>} Liste des messages
      */
     async getConversationMessages(conversationID) {
-        return await Messages.findAll({
-            where: {
-                conversationID,
-                expiresAt: { [Op.gt]: new Date() }
-            },
-            order: [['createdAt', 'ASC']]
-        });
+        return await MessagesRepository.getConversationMessages(conversationID);
     }
 
     /**
@@ -113,24 +102,10 @@ class MessagesService {
      */
     async getUnreadMessages(userID) {
         // Récupérer toutes les conversations de l'utilisateur
-        const conversations = await Conversations.findAll({
-            where: {
-                participants: {
-                    [Op.contains]: [userID]
-                }
-            }
-        });
-
+        const conversations = await ConversationService.getUserConversations(userID);
         const conversationIDs = conversations.map(c => c.conversationID);
 
-        return await Messages.findAll({
-            where: {
-                conversationID: { [Op.in]: conversationIDs },
-                isRead: false,
-                expiresAt: { [Op.gt]: new Date() }
-            },
-            order: [['createdAt', 'ASC']]
-        });
+        return await MessagesRepository.getUnreadMessages(conversationIDs);
     }
 
     /**
@@ -158,27 +133,15 @@ class MessagesService {
      * @returns {Promise<Array>} Résultat de l'opération
      */
     async markConversationMessagesAsRead(conversationID, userID) {
-        return await Messages.update(
-            { isRead: true },
-            {
-                where: {
-                    conversationID,
-                    isRead: false,
-                    expiresAt: { [Op.gt]: new Date() }
-                }
-            }
-        );
+        return await MessagesRepository.markAsRead(conversationID);
     }
 
     /**
      * Supprime les messages expirés.
+     * @returns {Promise<number>} Nombre de messages supprimés
      */
     async deleteExpiredMessages() {
-        await Messages.destroy({
-            where: {
-                expiresAt: { [Op.lt]: new Date() }
-            }
-        });
+        return await MessagesRepository.deleteExpiredMessages();
     }
 }
 
