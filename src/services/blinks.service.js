@@ -3,6 +3,8 @@ const BlinkLifetimesRepository = require('../repository/blinkLifetimes.repositor
 const { sequelize } = require('../core/postgres');
 const ErrorCodes = require('../../constants/errorCodes');
 const TIER_LEVELS = require('../../constants/tierLevels');
+const { buildAvatarUrl } = require('../utils/url.utils');
+const { createError, withTransaction } = require('../utils/error.utils');
 require('dotenv').config();
 
 // Import du service utilisateur pour la mise à jour des scores
@@ -12,38 +14,42 @@ class BlinkService {
     /**
      * Crée un Blink avec son contenu
      */
-    async createBlinkWithContent({ userID, contents }) {
-        const transaction = await sequelize.transaction();
-        try {
+    async createBlinkWithContent({ userID, contents, skipScoreUpdate = false }) {
+        return await withTransaction(async (transaction) => {
             const blink = await BlinkRepository.createBlink(userID, transaction);
             await BlinkRepository.addBlinkContents(blink.blinkID, contents, transaction);
-            await transaction.commit();
 
             // Mettre à jour le score de l'utilisateur après la création du blink
-            await UsersService.updateUserScore(userID);
+            // Sauf si on demande explicitement de sauter cette étape (utile pour le seeding)
+            if (!skipScoreUpdate) {
+                try {
+                    await UsersService.updateUserScore(userID);
+                } catch (error) {
+                    console.warn(`Impossible de mettre à jour le score de l'utilisateur ${userID}:`, error.message);
+                }
+            }
 
             return blink;
-        } catch (error) {
-            await transaction.rollback();
-            throw { message: error.message || ErrorCodes.Base.UnknownError };
-        }
+        }, sequelize, ErrorCodes.Blinks.CreationFailed);
     }
 
-    async createBlinkWithContentAndDate({ userID, contents, date }) {
-        const transaction = await sequelize.transaction();
-        try {
+    async createBlinkWithContentAndDate({ userID, contents, date, skipScoreUpdate = false }) {
+        return await withTransaction(async (transaction) => {
             const blink = await BlinkRepository.createBlinkWithDate(userID, date, transaction);
             await BlinkRepository.addBlinkContents(blink.blinkID, contents, transaction);
-            await transaction.commit();
 
             // Mettre à jour le score de l'utilisateur après la création du blink
-            await UsersService.updateUserScore(userID);
+            // Sauf si on demande explicitement de sauter cette étape (utile pour le seeding)
+            if (!skipScoreUpdate) {
+                try {
+                    await UsersService.updateUserScore(userID);
+                } catch (error) {
+                    console.warn(`Impossible de mettre à jour le score de l'utilisateur ${userID}:`, error.message);
+                }
+            }
 
             return blink;
-        } catch (error) {
-            await transaction.rollback();
-            throw { message: error.message || ErrorCodes.Base.UnknownError };
-        }
+        }, sequelize, ErrorCodes.Blinks.CreationFailed);
     }
 
     /**
@@ -57,19 +63,10 @@ class BlinkService {
      * Construit l'URL complète pour un avatar
      * @param {string} avatarFilename - Nom du fichier de l'avatar
      * @returns {string} URL complète de l'avatar
+     * @deprecated Utiliser la fonction buildAvatarUrl du module url.utils à la place
      */
     _constructProfileUrl(avatarFilename) {
-        if (!avatarFilename) return null;
-
-        // Toujours utiliser l'URL absolue du serveur API
-        // En développement: http://localhost:3011
-        // En production: https://dev.blinker.eterny.fr
-        const apiUrl = process.env.API_URL ||
-                      (process.env.NODE_ENV === 'production' ?
-                       'https://dev.blinker.eterny.fr' :
-                       'http://localhost:3011');
-
-        return `${apiUrl}/uploads/${avatarFilename}`;
+        return buildAvatarUrl(avatarFilename);
     }
 
     /**
@@ -77,7 +74,8 @@ class BlinkService {
      */
     async getPaginatedBlinks(page = 1, limit = 10, userId = null, currentUserId = null) {
         try {
-            const { total, blinks } = await BlinkRepository.getPaginatedBlinks(page, limit, userId, currentUserId);
+            const result = await BlinkRepository.getPaginatedBlinks(page, limit, userId, currentUserId);
+            const { data: blinks } = result;
 
             // Transformer les URLs des avatars pour inclure l'URL complète
             const transformedBlinks = blinks.map(blink => {
@@ -85,13 +83,17 @@ class BlinkService {
 
                 // Si le blink a un profil avec un avatar_url, construire l'URL complète
                 if (blinkData.profile && blinkData.profile.avatar_url) {
-                    blinkData.profile.avatar_url = this._constructProfileUrl(blinkData.profile.avatar_url);
+                    blinkData.profile.avatar_url = buildAvatarUrl(blinkData.profile.avatar_url);
                 }
 
                 return blinkData;
             });
 
-            return { page, limit, total, data: transformedBlinks };
+            // Retourner le résultat dans le même format que le repository
+            return {
+                ...result,
+                data: transformedBlinks
+            };
         } catch (error) {
             console.error(error);
             throw { message: ErrorCodes.Blinks.FetchFailed };
@@ -103,7 +105,8 @@ class BlinkService {
      */
     async getLikedBlinks(userId, page = 1, limit = 10) {
         try {
-            const { total, blinks } = await BlinkRepository.getLikedBlinks(userId, page, limit);
+            const result = await BlinkRepository.getLikedBlinks(userId, page, limit);
+            const { data: blinks } = result;
 
             // Transformer les URLs des avatars pour inclure l'URL complète
             const transformedBlinks = blinks.map(blink => {
@@ -111,13 +114,17 @@ class BlinkService {
 
                 // Si le blink a un profil avec un avatar_url, construire l'URL complète
                 if (blinkData.profile && blinkData.profile.avatar_url) {
-                    blinkData.profile.avatar_url = this._constructProfileUrl(blinkData.profile.avatar_url);
+                    blinkData.profile.avatar_url = buildAvatarUrl(blinkData.profile.avatar_url);
                 }
 
                 return blinkData;
             });
 
-            return { page, limit, total, data: transformedBlinks };
+            // Retourner le résultat dans le même format que le repository
+            return {
+                ...result,
+                data: transformedBlinks
+            };
         } catch (error) {
             console.error(error);
             throw { message: ErrorCodes.Blinks.FetchFailed };
@@ -128,26 +135,24 @@ class BlinkService {
      * Met à jour un Blink et son contenu
      */
     async updateBlink(blinkID, { contents }) {
-        const transaction = await sequelize.transaction();
-        try {
-            const blink = await BlinkRepository.getBlinkById(blinkID);
-            if (!blink) throw { message: ErrorCodes.Blinks.NotFound };
+        const blink = await BlinkRepository.getBlinkById(blinkID);
+        if (!blink) throw createError(ErrorCodes.Blinks.NotFound);
 
+        return await withTransaction(async (transaction) => {
             await BlinkRepository.deleteBlinkContents(blinkID, transaction);
             await BlinkRepository.addBlinkContents(blinkID, contents, transaction);
 
             await this.updateBlinkTier(blinkID);
 
-            await transaction.commit();
-
             // Mettre à jour le score de l'utilisateur après la mise à jour du blink
-            await UsersService.updateUserScore(blink.userID);
+            try {
+                await UsersService.updateUserScore(blink.userID);
+            } catch (error) {
+                console.warn(`Impossible de mettre à jour le score de l'utilisateur ${blink.userID}:`, error.message);
+            }
 
             return blink;
-        } catch (error) {
-            await transaction.rollback();
-            throw { message: error.message || ErrorCodes.Base.UnknownError };
-        }
+        }, sequelize, ErrorCodes.Blinks.UpdateFailed);
     }
 
     /**
@@ -177,8 +182,11 @@ class BlinkService {
             }, transaction);
 
             // Mettre à jour le score de l'utilisateur
-            const UsersService = require('./users.service');
-            await UsersService.updateUserScore(blink.userID);
+            try {
+                await UsersService.updateUserScore(blink.userID);
+            } catch (error) {
+                console.warn(`Impossible de mettre à jour le score de l'utilisateur ${blink.userID}:`, error.message);
+            }
 
             // Supprimer le blink
             return await BlinkRepository.deleteBlink(blinkID, transaction);
@@ -232,8 +240,7 @@ class BlinkService {
      * Supprime les Blinks expirés (sauf ceux avec le palier "gold")
      */
     async deleteExpiredBlinks() {
-        const transaction = await sequelize.transaction();
-        try {
+        return await withTransaction(async (transaction) => {
             const blinks = await BlinkRepository.getAllBlinks(transaction);
             let deletedCount = 0;
 
@@ -247,12 +254,12 @@ class BlinkService {
                 }
             }
 
-            await transaction.commit();
             console.log(`✅ ${deletedCount} Blink(s) expiré(s) supprimé(s).`);
-        } catch (error) {
-            await transaction.rollback();
+            return deletedCount;
+        }, sequelize).catch(error => {
             console.error("❌ Erreur lors de la suppression des Blinks expirés :", error);
-        }
+            return 0;
+        });
     }
 
     /**
@@ -261,37 +268,67 @@ class BlinkService {
     async searchBlinksAndUsers(query, page = 1, limit = 10) {
         try {
             if (!query || query.trim() === "") {
-                throw { message: ErrorCodes.Blinks.InvalidSearchQuery };
+                throw createError(ErrorCodes.Blinks.InvalidSearchQuery);
             }
 
-            const results = await BlinkRepository.searchBlinksAndUsers(query, Number(page), Number(limit));
+            const result = await BlinkRepository.searchBlinksAndUsers(query, Number(page), Number(limit));
 
-            // Transformer les URLs des avatars pour les utilisateurs
-            if (results.users && results.users.length > 0) {
-                results.users = results.users.map(user => {
-                    const userData = user.toJSON ? user.toJSON() : user;
-                    if (userData.avatar_url) {
-                        userData.avatar_url = this._constructProfileUrl(userData.avatar_url);
-                    }
-                    return userData;
-                });
+            // Vérifier si le résultat est au nouveau format
+            if (result.data) {
+                // Nouveau format avec data
+                const { data } = result;
+
+                // Transformer les données si nécessaire
+                if (data.users && data.users.length > 0) {
+                    data.users = data.users.map(user => {
+                        const userData = user.toJSON ? user.toJSON() : user;
+                        if (userData.avatar_url) {
+                            userData.avatar_url = buildAvatarUrl(userData.avatar_url);
+                        }
+                        return userData;
+                    });
+                }
+
+                if (data.blinks && data.blinks.length > 0) {
+                    data.blinks = data.blinks.map(blink => {
+                        const blinkData = blink.toJSON ? blink.toJSON() : blink;
+                        if (blinkData.Blink && blinkData.Blink.profile && blinkData.Blink.profile.avatar_url) {
+                            blinkData.Blink.profile.avatar_url = buildAvatarUrl(blinkData.Blink.profile.avatar_url);
+                        }
+                        return blinkData;
+                    });
+                }
+
+                return result;
+            } else {
+                // Ancien format
+                // Transformer les URLs des avatars pour les utilisateurs
+                if (result.users && result.users.length > 0) {
+                    result.users = result.users.map(user => {
+                        const userData = user.toJSON ? user.toJSON() : user;
+                        if (userData.avatar_url) {
+                            userData.avatar_url = buildAvatarUrl(userData.avatar_url);
+                        }
+                        return userData;
+                    });
+                }
+
+                // Transformer les URLs des avatars pour les blinks
+                if (result.blinks && result.blinks.length > 0) {
+                    result.blinks = result.blinks.map(blink => {
+                        const blinkData = blink.toJSON ? blink.toJSON() : blink;
+                        if (blinkData.Blink && blinkData.Blink.profile && blinkData.Blink.profile.avatar_url) {
+                            blinkData.Blink.profile.avatar_url = buildAvatarUrl(blinkData.Blink.profile.avatar_url);
+                        }
+                        return blinkData;
+                    });
+                }
+
+                return result;
             }
-
-            // Transformer les URLs des avatars pour les blinks
-            if (results.blinks && results.blinks.length > 0) {
-                results.blinks = results.blinks.map(blink => {
-                    const blinkData = blink.toJSON ? blink.toJSON() : blink;
-                    if (blinkData.Blink && blinkData.Blink.profile && blinkData.Blink.profile.avatar_url) {
-                        blinkData.Blink.profile.avatar_url = this._constructProfileUrl(blinkData.Blink.profile.avatar_url);
-                    }
-                    return blinkData;
-                });
-            }
-
-            return results;
         } catch (error) {
             console.error(error);
-            throw { message: ErrorCodes.Blinks.SearchFailed };
+            throw createError(ErrorCodes.Blinks.SearchFailed, error);
         }
     }
 

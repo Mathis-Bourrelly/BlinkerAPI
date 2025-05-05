@@ -14,19 +14,20 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '../schemas/index.yaml#/components/schemas/ConversationSummary'
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '../schemas/index.yaml#/components/schemas/ConversationSummary'
         '500':
           description: Erreur interne du serveur
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Erreur interne du serveur"
+                $ref: '#/components/schemas/StandardErrorResponse'
 
   /messages/conversation/{conversationID}:
     get:
@@ -53,39 +54,32 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '../schemas/index.yaml#/components/schemas/Message'
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '../schemas/index.yaml#/components/schemas/Message'
         '400':
           description: ID conversation requis
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "ID conversation requis"
+                $ref: '#/components/schemas/StandardErrorResponse'
         '403':
           description: Accès non autorisé
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Accès non autorisé à cette conversation"
+                $ref: '#/components/schemas/StandardErrorResponse'
         '500':
           description: Erreur interne du serveur
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Erreur interne du serveur"
+                $ref: '#/components/schemas/StandardErrorResponse'
 
   /messages/read/conversation/{conversationID}:
     put:

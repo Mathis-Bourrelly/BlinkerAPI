@@ -1,6 +1,7 @@
 const MessagesRepository = require('../repository/messages.repository');
 const ConversationService = require('./conversations.service');
 const { sequelize } = require('../core/postgres');
+const { createError, withTransaction } = require('../utils/error.utils');
 
 class MessagesService {
     /**
@@ -12,30 +13,28 @@ class MessagesService {
      * @returns {Promise<Object>} Le message créé
      */
     async sendMessage(userID, receiverID, content, conversationID = null) {
-        const transaction = await sequelize.transaction();
+        let conversation;
 
-        try {
-            let conversation;
-
-            // Si conversationID est fourni, vérifier qu'elle existe
-            if (conversationID) {
-                conversation = await ConversationService.findConversationById(conversationID);
-                if (!conversation) {
-                    throw new Error('Conversation non trouvée');
-                }
-
-                // Vérifier que l'utilisateur fait partie de la conversation
-                if (!conversation.participants.includes(userID)) {
-                    throw new Error('L\'utilisateur ne fait pas partie de cette conversation');
-                }
-            } else if (receiverID) {
-                // Créer ou récupérer une conversation entre ces deux utilisateurs
-                conversation = await ConversationService.createConversation([userID, receiverID]);
-                conversationID = conversation.conversationID;
-            } else {
-                throw new Error('receiverID ou conversationID doit être fourni');
+        // Si conversationID est fourni, vérifier qu'elle existe
+        if (conversationID) {
+            conversation = await ConversationService.findConversationById(conversationID);
+            if (!conversation) {
+                throw createError('Conversation non trouvée');
             }
 
+            // Vérifier que l'utilisateur fait partie de la conversation
+            if (!conversation.participants.includes(userID)) {
+                throw createError('L\'utilisateur ne fait pas partie de cette conversation');
+            }
+        } else if (receiverID) {
+            // Créer ou récupérer une conversation entre ces deux utilisateurs
+            conversation = await ConversationService.createConversation([userID, receiverID]);
+            conversationID = conversation.conversationID;
+        } else {
+            throw createError('receiverID ou conversationID doit être fourni');
+        }
+
+        return await withTransaction(async (transaction) => {
             // Calcul de la durée de vie en fonction des scores stockés dans les profils
             const participants = conversation.participants;
 
@@ -60,12 +59,8 @@ class MessagesService {
             // Mettre à jour la date de mise à jour de la conversation
             await conversation.update({ updatedAt: new Date() }, { transaction });
 
-            await transaction.commit();
             return message;
-        } catch (error) {
-            await transaction.rollback();
-            throw error;
-        }
+        }, sequelize);
     }
 
     /**

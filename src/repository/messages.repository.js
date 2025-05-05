@@ -3,8 +3,13 @@ const Conversations = require('../models/conversations');
 const Profiles = require('../models/profiles');
 const Users = require('../models/users');
 const { Op } = require('sequelize');
+const BaseRepository = require('./base.repository');
+const ErrorCodes = require('../../constants/errorCodes');
 
-class MessagesRepository {
+class MessagesRepository extends BaseRepository {
+    constructor() {
+        super(Messages, ErrorCodes.Messages);
+    }
     /**
      * Crée un nouveau message
      * @param {Object} messageData - Données du message
@@ -12,7 +17,7 @@ class MessagesRepository {
      * @returns {Promise<Object>} Le message créé
      */
     async createMessage(messageData, options = {}) {
-        return await Messages.create(messageData, options);
+        return this.create(messageData, options);
     }
 
     /**
@@ -112,11 +117,15 @@ class MessagesRepository {
      * @returns {Promise<number>} Nombre de messages supprimés
      */
     async deleteExpiredMessages() {
-        return await Messages.destroy({
-            where: {
-                expiresAt: { [Op.lt]: new Date() }
-            }
-        });
+        try {
+            return await Messages.destroy({
+                where: {
+                    expiresAt: { [Op.lt]: new Date() }
+                }
+            });
+        } catch (error) {
+            throw { message: ErrorCodes.Messages?.DeletionFailed || 'Failed to delete expired messages' };
+        }
     }
 
     /**

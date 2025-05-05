@@ -6,6 +6,7 @@ const ErrorCodes = require("../../constants/errorCodes");
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const { buildAvatarUrl } = require("../utils/url.utils");
 require('dotenv').config();
 
 class ProfilesService {
@@ -13,19 +14,10 @@ class ProfilesService {
      * Construit l'URL complète de l'avatar à partir du nom du fichier.
      * @param {string} filename - Nom du fichier de l'avatar.
      * @returns {string} URL complète de l'avatar.
+     * @deprecated Utiliser la fonction buildAvatarUrl du module url.utils à la place
      */
     buildAvatarUrl(filename) {
-        if (!filename) return null;
-
-        // Toujours utiliser l'URL absolue du serveur API
-        // En développement: http://localhost:3011
-        // En production: https://dev.blinker.eterny.fr
-        const apiUrl = process.env.API_URL ||
-                      (process.env.NODE_ENV === 'production' ?
-                       'https://dev.blinker.eterny.fr' :
-                       'http://localhost:3011');
-
-        return `${apiUrl}/uploads/${filename}`;
+        return buildAvatarUrl(filename);
     }
 
 
@@ -97,7 +89,7 @@ class ProfilesService {
             });
 
             // Construire l'URL complète de l'avatar si elle existe
-            profile.avatar_url = this.buildAvatarUrl(profile.avatar_url);
+            profile.avatar_url = buildAvatarUrl(profile.avatar_url);
 
             return profile;
         } catch (error) {
@@ -132,7 +124,7 @@ class ProfilesService {
         }
 
         // Construire l'URL complète de l'avatar si elle existe
-        profile.avatar_url = this.buildAvatarUrl(profile.avatar_url);
+        profile.avatar_url = buildAvatarUrl(profile.avatar_url);
 
         // Vérifier si l'utilisateur qui fait la demande suit ce profil
         if (requestingUserID && requestingUserID !== userID) {
@@ -163,7 +155,7 @@ class ProfilesService {
         await ProfilesRepository.updateAvatar(userID, avatar_url);
 
         // Retourner l'URL complète de l'avatar
-        return this.buildAvatarUrl(avatar_url);
+        return buildAvatarUrl(avatar_url);
     }
 
 }

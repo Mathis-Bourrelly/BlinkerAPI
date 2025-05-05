@@ -21,40 +21,19 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Vous suivez maintenant cet utilisateur"
+                $ref: '#/components/schemas/StandardResponse'
         '400':
           description: Erreur de validation
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  message:
-                    type: string
-                    example: "Vous ne pouvez pas vous suivre vous-même"
+                $ref: '#/components/schemas/StandardErrorResponse'
         '404':
           description: Utilisateur non trouvé
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  message:
-                    type: string
-                    example: "Utilisateur non trouvé"
+                $ref: '#/components/schemas/StandardErrorResponse'
         '409':
           description: Conflit
           content:
@@ -89,40 +68,19 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Vous ne suivez plus cet utilisateur"
+                $ref: '#/components/schemas/StandardResponse'
         '404':
           description: Utilisateur non trouvé
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  message:
-                    type: string
-                    example: "Utilisateur non trouvé"
+                $ref: '#/components/schemas/StandardErrorResponse'
         '409':
           description: Conflit
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  message:
-                    type: string
-                    example: "Vous ne suivez pas cet utilisateur"
+                $ref: '#/components/schemas/StandardErrorResponse'
 
   /follows/followers/{userID}:
     get:
@@ -159,41 +117,51 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  page:
-                    type: integer
-                    example: 1
-                  limit:
-                    type: integer
-                    example: 10
-                  total:
-                    type: integer
-                    example: 42
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        avatar_url:
-                          type: string
-                          example: "https://example.com/avatar.jpg"
-                        name:
-                          type: string
-                          example: "John Doe"
-                        username:
-                          type: string
-                          example: "johndoe"
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          page:
+                            type: integer
+                            example: 1
+                          limit:
+                            type: integer
+                            example: 10
+                          total:
+                            type: integer
+                            example: 42
+                          totalPages:
+                            type: integer
+                            example: 5
+                          hasNextPage:
+                            type: boolean
+                            example: true
+                          hasPrevPage:
+                            type: boolean
+                            example: false
+                          data:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                avatar_url:
+                                  type: string
+                                  example: "https://example.com/avatar.jpg"
+                                name:
+                                  type: string
+                                  example: "John Doe"
+                                username:
+                                  type: string
+                                  example: "johndoe"
         '404':
           description: Utilisateur non trouvé.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Utilisateur non trouvé"
+                $ref: '#/components/schemas/StandardErrorResponse'
 
   /follows/following/{userID}:
     get:
@@ -230,38 +198,48 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  page:
-                    type: integer
-                    example: 1
-                  limit:
-                    type: integer
-                    example: 10
-                  total:
-                    type: integer
-                    example: 35
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        avatar_url:
-                          type: string
-                          example: "https://example.com/avatar.jpg"
-                        name:
-                          type: string
-                          example: "Jane Doe"
-                        username:
-                          type: string
-                          example: "janedoe"
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          page:
+                            type: integer
+                            example: 1
+                          limit:
+                            type: integer
+                            example: 10
+                          total:
+                            type: integer
+                            example: 35
+                          totalPages:
+                            type: integer
+                            example: 4
+                          hasNextPage:
+                            type: boolean
+                            example: true
+                          hasPrevPage:
+                            type: boolean
+                            example: false
+                          data:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                avatar_url:
+                                  type: string
+                                  example: "https://example.com/avatar.jpg"
+                                name:
+                                  type: string
+                                  example: "Jane Doe"
+                                username:
+                                  type: string
+                                  example: "janedoe"
         '404':
           description: Utilisateur non trouvé.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Utilisateur non trouvé" 
+                $ref: '#/components/schemas/StandardErrorResponse'

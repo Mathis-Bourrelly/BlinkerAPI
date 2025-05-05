@@ -1,8 +1,12 @@
 const { sequelize } = require('../core/postgres');
-const Profiles = require("../models/Profiles");
+const Profiles = require("../models/profiles");
 const ErrorCodes = require("../../constants/errorCodes");
+const BaseRepository = require('./base.repository');
 
-class ProfilesRepository {
+class ProfilesRepository extends BaseRepository {
+    constructor() {
+        super(Profiles, ErrorCodes.Profiles);
+    }
     /**
      * Trouve un profil par userID avec les stats de follows et blinks.
      * @param {string} userID - UUID de l'utilisateur.
@@ -71,18 +75,7 @@ class ProfilesRepository {
         return profile;
     }
 
-    /**
-     * Crée un nouveau profil.
-     * @param {Object} profileData - Données du profil.
-     * @returns {Promise<Object>} Le profil créé.
-     */
-    async create(profileData) {
-        try {
-            return await Profiles.create(profileData);
-        } catch (error) {
-            throw { message: ErrorCodes.Profiles.CreationFailed };
-        }
-    }
+    // La méthode create est héritée de BaseRepository
 
     /**
      * Met à jour l'URL de l'avatar pour un utilisateur donné.
@@ -91,11 +84,7 @@ class ProfilesRepository {
      * @returns {Promise<void>}
      */
      async updateAvatar(userID, avatar_url) {
-        try {
-        await Profiles.update({ avatar_url }, { where: { userID } });
-        } catch (error) {
-            throw { message: ErrorCodes.Profiles.UpdateFailed };
-        }
+        return this.update(userID, { avatar_url });
     }
 
     /**
@@ -105,11 +94,7 @@ class ProfilesRepository {
      * @returns {Promise<void>}
      */
     async updateScore(userID, score) {
-        try {
-            await Profiles.update({ score }, { where: { userID } });
-        } catch (error) {
-            throw { message: ErrorCodes.Profiles.UpdateFailed };
-        }
+        return this.update(userID, { score });
     }
 }
 

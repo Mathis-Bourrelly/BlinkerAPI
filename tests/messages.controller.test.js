@@ -38,7 +38,7 @@ const MessagesService = require('../src/services/messages.service.js');
 const ConversationService = require('../src/services/conversations.service.js');
 
 // Importer le contrôleur de messages
-const messagesRoutes = require('../src/route/messages.route.js');
+const messagesRoutes = require('../src/route/OLD/messages.route.js');
 
 describe('Messages Controller', () => {
   // Réinitialiser les mocks avant chaque test

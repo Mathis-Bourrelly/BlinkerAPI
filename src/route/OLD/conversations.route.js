@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const ConversationService = require('../services/conversations.service.js');
-const AuthMiddleware = require("../core/middlewares/authMiddleware");
+const ConversationService = require('../../services/conversations.service.js');
+const AuthMiddleware = require("../../core/middlewares/authMiddleware");
 
 /**
  * @route GET /conversations

@@ -1,9 +1,9 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const {body, validationResult} = require('express-validator');
-const UsersService = require('../services/users.service');
-const {sendEmail} = require('../core/emailService');
-const AuthMiddleware = require('../core/middlewares/authMiddleware');
+const UsersService = require('../../services/users.service');
+const {sendEmail} = require('../../core/emailService');
+const AuthMiddleware = require('../../core/middlewares/authMiddleware');
 const router = express.Router();
 
 router.post('/register',

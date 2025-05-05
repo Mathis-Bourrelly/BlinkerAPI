@@ -16,7 +16,7 @@ const seedBlinks = async () => {
         let blinkCount = 0;
         let likeCount = 0;
         let dislikeCount = 0;
-        const numberOfBlinks = 100;
+        const numberOfBlinks = 50;
 
         // Générer des blinks
         for (let i = 0; i < numberOfBlinks; i++) {
@@ -47,19 +47,21 @@ const seedBlinks = async () => {
             }
 
             // Utiliser le service pour créer le blink avec son contenu
+            // Passer skipScoreUpdate=true pour éviter les problèmes de dépendances circulaires
             const blink = await BlinkService.createBlinkWithContentAndDate({
                 userID: randomUser.userID,
                 contents: contents,
                 date: getRandomDate(),
+                skipScoreUpdate: true // Éviter la mise à jour du score pendant le seeding
             });
             console.log(`🔹 Blink créé pour l'utilisateur ${randomUser.userID}`);
             blinkCount++;
 
             // Ajouter des likes et dislikes aléatoires
-            // Nombre de likes (entre 0 et 20)
-            const numberOfLikes = Math.floor(Math.random() * 21);
-            // Nombre de dislikes (entre 0 et 10)
-            const numberOfDislikes = Math.floor(Math.random() * 11);
+            // Nombre de likes (entre 0 et 3)
+            const numberOfLikes = Math.floor(Math.random() * 4);
+            // Nombre de dislikes (entre 0 et 2)
+            const numberOfDislikes = Math.floor(Math.random() * 3);
 
             // Garder une trace des utilisateurs qui ont déjà interagi avec ce blink
             const interactedUsers = new Set();

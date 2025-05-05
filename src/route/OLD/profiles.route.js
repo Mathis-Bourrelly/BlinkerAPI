@@ -1,7 +1,7 @@
 const express = require("express");
-const ProfilesService = require("../services/profiles.service");
+const ProfilesService = require("../../services/profiles.service");
 const multer = require("multer");
-const AuthMiddleware = require("../core/middlewares/authMiddleware");
+const AuthMiddleware = require("../../core/middlewares/authMiddleware");
 
 const router = express.Router();
 const upload = multer({ dest: 'uploads/', limits: { fileSize: 5 * 1024 * 1024 },  })

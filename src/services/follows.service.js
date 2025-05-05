@@ -6,6 +6,22 @@ const ProfilesService = require("./profiles.service");
 
 class FollowsService {
     /**
+     * Vérifie si un utilisateur suit un autre utilisateur
+     * @param {string} fromUserID - ID de l'utilisateur qui suit
+     * @param {string} targetUserID - ID de l'utilisateur suivi
+     * @returns {Promise<boolean>} - true si l'utilisateur suit la cible, false sinon
+     */
+    async isFollowing(fromUserID, targetUserID) {
+        try {
+            const follow = await FollowsRepository.isFollowing(fromUserID, targetUserID);
+            return !!follow; // Convertit en booléen
+        } catch (error) {
+            console.error(`Erreur lors de la vérification du follow entre ${fromUserID} et ${targetUserID}:`, error);
+            return false;
+        }
+    }
+
+    /**
      * Suivre un utilisateur
      */
     async followUser(fromUserID, targetUserID) {
@@ -62,12 +78,24 @@ class FollowsService {
      */
     async getFollowers(targetUserID, page = 1, limit = 10) {
         try {
-            const { total, followers } = await FollowsRepository.getFollowers(targetUserID, page, limit);
-            const followersData = await Promise.all(
-                followers.map(follow => ProfilesService.getProfileByUserID(follow.fromUserID))
-            );
+            const result = await FollowsRepository.getFollowers(targetUserID, page, limit);
+            const { total, data: follows } = result;
+
+            // Récupérer les profils des followers, en ignorant ceux qui n'existent pas
+            const followersData = [];
+            for (const follow of follows) {
+                try {
+                    const profile = await ProfilesService.getProfileByUserID(follow.fromUserID);
+                    followersData.push(profile);
+                } catch (profileError) {
+                    console.warn(`Profil non trouvé pour l'utilisateur ${follow.fromUserID}:`, profileError.message);
+                    // Continuer avec le prochain profil
+                }
+            }
+
             return { page, limit, total, data: followersData };
         } catch (error) {
+            console.error('Erreur lors de la récupération des followers:', error);
             throw { message: ErrorCodes.Follows.FetchFailed };
         }
     }
@@ -77,13 +105,24 @@ class FollowsService {
      */
     async getFollowedUsers(fromUserID, page = 1, limit = 10) {
         try {
-            const { total, followedUsers } = await FollowsRepository.getFollowedUsers(fromUserID, page, limit);
-            const followedUsersData = await Promise.all(
-                followedUsers.map(follow => ProfilesService.getProfileByUserID(follow.targetUserID))
-            );
+            const result = await FollowsRepository.getFollowedUsers(fromUserID, page, limit);
+            const { total, data: follows } = result;
+
+            // Récupérer les profils des utilisateurs suivis, en ignorant ceux qui n'existent pas
+            const followedUsersData = [];
+            for (const follow of follows) {
+                try {
+                    const profile = await ProfilesService.getProfileByUserID(follow.targetUserID);
+                    followedUsersData.push(profile);
+                } catch (profileError) {
+                    console.warn(`Profil non trouvé pour l'utilisateur ${follow.targetUserID}:`, profileError.message);
+                    // Continuer avec le prochain profil
+                }
+            }
 
             return { page, limit, total, data: followedUsersData };
         } catch (error) {
+            console.error('Erreur lors de la récupération des utilisateurs suivis:', error);
             throw { message: ErrorCodes.Follows.FetchFailed };
         }
     }

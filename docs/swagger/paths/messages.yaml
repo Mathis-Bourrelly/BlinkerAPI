@@ -38,27 +38,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../schemas/index.yaml#/components/schemas/Message'
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '../schemas/index.yaml#/components/schemas/Message'
         '400':
           description: Données invalides
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Données invalides. receiverID et content sont requis."
+                $ref: '#/components/schemas/StandardErrorResponse'
         '500':
           description: Erreur interne du serveur
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Erreur interne du serveur"
+                $ref: '#/components/schemas/StandardErrorResponse'
 
   /messages/between/{userID}:
     get:

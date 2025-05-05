@@ -24,26 +24,43 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  created:
-                    type: boolean
-                    example: true
-                    description: Indique si un nouveau like a été créé
-                  removed:
-                    type: boolean
-                    example: false
-                    description: Indique si un like existant a été supprimé
-                  updated:
-                    type: boolean
-                    example: false
-                    description: Indique si un like a été mis à jour (changement de type de réaction)
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          created:
+                            type: boolean
+                            example: true
+                            description: Indique si un nouveau like a été créé
+                          removed:
+                            type: boolean
+                            example: false
+                            description: Indique si un like existant a été supprimé
+                          updated:
+                            type: boolean
+                            example: false
+                            description: Indique si un like a été mis à jour (changement de type de réaction)
         '401':
           description: Utilisateur non authentifié.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
         '404':
           description: Blink non trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
         '500':
           description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
 
   /interactions/dislike/{postID}:
     post:
@@ -70,23 +87,40 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  created:
-                    type: boolean
-                    example: true
-                    description: Indique si un nouveau dislike a été créé
-                  removed:
-                    type: boolean
-                    example: false
-                    description: Indique si un dislike existant a été supprimé
-                  updated:
-                    type: boolean
-                    example: false
-                    description: Indique si un dislike a été mis à jour (changement de type de réaction)
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          created:
+                            type: boolean
+                            example: true
+                            description: Indique si un nouveau dislike a été créé
+                          removed:
+                            type: boolean
+                            example: false
+                            description: Indique si un dislike existant a été supprimé
+                          updated:
+                            type: boolean
+                            example: false
+                            description: Indique si un dislike a été mis à jour (changement de type de réaction)
         '401':
           description: Utilisateur non authentifié.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
         '404':
           description: Blink non trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
         '500':
-          description: Erreur interne du serveur. 
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'

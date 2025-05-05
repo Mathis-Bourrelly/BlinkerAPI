@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const MessagesService = require('../services/messages.service.js');
-const ConversationService = require('../services/conversations.service.js');
-const AuthMiddleware = require("../core/middlewares/authMiddleware");
+const MessagesService = require('../../services/messages.service.js');
+const ConversationService = require('../../services/conversations.service.js');
+const AuthMiddleware = require("../../core/middlewares/authMiddleware");
 
 /**
  * @route POST /messages

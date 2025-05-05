@@ -2,19 +2,35 @@ const express = require("express");
 require("dotenv").config();
 const { initializeConfigMiddlewares } = require("./middlewares");
 const authMiddleware = require("./middlewares/authMiddleware");
-const usersRoute = require("../route/users.route");
-const followsRoute = require("../route/follows.route");
-const profilesRoute = require("../route/profiles.route");
-const loginRoute = require("../route/login.route");
-const blinksRoute = require("../route/blinks.route");
-const messagesRoute = require("../route/messages.route");
-const conversationsRoute = require("../route/conversations.route");
-const interactionsRoute = require("../route/interactions.route");
+
+// Routes traditionnelles
+const usersRoute = require("../route/OLD/users.route");
+const followsRoute = require("../route/OLD/follows.route");
+const profilesRoute = require("../route/OLD/profiles.route");
+const loginRoute = require("../route/OLD/login.route");
+const blinksRoute = require("../route/OLD/blinks.route");
+const messagesRoute = require("../route/OLD/messages.route");
+const conversationsRoute = require("../route/OLD/conversations.route");
+const interactionsRoute = require("../route/OLD/interactions.route");
+
+// Routes standardisées
+const loginRouteStd = require("../route/login.route.standardized");
+const usersRouteStd = require("../route/users.route.standardized");
+const followsRouteStd = require("../route/follows.route.standardized");
+const profilesRouteStd = require("../route/profiles.route.standardized");
+const blinksRouteStd = require("../route/blinks.route.standardized");
+const messagesRouteStd = require("../route/messages.route.standardized");
+const conversationsRouteStd = require("../route/conversations.route.standardized");
+const interactionsRouteStd = require("../route/interactions.route.standardized");
+
 const { sequelize } = require("./postgres");
 const { AUTO_DELETE_INTERVAL } = require("../../config/blinks.config");
 require("../../src/core/cron");
 const SocketManager = require("./socket");
 const http = require("http");
+const { logger, httpLogger } = require("../utils/logger.utils");
+const { errorHandler } = require("../utils/response.utils");
+const { initializeSwagger } = require("./swagger");
 
 class WebServer {
     app = undefined;
@@ -23,9 +39,15 @@ class WebServer {
 
     constructor() {
         this.app = express();
+
+        // Ajouter le middleware de journalisation HTTP
+        this.app.use(httpLogger);
+
         initializeConfigMiddlewares(this.app);
         this._initializeRoutes();
         this._initializeErrorHandler();
+
+        logger.info('Application initialisée');
     }
 
     start() {
@@ -33,43 +55,47 @@ class WebServer {
 
         // Démarrer le serveur HTTP + WebSocket
         this.server.listen(this.port, () => {
-            console.log(`✅ App listening on port ${this.port}`);
-            console.log(`⏳ Suppression automatique des Blinks activée toutes les ${AUTO_DELETE_INTERVAL / 1000} secondes.`);
+            logger.info(`App listening on port ${this.port}`);
+            logger.info(`Suppression automatique des Blinks activée toutes les ${AUTO_DELETE_INTERVAL / 1000} secondes.`);
         });
 
         SocketManager.initialize(this.server);
     }
 
     _initializeRoutes() {
-        console.log("🚀 Initialisation des routes...");
+        logger.info("Initialisation des routes...");
 
-        this.app.use("/", loginRoute.initializeRoutes());
-        console.log("✅ Route login initialisée");
+        // Route de login standardisée
+        this.app.use("/", loginRouteStd.initializeRoutes());
+        logger.info("Route login initialisée");
 
-        this.app.use("/users", usersRoute.initializeRoutes());
-        this.app.use("/follows", followsRoute.initializeRoutes());
-        this.app.use("/profiles", profilesRoute.initializeRoutes());
-        this.app.use("/blinks", blinksRoute.initializeRoutes());
-        this.app.use("/messages", messagesRoute.initializeRoutes());
-        this.app.use("/conversations", conversationsRoute.initializeRoutes());
-        this.app.use("/interactions", interactionsRoute.initializeRoutes());
+        // Utiliser les routes standardisées avec les mêmes chemins que les routes originales
+        this.app.use("/users", usersRouteStd.initializeRoutes());
+        this.app.use("/follows", followsRouteStd.initializeRoutes());
+        this.app.use("/profiles", profilesRouteStd.initializeRoutes());
+        this.app.use("/blinks", blinksRouteStd.initializeRoutes());
+        this.app.use("/messages", messagesRouteStd.initializeRoutes());
+        this.app.use("/conversations", conversationsRouteStd.initializeRoutes());
+        this.app.use("/interactions", interactionsRouteStd.initializeRoutes());
 
-        console.log("✅ Routes protégées initialisées");
+        logger.info("Routes standardisées initialisées");
+
+        // Note: Les routes originales sont toujours disponibles dans le code mais ne sont plus utilisées
+        // Elles peuvent être réactivées en cas de besoin pour la rétro-compatibilité
     }
 
     _initializeErrorHandler() {
+        // Utiliser le middleware de gestion d'erreurs standardisé
         this.app.use((err, req, res, next) => {
             if (err.name === "UnauthorizedError") {
-                res.status(401).send("invalid token");
+                logger.error(`Accès non autorisé: ${err.message}`);
+                return res.status(401).send("invalid token");
             }
-            console.error("❌ ErrorHandler :", err);
-            console.error("❌ ErrorHandler :", err.message);
-            const statusCode = err.statusCode || 500;
-            const errorResponse = {
-                message: err.message || "Erreur interne du serveur"
-            };
-            res.status(statusCode).json(errorResponse);
+            next(err);
         });
+
+        // Utiliser notre gestionnaire d'erreurs standardisé
+        this.app.use(errorHandler);
     }
 }
 

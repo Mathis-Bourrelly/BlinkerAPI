@@ -11,19 +11,20 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '../schemas/index.yaml#/components/schemas/User'
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '../schemas/index.yaml#/components/schemas/User'
         '500':
           description: Erreur interne du serveur
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Erreur interne du serveur"
+                $ref: '#/components/schemas/StandardErrorResponse'
 
   /users/search:
     get:
@@ -60,56 +61,68 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  total:
-                    type: integer
-                    example: 42
-                    description: Nombre total d'utilisateurs correspondant à la recherche
-                  users:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        userID:
-                          type: string
-                          format: uuid
-                          example: "123e4567-e89b-12d3-a456-426614174000"
-                        display_name:
-                          type: string
-                          example: "John Doe"
-                        username:
-                          type: string
-                          example: "john_doe"
-                        avatar_url:
-                          type: string
-                          example: "http://localhost:3011/uploads/avatar.jpg"
-                        bio:
-                          type: string
-                          example: "Développeur full-stack passionné"
-                        score:
-                          type: integer
-                          example: 100
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          page:
+                            type: integer
+                            example: 1
+                          limit:
+                            type: integer
+                            example: 10
+                          total:
+                            type: integer
+                            example: 42
+                            description: Nombre total d'utilisateurs correspondant à la recherche
+                          totalPages:
+                            type: integer
+                            example: 5
+                          hasNextPage:
+                            type: boolean
+                            example: true
+                          hasPrevPage:
+                            type: boolean
+                            example: false
+                          data:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                userID:
+                                  type: string
+                                  format: uuid
+                                  example: "123e4567-e89b-12d3-a456-426614174000"
+                                display_name:
+                                  type: string
+                                  example: "John Doe"
+                                username:
+                                  type: string
+                                  example: "john_doe"
+                                avatar_url:
+                                  type: string
+                                  example: "http://localhost:3011/uploads/avatar.jpg"
+                                bio:
+                                  type: string
+                                  example: "Développeur full-stack passionné"
+                                score:
+                                  type: integer
+                                  example: 100
         '400':
           description: Paramètres de recherche invalides
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Le paramètre 'query' est requis."
+                $ref: '#/components/schemas/StandardErrorResponse'
         '500':
           description: Erreur interne du serveur
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "User.SearchFailed"
+                $ref: '#/components/schemas/StandardErrorResponse'
 
   /users/register:
     post:

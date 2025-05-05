@@ -38,8 +38,8 @@ async function updateAllUserScores() {
 // Suppression des données expirées toutes les X secondes (défini dans la config)
 setInterval(deleteExpiredData, AUTO_DELETE_INTERVAL);
 
-// Seeding de blinks toutes les jours
-setInterval(seedBlinks, 24 * 3600000);
+// Seeding de blinks toutes les 12h
+setInterval(seedBlinks, 12 * 3600000);
 
 // Mise à jour des scores utilisateurs toutes les 12 heures
 setInterval(updateAllUserScores, 12 * 3600000);

@@ -29,35 +29,32 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  userID:
-                    type: string
-                    format: uuid
-                    example: "123e4567-e89b-12d3-a456-426614174000"
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          token:
+                            type: string
+                            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                          userID:
+                            type: string
+                            format: uuid
+                            example: "123e4567-e89b-12d3-a456-426614174000"
         '400':
           description: Données invalides
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Email ou mot de passe invalide"
+                $ref: '#/components/schemas/StandardErrorResponse'
         '401':
           description: Authentification échouée
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Identifiants incorrects"
+                $ref: '#/components/schemas/StandardErrorResponse'
 
   /login/google:
     post:
@@ -83,35 +80,32 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  userID:
-                    type: string
-                    format: uuid
-                    example: "123e4567-e89b-12d3-a456-426614174000"
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          token:
+                            type: string
+                            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                          userID:
+                            type: string
+                            format: uuid
+                            example: "123e4567-e89b-12d3-a456-426614174000"
         '400':
           description: Token invalide
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Token Google invalide"
+                $ref: '#/components/schemas/StandardErrorResponse'
         '401':
           description: Authentification échouée
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Authentification Google échouée"
+                $ref: '#/components/schemas/StandardErrorResponse'
 
   /checkToken:
     post:
@@ -127,18 +121,19 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  valid:
-                    type: boolean
-                    example: true
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          valid:
+                            type: boolean
+                            example: true
         '401':
           description: Token invalide
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Token invalide ou expiré" 
+                $ref: '#/components/schemas/StandardErrorResponse'

@@ -2,17 +2,20 @@ const Conversations = require('../models/conversations');
 const Messages = require('../models/messages');
 const Profiles = require('../models/profiles');
 const { Op } = require('sequelize');
+const BaseRepository = require('./base.repository');
+const ErrorCodes = require('../../constants/errorCodes');
 
-class ConversationsRepository {
+class ConversationsRepository extends BaseRepository {
+    constructor() {
+        super(Conversations, ErrorCodes.Conversations);
+    }
     /**
      * Crée une nouvelle conversation
      * @param {string[]} participants - Tableau des IDs des participants
      * @returns {Promise<Object>} La conversation créée
      */
     async createConversation(participants) {
-        return await Conversations.create({
-            participants
-        });
+        return this.create({ participants });
     }
 
     /**
@@ -21,7 +24,7 @@ class ConversationsRepository {
      * @returns {Promise<Object|null>} La conversation trouvée ou null
      */
     async findById(conversationID) {
-        return await Conversations.findByPk(conversationID);
+        return super.findById(conversationID);
     }
 
     /**
@@ -29,7 +32,7 @@ class ConversationsRepository {
      * @returns {Promise<Array>} Liste de toutes les conversations
      */
     async findAll() {
-        return await Conversations.findAll();
+        return super.findAll();
     }
 
     /**
@@ -56,11 +59,7 @@ class ConversationsRepository {
      * @returns {Promise<Object>} Résultat de la mise à jour
      */
     async update(conversationID, updates, options = {}) {
-        const conversation = await this.findById(conversationID);
-        if (!conversation) {
-            throw new Error('Conversation non trouvée');
-        }
-        return await conversation.update(updates, options);
+        return super.update(conversationID, updates, options);
     }
 
     /**

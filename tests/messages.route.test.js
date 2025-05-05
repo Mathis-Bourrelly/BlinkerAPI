@@ -8,7 +8,7 @@ const request = require('supertest');
 const MessagesService = require('../src/services/messages.service');
 const ConversationService = require('../src/services/conversations.service');
 const AuthMiddleware = require('../src/core/middlewares/authMiddleware');
-const messagesRoutes = require('../src/route/messages.route');
+const messagesRoutes = require('../src/route/OLD/messages.route');
 
 // Mocks pour les dépendances
 jest.mock('../src/services/messages.service');

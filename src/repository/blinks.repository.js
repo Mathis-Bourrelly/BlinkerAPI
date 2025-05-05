@@ -4,25 +4,22 @@ const Profiles = require('../models/profiles');
 const { sequelize } = require('../core/postgres');
 const ErrorCodes = require('../../constants/errorCodes');
 const {Op} = require("sequelize");
+const BaseRepository = require('./base.repository');
+const { normalizePaginationParams, formatPaginatedResponse } = require('../utils/pagination.utils');
 
-class BlinkRepository {
+class BlinkRepository extends BaseRepository {
+    constructor() {
+        super(Blinks, ErrorCodes.Blinks);
+    }
     /**
      * Crée un Blink
      */
     async createBlink(userID, transaction) {
-        try {
-            return await Blinks.create({ userID }, { transaction });
-        } catch (error) {
-            throw { message: ErrorCodes.Blinks.CreationFailed };
-        }
+        return this.create({ userID }, { transaction });
     }
 
     async createBlinkWithDate(userID, createdAt, transaction) {
-        try {
-            return await Blinks.create({ userID, createdAt}, { transaction });
-        } catch (error) {
-            throw { message: ErrorCodes.Blinks.CreationFailed };
-        }
+        return this.create({ userID, createdAt }, { transaction });
     }
 
     /**
@@ -87,19 +84,24 @@ class BlinkRepository {
      * Récupère tous les Blinks
      */
     async getAllBlinks(transaction) {
-        return await Blinks.findAll({ transaction });
+        return this.findAll({ transaction });
     }
 
     /**
      * Récupère les Blinks avec pagination
+     * @param {number} page - Numéro de la page
+     * @param {number} limit - Nombre d'éléments par page
+     * @param {string} userId - ID de l'utilisateur (optionnel)
+     * @param {string} currentUserId - ID de l'utilisateur courant (optionnel)
+     * @returns {Promise<Object>} Résultat paginé
      */
     async getPaginatedBlinks(page, limit, userId = null, currentUserId = null) {
-        const offset = (page - 1) * limit;
+        const { offset, limit: normalizedLimit } = normalizePaginationParams({ page, limit });
         const whereClause = userId ? { userID: userId } : {};
 
         const { count, rows } = await Blinks.findAndCountAll({
             where: whereClause,
-            limit,
+            limit: normalizedLimit,
             offset,
             order: [['createdAt', 'DESC']],
             include: [
@@ -133,7 +135,12 @@ class BlinkRepository {
             return blinkJson;
         });
 
-        return { total: count, blinks };
+        return formatPaginatedResponse({
+            page,
+            limit: normalizedLimit,
+            total: count,
+            data: blinks
+        });
     }
 
     /**
@@ -150,16 +157,12 @@ class BlinkRepository {
     /**
      * Supprime un Blink
      */
-    async deleteBlink(blinkID) {
-        try {
-            return await Blinks.destroy({ where: { blinkID } });
-        } catch (error) {
-            throw { message: ErrorCodes.Blinks.DeletionFailed };
-        }
+    async deleteBlink(blinkID, transaction) {
+        return this.delete(blinkID, { transaction });
     }
 
     async searchBlinksAndUsers(query, page = 1, limit = 10) {
-        const offset = (page - 1) * limit;
+        const { offset, limit: normalizedLimit } = normalizePaginationParams({ page, limit });
 
         // Recherche dans les profils (display_name et username)
         const users = await Profiles.findAll({
@@ -170,7 +173,7 @@ class BlinkRepository {
                 ]
             },
             attributes: ['userID', 'display_name', 'username', 'avatar_url'],
-            limit,
+            limit: normalizedLimit,
             offset
         });
 

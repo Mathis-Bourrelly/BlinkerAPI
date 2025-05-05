@@ -38,41 +38,47 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  page:
-                    type: integer
-                    example: 1
-                  limit:
-                    type: integer
-                    example: 10
-                  total:
-                    type: integer
-                    example: 100
-                  data:
-                    type: array
-                    items:
-                      $ref: '../schemas/index.yaml#/components/schemas/Blink'
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          page:
+                            type: integer
+                            example: 1
+                          limit:
+                            type: integer
+                            example: 10
+                          total:
+                            type: integer
+                            example: 100
+                          totalPages:
+                            type: integer
+                            example: 10
+                          hasNextPage:
+                            type: boolean
+                            example: true
+                          hasPrevPage:
+                            type: boolean
+                            example: false
+                          data:
+                            type: array
+                            items:
+                              $ref: '../schemas/index.yaml#/components/schemas/Blink'
         '400':
           description: Requête invalide (ex. paramètre non valide).
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Paramètres de pagination invalides."
+                $ref: '#/components/schemas/StandardErrorResponse'
         '500':
           description: Erreur interne du serveur.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Erreur interne du serveur"
+                $ref: '#/components/schemas/StandardErrorResponse'
 
     post:
       tags:
@@ -111,27 +117,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../schemas/index.yaml#/components/schemas/Blink'
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '../schemas/index.yaml#/components/schemas/Blink'
         '400':
           description: Données invalides.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Données invalides"
+                $ref: '#/components/schemas/StandardErrorResponse'
         '500':
           description: Erreur interne du serveur.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Erreur interne du serveur"
+                $ref: '#/components/schemas/StandardErrorResponse'
 
   /blinks/{blinkID}:
     get:
@@ -456,4 +459,4 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Erreur interne du serveur" 
+                    example: "Erreur interne du serveur"

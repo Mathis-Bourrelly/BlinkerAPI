@@ -232,25 +232,9 @@ UsersService.calculateUserScore = async function(userID) {
             return averageLifetime;
         }
 
-        // 2. Si nous n'avons pas de données de durée de vie, utiliser la méthode de calcul du temps restant
-        const BlinkService = require('./blinks.service');
-        const blinks = await BlinkRepository.getBlinksByUser(userID);
-
-        if (!blinks || blinks.length === 0) {
-            console.log(`Aucun blink trouvé pour l'utilisateur ${userID}, score par défaut: 86400 (24h)`);
-            return 86400; // 24h en secondes par défaut
-        }
-
-        let totalDuration = 0;
-
-        for (const blink of blinks) {
-            const remainingTime = await BlinkService.calculateRemainingTime(blink.blinkID);
-            totalDuration += remainingTime;
-        }
-
-        const averageScore = Math.round(totalDuration / blinks.length);
-        console.log(`Score calculé à partir du temps restant moyen: ${averageScore} secondes`);
-        return averageScore;
+        // 2. Si nous n'avons pas de données de durée de vie, utiliser un score par défaut
+        console.log(`Aucune donnée de durée de vie pour l'utilisateur ${userID}, score par défaut: 86400 (24h)`);
+        return 86400; // 24h en secondes par défaut
     } catch (error) {
         console.error('Erreur lors du calcul du score:', error);
         return 86400; // 24h en secondes par défaut en cas d'erreur

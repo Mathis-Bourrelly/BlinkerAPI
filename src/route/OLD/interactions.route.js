@@ -1,6 +1,6 @@
 const express = require("express");
-const InteractionsService = require("../services/interactions.service");
-const AuthMiddleware = require("../core/middlewares/authMiddleware");
+const InteractionsService = require("../../services/interactions.service");
+const AuthMiddleware = require("../../core/middlewares/authMiddleware");
 
 const router = express.Router();
 

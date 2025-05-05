@@ -1,10 +1,8 @@
 const express = require('express');
 const { DateTime } = require('luxon');
 let cors = require('cors');
-const swaggerUi = require('swagger-ui-express')
 const {expressjwt: jwt} = require("express-jwt");
-const yaml = require("js-yaml");
-const fs = require("fs");
+const { initializeSwagger } = require('./swagger');
 
 
 const initJsonHandlerMiddleware = (app) => app.use(express.json({
@@ -104,73 +102,10 @@ const initLoggerMiddleware = (app) => {
     });
 };
 
+// Utilise l'implémentation de swagger.js
 const initSwaggerMiddleware = (app) => {
     try {
-        console.log("Loading Swagger documentation...");
-
-        // Charger le document principal
-        const swaggerDocument = yaml.load(fs.readFileSync("./docs/swagger/index.yaml", "utf8"));
-
-        // Charger les composants
-        const securitySchemes = yaml.load(fs.readFileSync("./docs/swagger/components/security.yaml", "utf8"));
-        const schemas = yaml.load(fs.readFileSync("./docs/swagger/schemas/index.yaml", "utf8"));
-
-        // Charger les chemins
-        const blinksPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/blinks.yaml", "utf8"));
-        const interactionsPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/interactions.yaml", "utf8"));
-        const profilesPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/profiles.yaml", "utf8"));
-        const followsPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/follows.yaml", "utf8"));
-        const authPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/auth.yaml", "utf8"));
-        const usersPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/users.yaml", "utf8"));
-        const messagesPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/messages.yaml", "utf8"));
-        const conversationsPaths = yaml.load(fs.readFileSync("./docs/swagger/paths/conversations.yaml", "utf8"));
-
-        // Combiner tous les chemins
-        const paths = {
-            ...blinksPaths.paths,
-            ...interactionsPaths.paths,
-            ...profilesPaths.paths,
-            ...followsPaths.paths,
-            ...authPaths.paths,
-            ...usersPaths.paths,
-            ...messagesPaths.paths,
-            ...conversationsPaths.paths
-        };
-
-        // Mettre à jour le document Swagger
-        swaggerDocument.paths = paths;
-        swaggerDocument.components = {
-            securitySchemes: securitySchemes.components.securitySchemes,
-            schemas: schemas.components.schemas
-        };
-
-        // Configurer Swagger UI avec les options
-        const options = {
-            explorer: true,
-            swaggerOptions: {
-                docExpansion: "list",
-                filter: true,
-                showRequestDuration: true,
-                tryItOutEnabled: true,
-                requestInterceptor: (req) => {
-                    // Ajouter le token JWT si disponible
-                    const token = localStorage.getItem('token');
-                    if (token) {
-                        req.headers.Authorization = `Bearer ${token}`;
-                    }
-                    return req;
-                }
-            }
-        };
-
-        // Servir le document Swagger
-        app.use("/api-docs", swaggerUi.serve);
-        app.get("/api-docs/swagger.json", (req, res) => {
-            res.json(swaggerDocument);
-        });
-        app.use("/api-docs", swaggerUi.setup(swaggerDocument, options));
-
-        console.log("✅ Swagger initialized at /api-docs");
+        initializeSwagger(app);
     } catch (error) {
         console.error("❌ Error loading Swagger:", error.message);
     }
@@ -182,7 +117,7 @@ exports.initializeConfigMiddlewares = (app) => {
     initJsonHandlerMiddleware(app); // Gestion des requêtes JSON
     handleJsonErrors(app); // Gestion des erreurs de parsing JSON
     initJwtMiddleware(app); // Middleware JWT pour l'authentification
-    initLoggerMiddleware(app); // Logger des requêtes
+    // initLoggerMiddleware(app); // Logger des requêtes (désactivé car remplacé par Winston)
     staticMiddleware(app); // Fichiers statiques
     initFileUploadMiddleware(app); // Middleware d'upload de fichiers
 }

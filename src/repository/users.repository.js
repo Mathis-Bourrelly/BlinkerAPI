@@ -2,84 +2,77 @@ const User = require('../models/users');
 const Profiles = require('../models/profiles');
 const { Op } = require('sequelize');
 const ErrorCodes = require("../../constants/errorCodes");
+const BaseRepository = require('./base.repository');
+const { createError } = require('../utils/error.utils');
 
-const UsersRepository = {
+class UsersRepository extends BaseRepository {
+    constructor() {
+        super(User, ErrorCodes.User);
+    }
     /**
      * Créer un utilisateur.
+     * @param {Object} userData - Données de l'utilisateur
+     * @param {string} userData.email - Email de l'utilisateur
+     * @param {string} [userData.password] - Mot de passe hashé (optionnel pour auth Google)
+     * @param {boolean} userData.isVerified - Statut de vérification
+     * @returns {Promise<Object>} L'utilisateur créé
      */
-    async createUser({ email, password, isVerified }) {
-        try {
-            return await User.create({
-                email,
-                password, // Le mot de passe est déjà hashé dans la couche service
-                isVerified,
-            });
-        } catch (error) {
-            throw { message: ErrorCodes.User.CreationFailed };
-        }
-    },
+    async createUser(userData) {
+        return this.create(userData);
+    }
 
     /**
      * Obtenir tous les utilisateurs.
+     * @returns {Promise<Array>} Liste des utilisateurs
      */
     async getAllUsers() {
-        return await User.findAll({
-            attributes: { exclude: ['password'] }, // Exclure le mot de passe des résultats
+        return this.findAll({
+            attributes: { exclude: ['password'] }
         });
-    },
+    }
 
     /**
      * Obtenir un utilisateur par son ID.
+     * @param {string} userID - ID de l'utilisateur
+     * @returns {Promise<Object>} L'utilisateur trouvé
      */
     async getUserById(userID) {
-        const user = await User.findByPk(userID, {
-            attributes: { exclude: ['password'] },
+        return this.findById(userID, {
+            attributes: { exclude: ['password'] }
         });
-
-        if (!user) {
-            throw { message: ErrorCodes.User.NotFound };
-        }
-
-        return user;
-    },
+    }
 
     /**
      * Obtenir un utilisateur par son email.
+     * @param {string} email - Email de l'utilisateur
+     * @returns {Promise<Object|null>} L'utilisateur trouvé ou null
      */
     async getUserByEmail(email) {
-        return await User.findOne({ where: { email } });
-    },
+        try {
+            return await User.findOne({ where: { email } });
+        } catch (error) {
+            throw createError(ErrorCodes.User.FetchFailed, error);
+        }
+    }
 
     /**
      * Mettre à jour un utilisateur.
+     * @param {string} userID - ID de l'utilisateur
+     * @param {Object} updates - Données à mettre à jour
+     * @returns {Promise<Object>} L'utilisateur mis à jour
      */
     async updateUser(userID, updates) {
-        const user = await User.findByPk(userID);
-        if (!user) {
-            throw { message: ErrorCodes.User.NotFound };
-        }
-
-        try {
-            await user.update(updates);
-            return user;
-        } catch (error) {
-            throw { message: ErrorCodes.User.UpdateFailed };
-        }
-    },
+        return this.update(userID, updates);
+    }
 
     /**
      * Supprimer un utilisateur.
+     * @param {string} userID - ID de l'utilisateur
+     * @returns {Promise<boolean>} true si supprimé avec succès
      */
     async deleteUser(userID) {
-        try {
-            const deleted = await User.destroy({ where: { userID } });
-            if (!deleted) {
-                throw { message: ErrorCodes.User.NotFound };
-            }
-        } catch (error) {
-            throw { message: ErrorCodes.User.DeletionFailed };
-        }
-    },
+        return this.delete(userID);
+    }
 
     /**
      * Rechercher des utilisateurs par nom d'affichage ou nom d'utilisateur
@@ -109,9 +102,9 @@ const UsersRepository = {
             return { total: count, users: rows };
         } catch (error) {
             console.error('Erreur lors de la recherche d\'utilisateurs:', error);
-            throw { message: ErrorCodes.User.SearchFailed };
+            throw createError(ErrorCodes.User.SearchFailed, error);
         }
     }
-};
+}
 
-module.exports = UsersRepository;
+module.exports = new UsersRepository();

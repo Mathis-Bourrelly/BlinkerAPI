@@ -1,7 +1,14 @@
 const Follows = require('../models/follows');
 const ErrorCodes = require('../../constants/errorCodes');
+const BaseRepository = require('./base.repository');
+const { Op } = require('sequelize');
+const { normalizePaginationParams, formatPaginatedResponse } = require('../utils/pagination.utils');
+const { createError } = require('../utils/error.utils');
 
-class FollowsRepository {
+class FollowsRepository extends BaseRepository {
+    constructor() {
+        super(Follows, ErrorCodes.Follows);
+    }
     /**
      * Vérifie si un utilisateur suit déjà un autre utilisateur
      */
@@ -18,11 +25,7 @@ class FollowsRepository {
             throw { message: ErrorCodes.Follows.AlreadyFollowing };
         }
 
-        try {
-            return await Follows.create({ fromUserID, targetUserID });
-        } catch (error) {
-            throw { message: ErrorCodes.Follows.FollowFailed };
-        }
+        return this.create({ fromUserID, targetUserID });
     }
 
     /**
@@ -43,37 +46,55 @@ class FollowsRepository {
 
     /**
      * Obtenir la liste des followers d'un utilisateur avec pagination
+     * @param {string} targetUserID - ID de l'utilisateur cible
+     * @param {number} page - Numéro de la page
+     * @param {number} limit - Nombre d'éléments par page
+     * @returns {Promise<Object>} Résultat paginé
      */
     async getFollowers(targetUserID, page, limit) {
         try {
-            const offset = (page - 1) * limit;
+            const { offset, limit: normalizedLimit } = normalizePaginationParams({ page, limit });
             const { count, rows } = await Follows.findAndCountAll({
                 where: { targetUserID },
-                limit,
+                limit: normalizedLimit,
                 offset
             });
 
-            return { total: count, followers: rows };
+            return formatPaginatedResponse({
+                page,
+                limit: normalizedLimit,
+                total: count,
+                data: rows
+            });
         } catch (error) {
-            throw { message: ErrorCodes.Follows.FetchFailed };
+            throw createError(ErrorCodes.Follows.FetchFailed, error);
         }
     }
 
     /**
      * Obtenir la liste des utilisateurs suivis par un utilisateur avec pagination
+     * @param {string} fromUserID - ID de l'utilisateur qui suit
+     * @param {number} page - Numéro de la page
+     * @param {number} limit - Nombre d'éléments par page
+     * @returns {Promise<Object>} Résultat paginé
      */
     async getFollowedUsers(fromUserID, page, limit) {
         try {
-            const offset = (page - 1) * limit;
+            const { offset, limit: normalizedLimit } = normalizePaginationParams({ page, limit });
             const { count, rows } = await Follows.findAndCountAll({
                 where: { fromUserID },
-                limit,
+                limit: normalizedLimit,
                 offset
             });
 
-            return { total: count, followedUsers: rows };
+            return formatPaginatedResponse({
+                page,
+                limit: normalizedLimit,
+                total: count,
+                data: rows
+            });
         } catch (error) {
-            throw { message: ErrorCodes.Follows.FetchFailed };
+            throw createError(ErrorCodes.Follows.FetchFailed, error);
         }
     }
 }

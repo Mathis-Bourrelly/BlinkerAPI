@@ -27,18 +27,33 @@ paths:
       responses:
         '201':
           description: Profil créé avec succès
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Profile'
         '400':
           description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
         '409':
           description: Username déjà utilisé
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Ce nom d'utilisateur est déjà pris"
+                allOf:
+                  - $ref: '#/components/schemas/StandardErrorResponse'
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Ce nom d'utilisateur est déjà pris"
 
   /profiles/{userID}:
     get:
@@ -61,17 +76,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../schemas/index.yaml#/components/schemas/Profile'
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '../schemas/index.yaml#/components/schemas/Profile'
         '404':
           description: Profil non trouvé
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Profil non trouvé"
+                $ref: '#/components/schemas/StandardErrorResponse'
         '500':
           description: Erreur interne du serveur
           content:
