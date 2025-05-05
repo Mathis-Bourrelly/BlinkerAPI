@@ -1,5 +1,6 @@
 const UsersService = require('../src/services/users.service');
 const BlinkService = require('../src/services/blinks.service');
+const InteractionsService = require('../src/services/interactions.service');
 
 const seedBlinks = async () => {
     try {
@@ -13,7 +14,9 @@ const seedBlinks = async () => {
         }
 
         let blinkCount = 0;
-        const numberOfBlinks = 50;
+        let likeCount = 0;
+        let dislikeCount = 0;
+        const numberOfBlinks = 100;
 
         // Générer des blinks
         for (let i = 0; i < numberOfBlinks; i++) {
@@ -44,16 +47,61 @@ const seedBlinks = async () => {
             }
 
             // Utiliser le service pour créer le blink avec son contenu
-            await BlinkService.createBlinkWithContentAndDate({
+            const blink = await BlinkService.createBlinkWithContentAndDate({
                 userID: randomUser.userID,
                 contents: contents,
                 date: getRandomDate(),
             });
             console.log(`🔹 Blink créé pour l'utilisateur ${randomUser.userID}`);
             blinkCount++;
+
+            // Ajouter des likes et dislikes aléatoires
+            // Nombre de likes (entre 0 et 20)
+            const numberOfLikes = Math.floor(Math.random() * 21);
+            // Nombre de dislikes (entre 0 et 10)
+            const numberOfDislikes = Math.floor(Math.random() * 11);
+
+            // Garder une trace des utilisateurs qui ont déjà interagi avec ce blink
+            const interactedUsers = new Set();
+
+            // Ajouter des likes
+            for (let k = 0; k < numberOfLikes; k++) {
+                // Choisir un utilisateur aléatoire différent du créateur du blink
+                let likerIndex;
+                let likerUser;
+                do {
+                    likerIndex = Math.floor(Math.random() * users.length);
+                    likerUser = users[likerIndex];
+                } while (likerUser.userID === randomUser.userID || interactedUsers.has(likerUser.userID));
+
+                // Ajouter l'utilisateur à la liste des utilisateurs ayant interagi
+                interactedUsers.add(likerUser.userID);
+
+                // Ajouter le like
+                await InteractionsService.toggleLike(blink.blinkID, likerUser.userID);
+                likeCount++;
+            }
+
+            // Ajouter des dislikes
+            for (let l = 0; l < numberOfDislikes; l++) {
+                // Choisir un utilisateur aléatoire différent du créateur du blink et qui n'a pas déjà liké
+                let dislikerIndex;
+                let dislikerUser;
+                do {
+                    dislikerIndex = Math.floor(Math.random() * users.length);
+                    dislikerUser = users[dislikerIndex];
+                } while (dislikerUser.userID === randomUser.userID || interactedUsers.has(dislikerUser.userID));
+
+                // Ajouter l'utilisateur à la liste des utilisateurs ayant interagi
+                interactedUsers.add(dislikerUser.userID);
+
+                // Ajouter le dislike
+                await InteractionsService.toggleDislike(blink.blinkID, dislikerUser.userID);
+                dislikeCount++;
+            }
         }
 
-        console.log(`✅ Seeding terminé ! ${blinkCount} blinks ajoutés.`);
+        console.log(`✅ Seeding terminé ! ${blinkCount} blinks ajoutés avec ${likeCount} likes et ${dislikeCount} dislikes.`);
     } catch (error) {
         console.error("❌ Erreur lors du seeding des blinks :", error);
     }
