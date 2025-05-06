@@ -26,8 +26,47 @@ Follows.belongsTo(Users, { foreignKey: "fromUserID" });
 Users.hasMany(Follows, { foreignKey: "targetUserID", onDelete: "CASCADE" });
 Follows.belongsTo(Users, { foreignKey: "targetUserID" });
 
-Users.belongsToMany(Blinks, { through: Interactions, foreignKey: 'userID', as: 'likedBlinks' });
-Blinks.belongsToMany(Users, { through: Interactions, foreignKey: 'postID', as: 'likedByUsers' });
+// Association pour les likes
+Users.belongsToMany(Blinks, {
+    through: {
+        model: Interactions,
+        scope: { reactionType: 'like' },
+        attributes: ['reactionType']
+    },
+    foreignKey: 'userID',
+    as: 'likedBlinks'
+});
+
+Blinks.belongsToMany(Users, {
+    through: {
+        model: Interactions,
+        scope: { reactionType: 'like' },
+        attributes: ['reactionType']
+    },
+    foreignKey: 'postID',
+    as: 'likedByUsers'
+});
+
+// Association pour les dislikes
+Users.belongsToMany(Blinks, {
+    through: {
+        model: Interactions,
+        scope: { reactionType: 'dislike' },
+        attributes: ['reactionType']
+    },
+    foreignKey: 'userID',
+    as: 'dislikedBlinks'
+});
+
+Blinks.belongsToMany(Users, {
+    through: {
+        model: Interactions,
+        scope: { reactionType: 'dislike' },
+        attributes: ['reactionType']
+    },
+    foreignKey: 'postID',
+    as: 'dislikedByUsers'
+});
 
 // Associer Users et BlinkLifetimes
 Users.hasMany(BlinkLifetimes, { foreignKey: 'userID', onDelete: 'CASCADE' });

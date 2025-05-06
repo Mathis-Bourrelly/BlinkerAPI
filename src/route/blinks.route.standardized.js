@@ -109,7 +109,8 @@ router.get('/:blinkID',
     ]),
     withStandardResponse(async (req) => {
         const { blinkID } = req.params;
-        const blink = await BlinkService.getBlinkById(blinkID);
+        const userID = req.user.userID;
+        const blink = await BlinkService.getBlinkById(blinkID, userID);
 
         if (!blink) {
             const error = new Error('Blink non trouvé');

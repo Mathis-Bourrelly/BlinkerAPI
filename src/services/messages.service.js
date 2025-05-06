@@ -1,7 +1,18 @@
 const MessagesRepository = require('../repository/messages.repository');
-const ConversationService = require('./conversations.service');
+// Import ConversationService lazily to avoid circular dependencies
+let ConversationService;
+const WebSocketService = require('./websocket.service');
 const { sequelize } = require('../core/postgres');
 const { createError, withTransaction } = require('../utils/error.utils');
+const { logger } = require('../utils/logger.utils');
+
+// Initialize ConversationService lazily
+const getConversationService = () => {
+    if (!ConversationService) {
+        ConversationService = require('./conversations.service');
+    }
+    return ConversationService;
+};
 
 class MessagesService {
     /**
@@ -17,7 +28,7 @@ class MessagesService {
 
         // Si conversationID est fourni, vérifier qu'elle existe
         if (conversationID) {
-            conversation = await ConversationService.findConversationById(conversationID);
+            conversation = await getConversationService().findConversationById(conversationID);
             if (!conversation) {
                 throw createError('Conversation non trouvée');
             }
@@ -28,7 +39,7 @@ class MessagesService {
             }
         } else if (receiverID) {
             // Créer ou récupérer une conversation entre ces deux utilisateurs
-            conversation = await ConversationService.createConversation([userID, receiverID]);
+            conversation = await getConversationService().createConversation([userID, receiverID]);
             conversationID = conversation.conversationID;
         } else {
             throw createError('receiverID ou conversationID doit être fourni');
@@ -59,7 +70,33 @@ class MessagesService {
             // Mettre à jour la date de mise à jour de la conversation
             await conversation.update({ updatedAt: new Date() }, { transaction });
 
-            return message;
+            // Récupérer le message avec les informations de l'expéditeur
+            const messageWithSender = await MessagesRepository.findById(message.messageID, {
+                include: [{
+                    model: sequelize.models.Users,
+                    as: 'sender',
+                    attributes: ['userID', 'email']
+                }],
+                transaction
+            });
+
+            // Notifier les autres participants via WebSocket (après la transaction)
+            setTimeout(() => {
+                try {
+                    // Envoyer uniquement des notifications individuelles aux participants
+                    // pour éviter les doublons d'événements
+                    conversation.participants.forEach(participantID => {
+                        // Envoyer la notification à tous les participants, y compris l'expéditeur
+                        // pour assurer la cohérence des données
+                        WebSocketService.notifyNewMessage(participantID, messageWithSender, conversationID);
+                    });
+                    logger.info(`Notification de nouveau message envoyée pour la conversation ${conversationID}`);
+                } catch (error) {
+                    logger.error(`Erreur lors de la notification WebSocket: ${error.message}`);
+                }
+            }, 0);
+
+            return messageWithSender;
         }, sequelize);
     }
 
@@ -71,7 +108,7 @@ class MessagesService {
      */
     async getMessagesBetweenUsers(user1, user2) {
         // Trouver la conversation entre ces deux utilisateurs
-        const conversation = await ConversationService.findConversationByParticipants([user1, user2]);
+        const conversation = await getConversationService().findConversationByParticipants([user1, user2]);
 
         if (!conversation) {
             return [];
@@ -97,7 +134,7 @@ class MessagesService {
      */
     async getUnreadMessages(userID) {
         // Récupérer toutes les conversations de l'utilisateur
-        const conversations = await ConversationService.getUserConversations(userID);
+        const conversations = await getConversationService().getUserConversations(userID);
         const conversationIDs = conversations.map(c => c.conversationID);
 
         return await MessagesRepository.getUnreadMessages(conversationIDs);
@@ -111,14 +148,14 @@ class MessagesService {
      */
     async markMessagesAsRead(senderID, receiverID) {
         // Trouver la conversation entre ces deux utilisateurs
-        const conversation = await ConversationService.findConversationByParticipants([senderID, receiverID]);
+        const conversation = await getConversationService().findConversationByParticipants([senderID, receiverID]);
 
         if (!conversation) {
             return [0]; // Aucun message mis à jour
         }
 
         // Marquer les messages comme lus
-        return await this.markConversationMessagesAsRead(conversation.conversationID, receiverID);
+        return await this.markConversationAsRead(conversation.conversationID, receiverID);
     }
 
     /**
@@ -127,16 +164,51 @@ class MessagesService {
      * @param {string} userID - ID de l'utilisateur qui marque les messages comme lus
      * @returns {Promise<Array>} Résultat de l'opération
      */
-    async markConversationMessagesAsRead(conversationID, userID) {
-        return await MessagesRepository.markAsRead(conversationID);
+    async markConversationAsRead(conversationID, userID) {
+        try {
+            // Vérifier que l'utilisateur fait partie de la conversation
+            const conversation = await getConversationService().findConversationById(conversationID);
+            if (!conversation || !conversation.participants.includes(userID)) {
+                throw createError('L\'utilisateur ne fait pas partie de cette conversation');
+            }
+
+            // Marquer les messages comme lus
+            const result = await MessagesRepository.markAsRead(conversationID, userID);
+
+            // Notifier les autres participants via WebSocket
+            if (result[0] > 0) { // Si des messages ont été mis à jour
+                WebSocketService.notifyMessagesRead(conversationID, userID);
+                logger.info(`${result[0]} messages marqués comme lus par ${userID} dans la conversation ${conversationID}`);
+            }
+
+            return result;
+        } catch (error) {
+            logger.error(`Erreur lors du marquage des messages comme lus: ${error.message}`);
+            throw error;
+        }
     }
 
     /**
-     * Supprime les messages expirés.
-     * @returns {Promise<number>} Nombre de messages supprimés
+     * Supprime les messages expirés et retourne les messages supprimés.
+     * @returns {Promise<Array>} Messages supprimés
      */
     async deleteExpiredMessages() {
-        return await MessagesRepository.deleteExpiredMessages();
+        try {
+            // Récupérer les messages expirés avant de les supprimer
+            const expiredMessages = await MessagesRepository.getExpiredMessages();
+
+            if (expiredMessages.length > 0) {
+                // Supprimer les messages expirés
+                await MessagesRepository.deleteExpiredMessages();
+                logger.info(`${expiredMessages.length} messages expirés supprimés`);
+                return expiredMessages;
+            }
+
+            return [];
+        } catch (error) {
+            logger.error(`Erreur lors de la suppression des messages expirés: ${error.message}`);
+            return [];
+        }
     }
 }
 

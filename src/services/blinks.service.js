@@ -54,9 +54,12 @@ class BlinkService {
 
     /**
      * Récupère un Blink par son ID
+     * @param {string} blinkID - ID du blink à récupérer
+     * @param {string} currentUserId - ID de l'utilisateur courant (optionnel)
+     * @returns {Promise<Object>} Le blink avec les informations de like/dislike si currentUserId est fourni
      */
-    async getBlinkById(blinkID) {
-        return await BlinkRepository.getBlinkById(blinkID);
+    async getBlinkById(blinkID, currentUserId = null) {
+        return await BlinkRepository.getBlinkById(blinkID, currentUserId);
     }
 
     /**

@@ -125,6 +125,10 @@ components:
           type: boolean
           example: true
           description: Indique si le blink est liké par l'utilisateur courant
+        isDisliked:
+          type: boolean
+          example: false
+          description: Indique si le blink est disliké par l'utilisateur courant
 
     User:
       type: object

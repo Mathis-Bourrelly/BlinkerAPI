@@ -7,7 +7,7 @@ paths:
       description: |
         Récupère une liste paginée de blinks, triés par date de création (du plus récent au plus ancien).
         Possibilité de filtrer les résultats en fonction de l'utilisateur qui a créé le blink.
-        Inclut l'information si le blink est liké par l'utilisateur courant.
+        Inclut les informations si le blink est liké (isLiked) ou disliké (isDisliked) par l'utilisateur courant.
       security:
         - BearerAuth: [ ]
       parameters:
@@ -141,7 +141,9 @@ paths:
       tags:
         - Blinks
       summary: Récupérer un blink par ID
-      description: Récupère un blink en fonction de son identifiant.
+      description: |
+        Récupère un blink en fonction de son identifiant.
+        Inclut les informations si le blink est liké (isLiked) ou disliké (isDisliked) par l'utilisateur courant.
       security:
         - BearerAuth: []
       parameters:
@@ -351,6 +353,7 @@ paths:
       description: |
         Récupère une liste paginée des blinks que l'utilisateur courant a likés.
         Les blinks sont triés par date de création (du plus récent au plus ancien).
+        Inclut les informations si le blink est liké (isLiked=true) ou disliké (isDisliked) par l'utilisateur courant.
       security:
         - BearerAuth: [ ]
       parameters:
@@ -401,6 +404,7 @@ paths:
       summary: Rechercher dans les blinks et les profils d'utilisateurs
       description: |
         Effectue une recherche sur les profils (display_name, username) et les blinks (contenu texte uniquement).
+        Les blinks retournés incluent les informations si le blink est liké (isLiked) ou disliké (isDisliked) par l'utilisateur courant.
       security:
         - BearerAuth: [ ]
       parameters:

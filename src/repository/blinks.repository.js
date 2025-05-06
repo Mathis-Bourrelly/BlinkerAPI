@@ -52,14 +52,45 @@ class BlinkRepository extends BaseRepository {
     /**
      * Récupère un Blink avec son contenu
      */
-    async getBlinkById(blinkID) {
+    async getBlinkById(blinkID, currentUserId = null) {
         const blink = await Blinks.findOne({
             where: { blinkID },
-            include: [{ model: BlinkContents, as: 'contents' }]
+            include: [
+                { model: BlinkContents, as: 'contents' },
+                {
+                    model: sequelize.models.Users,
+                    as: 'likedByUsers',
+                    attributes: ['userID'],
+                    through: {
+                        attributes: ['reactionType'],
+                        where: currentUserId ? { userID: currentUserId } : {}
+                    },
+                    required: false
+                },
+                {
+                    model: sequelize.models.Users,
+                    as: 'dislikedByUsers',
+                    attributes: ['userID'],
+                    through: {
+                        attributes: ['reactionType'],
+                        where: currentUserId ? { userID: currentUserId } : {}
+                    },
+                    required: false
+                }
+            ]
         });
 
         if (!blink) {
             throw { message: ErrorCodes.Blinks.NotFound };
+        }
+
+        if (currentUserId) {
+            const blinkJson = blink.toJSON();
+            blinkJson.isLiked = blinkJson.likedByUsers && blinkJson.likedByUsers.length > 0;
+            blinkJson.isDisliked = blinkJson.dislikedByUsers && blinkJson.dislikedByUsers.length > 0;
+            delete blinkJson.likedByUsers;
+            delete blinkJson.dislikedByUsers;
+            return blinkJson;
         }
 
         return blink;
@@ -120,18 +151,30 @@ class BlinkRepository extends BaseRepository {
                     attributes: ['userID'],
                     through: {
                         attributes: ['reactionType'],
-                        where: currentUserId ? { userID: currentUserId, reactionType: 'like' } : {}
+                        where: currentUserId ? { userID: currentUserId } : {}
+                    },
+                    required: false
+                },
+                {
+                    model: sequelize.models.Users,
+                    as: 'dislikedByUsers',
+                    attributes: ['userID'],
+                    through: {
+                        attributes: ['reactionType'],
+                        where: currentUserId ? { userID: currentUserId } : {}
                     },
                     required: false
                 }
             ]
         });
 
-        // Transformer les résultats pour avoir un champ isLiked
+        // Transformer les résultats pour avoir les champs isLiked et isDisliked
         const blinks = rows.map(blink => {
             const blinkJson = blink.toJSON();
             blinkJson.isLiked = blinkJson.likedByUsers && blinkJson.likedByUsers.length > 0;
+            blinkJson.isDisliked = blinkJson.dislikedByUsers && blinkJson.dislikedByUsers.length > 0;
             delete blinkJson.likedByUsers;
+            delete blinkJson.dislikedByUsers;
             return blinkJson;
         });
 
@@ -234,9 +277,19 @@ class BlinkRepository extends BaseRepository {
                     attributes: ['userID'],
                     through: {
                         attributes: ['reactionType'],
-                        where: { userID: userId, reactionType: 'like' }
+                        where: { userID: userId }
                     },
                     required: true
+                },
+                {
+                    model: sequelize.models.Users,
+                    as: 'dislikedByUsers',
+                    attributes: ['userID'],
+                    through: {
+                        attributes: ['reactionType'],
+                        where: { userID: userId }
+                    },
+                    required: false
                 }
             ],
             limit,
@@ -244,11 +297,13 @@ class BlinkRepository extends BaseRepository {
             order: [['createdAt', 'DESC']]
         });
 
-        // Transformer les résultats pour avoir un champ isLiked
+        // Transformer les résultats pour avoir les champs isLiked et isDisliked
         const blinks = rows.map(blink => {
             const blinkJson = blink.toJSON();
             blinkJson.isLiked = true;
+            blinkJson.isDisliked = blinkJson.dislikedByUsers && blinkJson.dislikedByUsers.length > 0;
             delete blinkJson.likedByUsers;
+            delete blinkJson.dislikedByUsers;
             return blinkJson;
         });
 

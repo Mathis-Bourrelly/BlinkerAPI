@@ -95,21 +95,45 @@ class MessagesRepository extends BaseRepository {
     }
 
     /**
-     * Marque les messages d'une conversation comme lus
+     * Marque les messages d'une conversation comme lus pour un utilisateur spécifique
      * @param {string} conversationID - ID de la conversation
+     * @param {string} userID - ID de l'utilisateur qui marque les messages comme lus
      * @returns {Promise<Array>} Résultat de l'opération
      */
-    async markAsRead(conversationID) {
+    async markAsRead(conversationID, userID) {
         return await Messages.update(
             { isRead: true },
             {
                 where: {
                     conversationID,
                     isRead: false,
-                    expiresAt: { [Op.gt]: new Date() }
+                    expiresAt: { [Op.gt]: new Date() },
+                    senderID: { [Op.ne]: userID } // Ne marquer comme lus que les messages envoyés par d'autres utilisateurs
                 }
             }
         );
+    }
+
+    /**
+     * Récupère les messages expirés
+     * @returns {Promise<Array>} Liste des messages expirés
+     */
+    async getExpiredMessages() {
+        try {
+            return await Messages.findAll({
+                where: {
+                    expiresAt: { [Op.lt]: new Date() }
+                },
+                include: [{
+                    model: Users,
+                    as: 'sender',
+                    attributes: ['userID', 'email']
+                }]
+            });
+        } catch (error) {
+            console.error('Erreur lors de la récupération des messages expirés:', error);
+            return [];
+        }
     }
 
     /**
