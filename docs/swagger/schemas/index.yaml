@@ -234,6 +234,12 @@ components:
             isFromUser:
               type: boolean
               example: false
+              description: "Indique si le message provient de l'utilisateur courant"
+            senderID:
+              type: string
+              format: uuid
+              example: "123e4567-e89b-12d3-a456-426614174000"
+              description: "ID de l'utilisateur qui a envoyé le message"
         unreadCount:
           type: integer
           example: 3

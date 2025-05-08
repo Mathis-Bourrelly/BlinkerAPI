@@ -85,7 +85,7 @@ class MessagesRepository extends BaseRepository {
         return await Messages.findOne({
             where: { conversationID },
             order: [['createdAt', 'DESC']],
-            attributes: ['content', 'createdAt', 'isRead'],
+            attributes: ['messageID', 'content', 'createdAt', 'isRead', 'senderID'],
             include: [{
                 model: Users,
                 as: 'sender',

@@ -63,7 +63,7 @@ describe('ConversationService', () => {
       // Appeler la méthode à tester et vérifier qu'elle lève une erreur
       await expect(ConversationService.createConversation(['user1']))
         .rejects.toThrow('Une conversation doit avoir au moins 2 participants');
-      
+
       // Vérifier que les méthodes du repository n'ont pas été appelées
       expect(ConversationsRepository.findAll).not.toHaveBeenCalled();
       expect(ConversationsRepository.createConversation).not.toHaveBeenCalled();
@@ -76,27 +76,29 @@ describe('ConversationService', () => {
       const userID = 'test-user-id';
       const otherUserID = 'other-user-id';
       const conversationID = 'test-conversation-id';
-      
+
       ConversationsRepository.findByParticipant.mockResolvedValue([
         {
           conversationID,
           participants: [userID, otherUserID]
         }
       ]);
-      
+
       ConversationsRepository.getParticipantProfile.mockResolvedValue({
         userID: otherUserID,
         username: 'testuser',
         display_name: 'Test User',
         avatar_url: 'avatar.jpg'
       });
-      
+
       MessagesRepository.getLastMessage.mockResolvedValue({
         content: 'Hello',
         createdAt: new Date(),
-        isRead: false
+        isRead: false,
+        senderID: otherUserID,
+        messageID: 'test-message-id'
       });
-      
+
       MessagesRepository.countUnreadMessages.mockResolvedValue(2);
 
       // Espionner la méthode buildAvatarUrl
@@ -112,7 +114,7 @@ describe('ConversationService', () => {
       expect(MessagesRepository.getLastMessage).toHaveBeenCalledWith(conversationID);
       expect(MessagesRepository.countUnreadMessages).toHaveBeenCalledWith(conversationID);
       expect(buildAvatarUrlSpy).toHaveBeenCalledWith('avatar.jpg');
-      
+
       expect(result).toEqual([
         {
           conversationID,
@@ -123,7 +125,9 @@ describe('ConversationService', () => {
           lastMessage: {
             content: 'Hello',
             createdAt: expect.any(Date),
-            read: false
+            read: false,
+            isFromUser: false,
+            senderID: otherUserID
           },
           unreadCount: 2
         }
@@ -138,21 +142,21 @@ describe('ConversationService', () => {
       const userID = 'test-user-id';
       const otherUserID = 'other-user-id';
       const conversationID = 'test-conversation-id';
-      
+
       ConversationsRepository.findByParticipant.mockResolvedValue([
         {
           conversationID,
           participants: [userID, otherUserID]
         }
       ]);
-      
+
       ConversationsRepository.getParticipantProfile.mockResolvedValue({
         userID: otherUserID,
         username: 'testuser',
         display_name: 'Test User',
         avatar_url: null
       });
-      
+
       MessagesRepository.getLastMessage.mockResolvedValue(null);
       MessagesRepository.countUnreadMessages.mockResolvedValue(0);
 
@@ -179,13 +183,78 @@ describe('ConversationService', () => {
       // Restaurer l'espion
       buildAvatarUrlSpy.mockRestore();
     });
+
+    it('devrait mettre unreadCount à 0 quand le dernier message provient de l\'utilisateur actuel', async () => {
+      // Configurer les mocks
+      const userID = 'test-user-id';
+      const otherUserID = 'other-user-id';
+      const conversationID = 'test-conversation-id';
+
+      ConversationsRepository.findByParticipant.mockResolvedValue([
+        {
+          conversationID,
+          participants: [userID, otherUserID]
+        }
+      ]);
+
+      ConversationsRepository.getParticipantProfile.mockResolvedValue({
+        userID: otherUserID,
+        username: 'testuser',
+        display_name: 'Test User',
+        avatar_url: 'avatar.jpg'
+      });
+
+      // Le dernier message provient de l'utilisateur actuel
+      MessagesRepository.getLastMessage.mockResolvedValue({
+        content: 'Hello from me',
+        createdAt: new Date(),
+        isRead: false,
+        senderID: userID,
+        messageID: 'test-message-id'
+      });
+
+      // Même si le repository indique qu'il y a des messages non lus, le service devrait ignorer cette valeur
+      MessagesRepository.countUnreadMessages.mockResolvedValue(3);
+
+      // Espionner la méthode buildAvatarUrl
+      const buildAvatarUrlSpy = jest.spyOn(ConversationService, 'buildAvatarUrl');
+      buildAvatarUrlSpy.mockReturnValue('http://localhost:3011/uploads/avatar.jpg');
+
+      // Appeler la méthode à tester
+      const result = await ConversationService.getUserConversations(userID);
+
+      // Vérifier les résultats
+      expect(result).toEqual([
+        {
+          conversationID,
+          userID: otherUserID,
+          username: 'testuser',
+          display_name: 'Test User',
+          avatar_url: 'http://localhost:3011/uploads/avatar.jpg',
+          lastMessage: {
+            content: 'Hello from me',
+            createdAt: expect.any(Date),
+            read: false,
+            isFromUser: true,
+            senderID: userID
+          },
+          unreadCount: 0 // Doit être 0 même si le repository indique 3
+        }
+      ]);
+
+      // Vérifier que countUnreadMessages a été appelé mais que sa valeur a été ignorée
+      expect(MessagesRepository.countUnreadMessages).toHaveBeenCalledWith(conversationID);
+
+      // Restaurer l'espion
+      buildAvatarUrlSpy.mockRestore();
+    });
   });
 
   describe('buildAvatarUrl', () => {
     it('devrait construire l\'URL complète de l\'avatar', () => {
       // Sauvegarder l'environnement original
       const originalEnv = process.env;
-      
+
       // Configurer l'environnement pour le test
       process.env = {
         ...originalEnv,

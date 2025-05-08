@@ -84,8 +84,12 @@ class ConversationService {
             // Récupérer le dernier message de la conversation
             const lastMessage = await MessagesRepository.getLastMessage(conversation.conversationID);
 
+            // Déterminer si le dernier message provient de l'utilisateur actuel
+            const isFromUser = lastMessage?.senderID === userID;
+
             // Compter les messages non lus
-            const unreadCount = await MessagesRepository.countUnreadMessages(conversation.conversationID);
+            // Si le dernier message provient de l'utilisateur actuel, on considère qu'il n'y a pas de messages non lus
+            let unreadCount = isFromUser ? 0 : await MessagesRepository.countUnreadMessages(conversation.conversationID);
 
             // Construire l'objet de réponse
             return {
@@ -97,7 +101,9 @@ class ConversationService {
                 lastMessage: lastMessage ? {
                     content: lastMessage.content,
                     createdAt: lastMessage.createdAt,
-                    read: lastMessage.isRead
+                    read: lastMessage.isRead,
+                    isFromUser: isFromUser,
+                    senderID: lastMessage.senderID
                 } : null,
                 unreadCount
             };
