@@ -2,6 +2,14 @@ const ErrorCodes = {
     Base: {
         UnknownError: "Base.UnknownError"
     },
+    Reports: {
+        NotFound: "Reports.NotFound",
+        CreationFailed: "Reports.CreationFailed",
+        UpdateFailed: "Reports.UpdateFailed",
+        FetchFailed: "Reports.FetchFailed",
+        AlreadyReported: "Reports.AlreadyReported",
+        InvalidReason: "Reports.InvalidReason"
+    },
     Blinks: {
         NotFound: "Blinks.NotFound",
         InvalidFormat: "Blinks.InvalidFormat",

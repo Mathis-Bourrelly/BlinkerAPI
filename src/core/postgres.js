@@ -30,6 +30,7 @@ const modelDefiners = [
     require('../models/blinkLifetimes'),
     require('../models/conversations'),
     require('../models/messages'),
+    require('../models/reports'),
 ];
 
 (async () => {

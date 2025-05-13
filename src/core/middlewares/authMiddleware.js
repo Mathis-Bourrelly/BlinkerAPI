@@ -36,7 +36,28 @@ exports.checkVerifiedUser = async (req, res, next) => {
         }
 
         if (!user.isVerified) {
-            return res.status(403).json({ error: "Votre compte n’est pas encore vérifié." });
+            return res.status(403).json({ error: "Votre compte n'est pas encore vérifié." });
+        }
+
+        next();
+    } catch (error) {
+        return res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+};
+
+exports.checkAdminRole = async (req, res, next) => {
+    try {
+        if (!req.user || !req.user.userID) {
+            return res.status(401).json({ error: "Accès non autorisé : Identité utilisateur inconnue" });
+        }
+
+        const user = await userService.getUserById(req.user.userID);
+        if (!user) {
+            return res.status(404).json({ error: "Utilisateur non trouvé" });
+        }
+
+        if (user.role !== 'admin') {
+            return res.status(403).json({ error: "Accès non autorisé : Droits d'administrateur requis" });
         }
 
         next();

@@ -22,6 +22,7 @@ const blinksRouteStd = require("../route/blinks.route.standardized");
 const messagesRouteStd = require("../route/messages.route.standardized");
 const conversationsRouteStd = require("../route/conversations.route.standardized");
 const interactionsRouteStd = require("../route/interactions.route.standardized");
+const reportsRouteStd = require("../route/reports.route.standardized");
 
 const { sequelize } = require("./postgres");
 const { AUTO_DELETE_INTERVAL } = require("../../config/blinks.config");
@@ -77,6 +78,7 @@ class WebServer {
         this.app.use("/messages", messagesRouteStd.initializeRoutes());
         this.app.use("/conversations", conversationsRouteStd.initializeRoutes());
         this.app.use("/interactions", interactionsRouteStd.initializeRoutes());
+        this.app.use("/reports", reportsRouteStd.initializeRoutes());
 
         logger.info("Routes standardisées initialisées");
 
