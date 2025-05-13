@@ -129,7 +129,7 @@ async function up() {
                 for (const message of messages) {
                     const [conversation] = await sequelize.query(`
                         INSERT INTO "Conversations" ("participants")
-                        VALUES (:participants)
+                        VALUES (ARRAY[:participants]::UUID[])
                         RETURNING "conversationID";
                     `, {
                         replacements: { participants: message.participants },

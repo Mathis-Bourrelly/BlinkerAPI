@@ -12,7 +12,7 @@ const Messages = sequelize.define('Messages', {
     },
     conversationID: {
         type: DataTypes.UUID,
-        allowNull: false,
+        allowNull: true, // Peut être NULL car nous avons encore des messages sans conversationID
         references: {
             model: Conversations,
             key: 'conversationID'
@@ -33,7 +33,15 @@ const Messages = sequelize.define('Messages', {
     },
     senderID: {
         type: DataTypes.UUID,
-        allowNull: true,
+        allowNull: false, // NOT NULL dans la base de données
+        references: {
+            model: Users,
+            key: 'userID'
+        }
+    },
+    receiverID: {
+        type: DataTypes.UUID,
+        allowNull: false, // NOT NULL dans la base de données
         references: {
             model: Users,
             key: 'userID'

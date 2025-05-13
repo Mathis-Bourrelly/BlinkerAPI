@@ -397,6 +397,87 @@ paths:
         '500':
           description: Erreur interne du serveur.
 
+  /blinks/byuser/{userID}:
+    get:
+      tags:
+        - Blinks
+      summary: Récupérer les blinks d'un utilisateur spécifique
+      description: |
+        Récupère une liste paginée des blinks créés par un utilisateur spécifique.
+        Les blinks sont triés par date de création (du plus récent au plus ancien).
+        Inclut les informations si le blink est liké (isLiked) ou disliké (isDisliked) par l'utilisateur courant.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de l'utilisateur dont on veut récupérer les blinks.
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à récupérer.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
+      responses:
+        '200':
+          description: Liste paginée des blinks de l'utilisateur retournée avec succès.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          page:
+                            type: integer
+                            example: 1
+                          limit:
+                            type: integer
+                            example: 10
+                          total:
+                            type: integer
+                            example: 100
+                          totalPages:
+                            type: integer
+                            example: 10
+                          hasNextPage:
+                            type: boolean
+                            example: true
+                          hasPrevPage:
+                            type: boolean
+                            example: false
+                          data:
+                            type: array
+                            items:
+                              $ref: '../schemas/index.yaml#/components/schemas/Blink'
+        '400':
+          description: Requête invalide (ex. paramètre non valide).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+
   /blinks/search:
     get:
       tags:

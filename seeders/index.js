@@ -11,8 +11,8 @@ const runSeeders = async () => {
         console.log('Démarrage du seeding...');
         //await seedUsers();
         //await seedFollows();
-        await seedBlinks();
-        //await seedMessages();
+        //await seedBlinks();
+        await seedMessages();
         console.log('Tous les seeders ont été exécutés avec succès !');
         process.exit(0);
     } catch (error) {

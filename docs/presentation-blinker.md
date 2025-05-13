@@ -61,4 +61,4 @@ Blinker est construit avec une architecture moderne et performante :
 
 ---
 
-*Blinker - Partagez des moments qui comptent*
+*Blinker - More Like, More Time.*

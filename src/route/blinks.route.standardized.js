@@ -58,6 +58,28 @@ router.get("/liked",
 );
 
 /**
+ * @route GET /blinks/byuser/:userID
+ * @desc Récupère les blinks d'un utilisateur spécifique
+ * @access Private
+ */
+router.get("/byuser/:userID",
+    AuthMiddleware.verifyToken,
+    validate([
+        param('userID').custom(value => {
+            if (!isValidUUID(value)) {
+                throw new Error('ID d\'utilisateur invalide');
+            }
+            return true;
+        })
+    ]),
+    withStandardResponse(async (req) => {
+        const { userID } = req.params;
+        const { page = 1, limit = 10 } = normalizePaginationParams(req.query);
+        return await BlinkService.getPaginatedBlinks(page, limit, userID, req.user.userID);
+    })
+);
+
+/**
  * @route POST /blinks
  * @desc Crée un nouveau blink
  * @access Private

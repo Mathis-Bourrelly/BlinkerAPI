@@ -44,7 +44,7 @@ const getRandomMessage = () => {
 };
 
 // Fonction pour créer un message directement dans la base de données
-const createMessage = async (conversationID, content, isRead = false, senderID = null) => {
+const createMessage = async (conversationID, content, isRead = false, senderID = null, receiverID = null) => {
     // Définir une date d'expiration (7 jours par défaut)
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
@@ -57,6 +57,7 @@ const createMessage = async (conversationID, content, isRead = false, senderID =
         expiresAt,
         isRead,
         senderID, // Maintenant nous utilisons senderID dans le modèle
+        receiverID, // Ajouter le receiverID pour satisfaire la contrainte NOT NULL
         createdAt: getRandomDate()
     });
 };
@@ -141,7 +142,8 @@ const seedMessages = async () => {
                                 conversation.conversationID,
                                 content,
                                 isRead,
-                                senderID // Nous ne stockons pas cette information, mais elle est utile pour la logique
+                                senderID, // ID de l'expéditeur
+                                receiverID // ID du destinataire
                             );
 
                             // Mettre à jour la date de création pour avoir une chronologie réaliste

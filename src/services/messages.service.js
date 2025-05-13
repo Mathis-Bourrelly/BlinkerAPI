@@ -59,13 +59,20 @@ class MessagesService {
             const expiresAt = new Date(Date.now() + averageLifetime * 1000);
 
             // Créer le message
-            const message = await MessagesRepository.createMessage({
+            const messageData = {
                 conversationID,
                 content,
                 expiresAt,
                 isRead: false,
                 senderID: userID // Ajouter l'ID de l'expéditeur
-            }, { transaction });
+            };
+
+            // Ajouter le receiverID uniquement s'il est fourni (pour les messages directs)
+            if (receiverID) {
+                messageData.receiverID = receiverID;
+            }
+
+            const message = await MessagesRepository.createMessage(messageData, { transaction });
 
             // Mettre à jour la date de mise à jour de la conversation
             await conversation.update({ updatedAt: new Date() }, { transaction });
