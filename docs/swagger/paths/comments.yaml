@@ -1,0 +1,411 @@
+paths:
+  /comments/{blinkID}:
+    get:
+      tags:
+        - Comments
+      summary: Récupérer les commentaires d'un blink
+      description: |
+        Récupère une liste paginée des commentaires d'un blink spécifique, triés par date de création (du plus récent au plus ancien).
+        Inclut les informations du profil de l'auteur de chaque commentaire.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: blinkID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID du blink dont on veut récupérer les commentaires.
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à récupérer.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
+      responses:
+        '200':
+          description: Liste des commentaires récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CommentWithUser'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /comments:
+    post:
+      tags:
+        - Comments
+      summary: Créer un nouveau commentaire
+      description: |
+        Crée un nouveau commentaire sur un blink. Un utilisateur ne peut poster qu'un seul commentaire par blink.
+        Le commentaire augmente la durée de vie du blink (bonus de 172.8 secondes par commentaire).
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - blinkID
+                - content
+              properties:
+                blinkID:
+                  type: string
+                  format: uuid
+                  description: ID du blink à commenter
+                content:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+                  description: Contenu du commentaire
+              example:
+                blinkID: "123e4567-e89b-12d3-a456-426614174000"
+                content: "Super blink ! J'adore ce contenu."
+      responses:
+        '201':
+          description: Commentaire créé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Commentaire créé avec succès"
+                  data:
+                    type: object
+                    properties:
+                      comment:
+                        $ref: '#/components/schemas/CommentWithUser'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: L'utilisateur a déjà commenté ce blink
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  message:
+                    type: string
+                    example: "Vous avez déjà commenté ce blink"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /comments/comment/{commentID}:
+    get:
+      tags:
+        - Comments
+      summary: Récupérer un commentaire spécifique
+      description: Récupère les détails d'un commentaire spécifique avec les informations de l'auteur.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: commentID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID du commentaire à récupérer.
+      responses:
+        '200':
+          description: Commentaire récupéré avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      comment:
+                        $ref: '#/components/schemas/CommentWithUser'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /comments/{commentID}:
+    put:
+      tags:
+        - Comments
+      summary: Mettre à jour un commentaire
+      description: |
+        Met à jour le contenu d'un commentaire. Seul l'auteur du commentaire peut le modifier.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: commentID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID du commentaire à mettre à jour.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+                  description: Nouveau contenu du commentaire
+              example:
+                content: "Commentaire mis à jour avec plus de détails."
+      responses:
+        '200':
+          description: Commentaire mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Commentaire mis à jour avec succès"
+                  data:
+                    type: object
+                    properties:
+                      comment:
+                        $ref: '#/components/schemas/CommentWithUser'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Non autorisé à modifier ce commentaire
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  message:
+                    type: string
+                    example: "Vous n'êtes pas autorisé à modifier ce commentaire"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Comments
+      summary: Supprimer un commentaire
+      description: |
+        Supprime un commentaire. Seul l'auteur du commentaire peut le supprimer.
+        La suppression décrémente le compteur de commentaires du blink.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: commentID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID du commentaire à supprimer.
+      responses:
+        '200':
+          description: Commentaire supprimé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Commentaire supprimé avec succès"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Non autorisé à supprimer ce commentaire
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  message:
+                    type: string
+                    example: "Vous n'êtes pas autorisé à supprimer ce commentaire"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /comments/user/{userID}:
+    get:
+      tags:
+        - Comments
+      summary: Récupérer les commentaires d'un utilisateur
+      description: |
+        Récupère une liste paginée des commentaires postés par un utilisateur spécifique,
+        triés par date de création (du plus récent au plus ancien).
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de l'utilisateur dont on veut récupérer les commentaires.
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de la page à récupérer.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page.
+      responses:
+        '200':
+          description: Liste des commentaires de l'utilisateur récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CommentWithBlink'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /comments/user/{userID}/blink/{blinkID}:
+    get:
+      tags:
+        - Comments
+      summary: Récupérer le commentaire d'un utilisateur pour un blink spécifique
+      description: |
+        Récupère le commentaire d'un utilisateur pour un blink donné.
+        Retourne null si l'utilisateur n'a pas commenté ce blink.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de l'utilisateur.
+        - name: blinkID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID du blink.
+      responses:
+        '200':
+          description: Commentaire récupéré avec succès (peut être null)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: object
+                    properties:
+                      comment:
+                        oneOf:
+                          - $ref: '#/components/schemas/CommentWithUser'
+                          - type: "null"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'

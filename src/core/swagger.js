@@ -17,9 +17,13 @@ const mainSpec = YAML.parse(mainSpecYaml);
 const pathsDir = path.join(__dirname, '../../docs/swagger/paths');
 const pathFiles = fs.readdirSync(pathsDir).filter(file => file.endsWith('.yaml'));
 
-// Charger les fichiers YAML des schémas
-const schemasDir = path.join(__dirname, '../../docs/swagger/schemas');
+// Charger les fichiers YAML des schémas depuis le dossier components
+const schemasDir = path.join(__dirname, '../../docs/swagger/components/schemas');
 const schemaFiles = fs.readdirSync(schemasDir).filter(file => file.endsWith('.yaml'));
+
+// Charger les fichiers YAML des réponses communes
+const responsesDir = path.join(__dirname, '../../docs/swagger/components/responses');
+const responseFiles = fs.readdirSync(responsesDir).filter(file => file.endsWith('.yaml'));
 
 /**
  * Charge les fichiers YAML et les fusionne en une seule spécification
@@ -29,7 +33,7 @@ function loadSwaggerSpec() {
     // Créer une copie de la spécification principale
     const fullSpec = { ...mainSpec };
     fullSpec.paths = {};
-    fullSpec.components = { schemas: {}, securitySchemes: {} };
+    fullSpec.components = { schemas: {}, responses: {}, securitySchemes: {} };
 
     // Ajouter les chemins
     for (const file of pathFiles) {
@@ -42,7 +46,7 @@ function loadSwaggerSpec() {
         }
     }
 
-    // Ajouter les schémas
+    // Ajouter les schémas depuis components/schemas
     for (const file of schemaFiles) {
         const filePath = path.join(schemasDir, file);
         const content = fs.readFileSync(filePath, 'utf8');
@@ -54,6 +58,25 @@ function loadSwaggerSpec() {
 
         if (schemaSpec.components && schemaSpec.components.securitySchemes) {
             Object.assign(fullSpec.components.securitySchemes, schemaSpec.components.securitySchemes);
+        }
+    }
+
+    // Ajouter les réponses communes depuis components/responses
+    for (const file of responseFiles) {
+        const filePath = path.join(responsesDir, file);
+        const content = fs.readFileSync(filePath, 'utf8');
+        const responseSpec = YAML.parse(content);
+
+        if (responseSpec.components && responseSpec.components.responses) {
+            Object.assign(fullSpec.components.responses, responseSpec.components.responses);
+        }
+
+        if (responseSpec.components && responseSpec.components.schemas) {
+            Object.assign(fullSpec.components.schemas, responseSpec.components.schemas);
+        }
+
+        if (responseSpec.components && responseSpec.components.securitySchemes) {
+            Object.assign(fullSpec.components.securitySchemes, responseSpec.components.securitySchemes);
         }
     }
 

@@ -9,6 +9,7 @@ const Conversations = require('./conversations');
 const Messages = require('./messages');
 const BlinkLifetimes = require('./blinkLifetimes');
 const Reports = require('./reports');
+const Comments = require('./comments');
 
 // Associer Users et Profiles
 Users.hasOne(Profiles, { foreignKey: 'userID', onDelete: 'CASCADE' });
@@ -91,6 +92,13 @@ Reports.belongsTo(Users, { foreignKey: 'reviewedBy', as: 'reviewer' });
 Blinks.hasMany(Reports, { foreignKey: 'blinkID', as: 'reports' });
 Reports.belongsTo(Blinks, { foreignKey: 'blinkID' });
 
+// Associations pour les commentaires
+Blinks.hasMany(Comments, { foreignKey: 'blinkID', as: 'comments', onDelete: 'CASCADE' });
+Comments.belongsTo(Blinks, { foreignKey: 'blinkID', as: 'blink' });
+
+Users.hasMany(Comments, { foreignKey: 'userID', as: 'comments', onDelete: 'CASCADE' });
+Comments.belongsTo(Users, { foreignKey: 'userID', as: 'user' });
+
 // Exporter les modèles avec leurs associations
 module.exports = {
     Users,
@@ -102,5 +110,6 @@ module.exports = {
     Conversations,
     Messages,
     BlinkLifetimes,
-    Reports
+    Reports,
+    Comments
 };

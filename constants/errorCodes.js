@@ -10,6 +10,16 @@ const ErrorCodes = {
         AlreadyReported: "Reports.AlreadyReported",
         InvalidReason: "Reports.InvalidReason"
     },
+    Comments: {
+        NotFound: "Comments.NotFound",
+        CreationFailed: "Comments.CreationFailed",
+        UpdateFailed: "Comments.UpdateFailed",
+        DeletionFailed: "Comments.DeletionFailed",
+        FetchFailed: "Comments.FetchFailed",
+        AlreadyCommented: "Comments.AlreadyCommented",
+        InvalidContent: "Comments.InvalidContent",
+        Unauthorized: "Comments.Unauthorized"
+    },
     Blinks: {
         NotFound: "Blinks.NotFound",
         InvalidFormat: "Blinks.InvalidFormat",

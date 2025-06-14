@@ -58,6 +58,11 @@ class BlinkRepository extends BaseRepository {
             include: [
                 { model: BlinkContents, as: 'contents' },
                 {
+                    model: Profiles,
+                    as: 'profile',
+                    attributes: ['display_name', 'username', 'avatar_url', 'userID']
+                },
+                {
                     model: sequelize.models.Users,
                     as: 'likedByUsers',
                     attributes: ['userID'],

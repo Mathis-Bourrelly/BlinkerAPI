@@ -31,6 +31,7 @@ const modelDefiners = [
     require('../models/conversations'),
     require('../models/messages'),
     require('../models/reports'),
+    require('../models/comments'),
 ];
 
 (async () => {

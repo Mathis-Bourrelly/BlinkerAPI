@@ -27,9 +27,29 @@ tags:
     description: Gestion des messages entre utilisateurs
   - name: Conversations
     description: Gestion des conversations entre utilisateurs
+  - name: Comments
+    description: Gestion des commentaires sur les Blinks
 
 # Les chemins sont chargés dynamiquement dans le middleware
 paths: {}
 
 # Les composants sont chargés dynamiquement dans le middleware
-components: {}
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Authentification par token JWT.
+
+        **Comment obtenir un token :**
+        1. Utilisez l'endpoint `POST /login` avec vos identifiants
+        2. Récupérez le token dans la réponse
+        3. Cliquez sur "Authorize" et entrez le token (sans "Bearer ")
+
+        **Format du token :** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+
+# Configuration de sécurité globale
+security:
+  - BearerAuth: []

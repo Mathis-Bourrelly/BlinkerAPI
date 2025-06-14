@@ -144,6 +144,7 @@ paths:
       description: |
         Récupère un blink en fonction de son identifiant.
         Inclut les informations si le blink est liké (isLiked) ou disliké (isDisliked) par l'utilisateur courant.
+        Inclut également les informations du profil de l'utilisateur qui a créé le blink (display_name, username, avatar_url).
       security:
         - BearerAuth: []
       parameters:
@@ -159,7 +160,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../schemas/index.yaml#/components/schemas/Blink'
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '../schemas/index.yaml#/components/schemas/Blink'
         '404':
           description: Blink non trouvé.
           content:
