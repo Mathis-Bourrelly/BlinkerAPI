@@ -90,13 +90,21 @@ router.post('/',
         body('contents').isArray().withMessage('Le contenu doit être un tableau'),
         body('contents.*.contentType').isIn(['text', 'image', 'video']).withMessage('Type de contenu invalide'),
         body('contents.*.content').notEmpty().withMessage('Le contenu ne peut pas être vide'),
-        body('contents.*.position').isInt({ min: 0 }).withMessage('La position doit être un entier positif')
+        body('contents.*.position').isInt({ min: 0 }).withMessage('La position doit être un entier positif'),
+        body('tags').optional().isArray().withMessage('Les tags doivent être un tableau'),
+        body('tags.*').optional().isString().withMessage('Chaque tag doit être une chaîne de caractères'),
+        body('tags').optional().custom((tags) => {
+            if (tags && tags.length > 3) {
+                throw new Error('Un blink ne peut avoir que 3 tags maximum');
+            }
+            return true;
+        })
     ]),
     withStandardResponse(async (req) => {
-        const { contents } = req.body;
+        const { contents, tags = [] } = req.body;
         const userID = req.user.userID;
 
-        const blink = await BlinkService.createBlinkWithContent({ userID, contents });
+        const blink = await BlinkService.createBlinkWithContent({ userID, contents, tags });
         return { blink, message: 'Blink créé avec succès' };
     })
 );
@@ -161,13 +169,21 @@ router.put('/:blinkID',
         body('contents').isArray().withMessage('Le contenu doit être un tableau'),
         body('contents.*.contentType').isIn(['text', 'image', 'video']).withMessage('Type de contenu invalide'),
         body('contents.*.content').notEmpty().withMessage('Le contenu ne peut pas être vide'),
-        body('contents.*.position').isInt({ min: 0 }).withMessage('La position doit être un entier positif')
+        body('contents.*.position').isInt({ min: 0 }).withMessage('La position doit être un entier positif'),
+        body('tags').optional().isArray().withMessage('Les tags doivent être un tableau'),
+        body('tags.*').optional().isString().withMessage('Chaque tag doit être une chaîne de caractères'),
+        body('tags').optional().custom((tags) => {
+            if (tags && tags.length > 3) {
+                throw new Error('Un blink ne peut avoir que 3 tags maximum');
+            }
+            return true;
+        })
     ]),
     withStandardResponse(async (req) => {
         const { blinkID } = req.params;
-        const { contents } = req.body;
+        const { contents, tags } = req.body;
 
-        const updatedBlink = await BlinkService.updateBlink(blinkID, { contents });
+        const updatedBlink = await BlinkService.updateBlink(blinkID, { contents, tags });
         return { blink: updatedBlink, message: 'Blink mis à jour avec succès' };
     })
 );

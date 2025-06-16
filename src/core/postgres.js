@@ -32,6 +32,8 @@ const modelDefiners = [
     require('../models/messages'),
     require('../models/reports'),
     require('../models/comments'),
+    require('../models/tags'),
+    require('../models/blinkTags'),
 ];
 
 (async () => {

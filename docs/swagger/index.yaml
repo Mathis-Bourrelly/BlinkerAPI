@@ -19,7 +19,7 @@ tags:
     description: Opérations liées aux profils utilisateurs
   - name: Users
     description: Gestion des utilisateurs
-  - name: Auth
+  - name: Authentification
     description: Gestion des connexions
   - name: Interactions
     description: Gestion des likes et dislikes sur les Blinks
@@ -29,6 +29,8 @@ tags:
     description: Gestion des conversations entre utilisateurs
   - name: Comments
     description: Gestion des commentaires sur les Blinks
+  - name: Tags
+    description: Gestion des tags et mots-clés pour les Blinks
 
 # Les chemins sont chargés dynamiquement dans le middleware
 paths: {}

@@ -1,0 +1,299 @@
+paths:
+  /tags/popular:
+    get:
+      tags:
+        - Tags
+      summary: Récupérer les tags les plus populaires
+      description: |
+        Récupère les tags les plus utilisés selon différents critères temporels.
+        Permet de filtrer par période (24h, 7j, 30j, ou depuis le début).
+      parameters:
+        - name: timeFilter
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ['24h', '7d', '30d', 'all']
+            default: 'all'
+          description: Filtre temporel pour les statistiques
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+          description: Nombre maximum de tags à retourner
+      responses:
+        '200':
+          description: Tags populaires récupérés avec succès
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          tags:
+                            type: array
+                            items:
+                              $ref: '../schemas/index.yaml#/components/schemas/TagStats'
+                          timeFilter:
+                            type: string
+                          message:
+                            type: string
+
+  /tags/trending:
+    get:
+      tags:
+        - Tags
+      summary: Récupérer les tags tendances
+      description: |
+        Récupère les tags tendances selon tous les critères temporels
+        (24h, 7j, 30j, et depuis le début).
+      responses:
+        '200':
+          description: Tags tendances récupérés avec succès
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          trending:
+                            type: object
+                            properties:
+                              last24h:
+                                type: array
+                                items:
+                                  $ref: '../schemas/index.yaml#/components/schemas/TagStats'
+                              last7days:
+                                type: array
+                                items:
+                                  $ref: '../schemas/index.yaml#/components/schemas/TagStats'
+                              last30days:
+                                type: array
+                                items:
+                                  $ref: '../schemas/index.yaml#/components/schemas/TagStats'
+                              allTime:
+                                type: array
+                                items:
+                                  $ref: '../schemas/index.yaml#/components/schemas/TagStats'
+
+  /tags/search:
+    get:
+      tags:
+        - Tags
+      summary: Rechercher des tags
+      description: |
+        Recherche des tags par nom pour l'autocomplétion.
+        Utile pour suggérer des tags existants lors de la création de blinks.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Terme de recherche
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 10
+          description: Nombre maximum de résultats
+      responses:
+        '200':
+          description: Recherche effectuée avec succès
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          tags:
+                            type: array
+                            items:
+                              $ref: '../schemas/index.yaml#/components/schemas/Tag'
+                          query:
+                            type: string
+
+  /tags/{tagNames}/blinks:
+    get:
+      tags:
+        - Tags
+      summary: Récupérer les blinks par tags
+      description: |
+        Récupère les blinks associés à des tags spécifiques.
+        Plusieurs tags peuvent être spécifiés en les séparant par des virgules.
+      parameters:
+        - name: tagNames
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Noms des tags séparés par des virgules
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Numéro de la page
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+          description: Nombre d'éléments par page
+      responses:
+        '200':
+          description: Blinks récupérés avec succès
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          blinkIDs:
+                            type: array
+                            items:
+                              type: string
+                              format: uuid
+                          tags:
+                            type: array
+                            items:
+                              type: string
+                          total:
+                            type: integer
+                          page:
+                            type: integer
+                          limit:
+                            type: integer
+                          totalPages:
+                            type: integer
+
+  /tags/validate:
+    post:
+      tags:
+        - Tags
+      summary: Valider des tags
+      description: |
+        Valide un tableau de tags selon les règles métier
+        (maximum 3 tags, caractères autorisés, longueur, etc.).
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tags
+              properties:
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 3
+                  description: Tableau des tags à valider
+      responses:
+        '200':
+          description: Validation effectuée
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          valid:
+                            type: boolean
+                          tags:
+                            type: array
+                            items:
+                              type: string
+                          error:
+                            type: string
+                            description: Message d'erreur si la validation échoue
+
+  /tags/stats:
+    get:
+      tags:
+        - Tags
+      summary: Récupérer les statistiques des tags
+      description: |
+        Récupère des statistiques détaillées sur l'utilisation des tags
+        avec des informations de synthèse.
+      parameters:
+        - name: timeFilter
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ['24h', '7d', '30d', 'all']
+            default: 'all'
+          description: Filtre temporel pour les statistiques
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Nombre maximum de tags dans les statistiques
+      responses:
+        '200':
+          description: Statistiques récupérées avec succès
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          stats:
+                            type: array
+                            items:
+                              $ref: '../schemas/index.yaml#/components/schemas/TagStats'
+                          summary:
+                            type: object
+                            properties:
+                              totalTags:
+                                type: integer
+                              totalUsage:
+                                type: integer
+                              totalUniqueBlinks:
+                                type: integer
+                              timeFilter:
+                                type: string

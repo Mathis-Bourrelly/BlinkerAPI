@@ -7,7 +7,7 @@ class InteractionsService {
     /**
      * Met à jour le compteur de likes/dislikes sur un Blink en fonction de l'action effectuée.
      */
-    async updateReactionCount(postID, reactionType, action) {
+    async updateReactionCount(postID, reactionType, action, skipTierUpdate = false) {
         try {
             // Récupérer le Blink actuel
             const blink = await Blinks.findOne({
@@ -45,7 +45,7 @@ class InteractionsService {
                 where: { blinkID: postID }
             });
 
-            if (reactionType === "like") {
+            if (reactionType === "like" && !skipTierUpdate) {
                 await updateBlinkTier(postID);
             }
         } catch (error) {
@@ -57,15 +57,15 @@ class InteractionsService {
     /**
      * Gère l'ajout, la suppression ou la mise à jour d'un like sur un Blink.
      */
-    async toggleLike(postID, userID) {
+    async toggleLike(postID, userID, skipTierUpdate = false) {
         const result = await InteractionsRepository.toggleReaction(postID, userID, "like");
 
         if (result.created) {
-            await this.updateReactionCount(postID, "like", "increment");
+            await this.updateReactionCount(postID, "like", "increment", skipTierUpdate);
         } else if (result.removed) {
-            await this.updateReactionCount(postID, "like", "decrement");
+            await this.updateReactionCount(postID, "like", "decrement", skipTierUpdate);
         } else if (result.updated) {
-            await this.updateReactionCount(postID, "like", "switch");
+            await this.updateReactionCount(postID, "like", "switch", skipTierUpdate);
         }
 
         return result;
@@ -74,15 +74,15 @@ class InteractionsService {
     /**
      * Gère l'ajout, la suppression ou la mise à jour d'un dislike sur un Blink.
      */
-    async toggleDislike(postID, userID) {
+    async toggleDislike(postID, userID, skipTierUpdate = false) {
         const result = await InteractionsRepository.toggleReaction(postID, userID, "dislike");
 
         if (result.created) {
-            await this.updateReactionCount(postID, "dislike", "increment");
+            await this.updateReactionCount(postID, "dislike", "increment", skipTierUpdate);
         } else if (result.removed) {
-            await this.updateReactionCount(postID, "dislike", "decrement");
+            await this.updateReactionCount(postID, "dislike", "decrement", skipTierUpdate);
         } else if (result.updated) {
-            await this.updateReactionCount(postID, "dislike", "switch");
+            await this.updateReactionCount(postID, "dislike", "switch", skipTierUpdate);
         }
 
         return result;

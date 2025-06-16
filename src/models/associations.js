@@ -10,6 +10,8 @@ const Messages = require('./messages');
 const BlinkLifetimes = require('./blinkLifetimes');
 const Reports = require('./reports');
 const Comments = require('./comments');
+const Tags = require('./tags');
+const BlinkTags = require('./blinkTags');
 
 // Associer Users et Profiles
 Users.hasOne(Profiles, { foreignKey: 'userID', onDelete: 'CASCADE' });
@@ -99,6 +101,28 @@ Comments.belongsTo(Blinks, { foreignKey: 'blinkID', as: 'blink' });
 Users.hasMany(Comments, { foreignKey: 'userID', as: 'comments', onDelete: 'CASCADE' });
 Comments.belongsTo(Users, { foreignKey: 'userID', as: 'user' });
 
+// Associations pour les tags
+Blinks.belongsToMany(Tags, {
+    through: BlinkTags,
+    foreignKey: 'blinkID',
+    otherKey: 'tagID',
+    as: 'tags'
+});
+
+Tags.belongsToMany(Blinks, {
+    through: BlinkTags,
+    foreignKey: 'tagID',
+    otherKey: 'blinkID',
+    as: 'blinks'
+});
+
+// Associations directes pour BlinkTags
+BlinkTags.belongsTo(Blinks, { foreignKey: 'blinkID', as: 'blink' });
+BlinkTags.belongsTo(Tags, { foreignKey: 'tagID', as: 'tag' });
+
+Blinks.hasMany(BlinkTags, { foreignKey: 'blinkID', as: 'blinkTags', onDelete: 'CASCADE' });
+Tags.hasMany(BlinkTags, { foreignKey: 'tagID', as: 'blinkTags', onDelete: 'CASCADE' });
+
 // Exporter les modèles avec leurs associations
 module.exports = {
     Users,
@@ -111,5 +135,7 @@ module.exports = {
     Messages,
     BlinkLifetimes,
     Reports,
-    Comments
+    Comments,
+    Tags,
+    BlinkTags
 };

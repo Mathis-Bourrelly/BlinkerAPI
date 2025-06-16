@@ -1,0 +1,185 @@
+components:
+  schemas:
+    Tag:
+      type: object
+      properties:
+        tagID:
+          type: string
+          format: uuid
+          description: Identifiant unique du tag
+        name:
+          type: string
+          maxLength: 50
+          description: Nom du tag
+          example: "technologie"
+        createdAt:
+          type: string
+          format: date-time
+          description: Date de création du tag
+        updatedAt:
+          type: string
+          format: date-time
+          description: Date de dernière mise à jour du tag
+      required:
+        - tagID
+        - name
+        - createdAt
+        - updatedAt
+
+    TagStats:
+      type: object
+      properties:
+        tagID:
+          type: string
+          format: uuid
+          description: Identifiant unique du tag
+        name:
+          type: string
+          description: Nom du tag
+          example: "technologie"
+        usageCount:
+          type: integer
+          description: Nombre total d'utilisations du tag
+          example: 42
+        uniqueBlinks:
+          type: integer
+          description: Nombre de blinks uniques utilisant ce tag
+          example: 38
+      required:
+        - tagID
+        - name
+        - usageCount
+        - uniqueBlinks
+
+    BlinkTag:
+      type: object
+      properties:
+        blinkTagID:
+          type: string
+          format: uuid
+          description: Identifiant unique de l'association blink-tag
+        blinkID:
+          type: string
+          format: uuid
+          description: Identifiant du blink
+        tagID:
+          type: string
+          format: uuid
+          description: Identifiant du tag
+        createdAt:
+          type: string
+          format: date-time
+          description: Date de création de l'association
+      required:
+        - blinkTagID
+        - blinkID
+        - tagID
+        - createdAt
+
+    BlinkWithTags:
+      allOf:
+        - $ref: './blinks.yaml#/components/schemas/Blink'
+        - type: object
+          properties:
+            tags:
+              type: array
+              items:
+                $ref: '#/components/schemas/Tag'
+              maxItems: 3
+              description: Tags associés au blink (maximum 3)
+
+    TagValidationRequest:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 3
+          description: Tableau des tags à valider
+          example: ["technologie", "innovation", "web"]
+      required:
+        - tags
+
+    TagValidationResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          description: Indique si les tags sont valides
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags soumis à la validation
+        error:
+          type: string
+          description: Message d'erreur si la validation échoue
+        message:
+          type: string
+          description: Message de retour
+      required:
+        - valid
+        - tags
+        - message
+
+    TagTrendingResponse:
+      type: object
+      properties:
+        last24h:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagStats'
+          description: Tags populaires des dernières 24h
+        last7days:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagStats'
+          description: Tags populaires des 7 derniers jours
+        last30days:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagStats'
+          description: Tags populaires des 30 derniers jours
+        allTime:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagStats'
+          description: Tags populaires depuis le début
+      required:
+        - last24h
+        - last7days
+        - last30days
+        - allTime
+
+    TagStatsResponse:
+      type: object
+      properties:
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagStats'
+          description: Statistiques détaillées des tags
+        summary:
+          type: object
+          properties:
+            totalTags:
+              type: integer
+              description: Nombre total de tags dans les statistiques
+            totalUsage:
+              type: integer
+              description: Nombre total d'utilisations de tous les tags
+            totalUniqueBlinks:
+              type: integer
+              description: Nombre total de blinks uniques avec des tags
+            timeFilter:
+              type: string
+              description: Filtre temporel appliqué
+          required:
+            - totalTags
+            - totalUsage
+            - totalUniqueBlinks
+            - timeFilter
+      required:
+        - stats
+        - summary

@@ -111,6 +111,13 @@ paths:
                       position:
                         type: integer
                         example: 1
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 3
+                  description: Tags associés au blink (maximum 3)
+                  example: ["technologie", "innovation"]
       responses:
         '201':
           description: Blink créé avec succès.
@@ -213,8 +220,25 @@ paths:
                 contents:
                   type: array
                   items:
+                    type: object
+                    properties:
+                      contentType:
+                        type: string
+                        enum: [ "text", "image", "video" ]
+                        example: "text"
+                      content:
+                        type: string
+                        example: "Nouveau contenu mis à jour."
+                      position:
+                        type: integer
+                        example: 1
+                tags:
+                  type: array
+                  items:
                     type: string
-                  example: ["Nouveau contenu"]
+                  maxItems: 3
+                  description: Tags associés au blink (maximum 3)
+                  example: ["technologie", "innovation"]
       responses:
         '200':
           description: Blink mis à jour avec succès.

@@ -1,6 +1,7 @@
 const Blinks = require('../models/blinks');
 const BlinkContents = require('../models/blinkContents');
 const Profiles = require('../models/profiles');
+const Tags = require('../models/tags');
 const { sequelize } = require('../core/postgres');
 const ErrorCodes = require('../../constants/errorCodes');
 const {Op} = require("sequelize");
@@ -63,6 +64,12 @@ class BlinkRepository extends BaseRepository {
                     attributes: ['display_name', 'username', 'avatar_url', 'userID']
                 },
                 {
+                    model: Tags,
+                    as: 'tags',
+                    attributes: ['tagID', 'name'],
+                    through: { attributes: [] }
+                },
+                {
                     model: sequelize.models.Users,
                     as: 'likedByUsers',
                     attributes: ['userID'],
@@ -117,6 +124,22 @@ class BlinkRepository extends BaseRepository {
     }
 
     /**
+     * Récupère un Blink avec seulement les données nécessaires pour la mise à jour du tier
+     */
+    async getBlinkForTierUpdate(blinkID) {
+        const blink = await Blinks.findOne({
+            where: { blinkID },
+            attributes: ['blinkID', 'likeCount', 'tier']
+        });
+
+        if (!blink) {
+            throw { message: ErrorCodes.Blinks.NotFound };
+        }
+
+        return blink;
+    }
+
+    /**
      * Récupère tous les Blinks
      */
     async getAllBlinks(transaction) {
@@ -149,6 +172,12 @@ class BlinkRepository extends BaseRepository {
                     model: Profiles,
                     as: 'profile',
                     attributes: ['display_name', 'username', 'avatar_url', "userID"]
+                },
+                {
+                    model: Tags,
+                    as: 'tags',
+                    attributes: ['tagID', 'name'],
+                    through: { attributes: [] }
                 },
                 {
                     model: sequelize.models.Users,
@@ -275,6 +304,12 @@ class BlinkRepository extends BaseRepository {
                     model: Profiles,
                     as: 'profile',
                     attributes: ['display_name', 'username', 'avatar_url', "userID"]
+                },
+                {
+                    model: Tags,
+                    as: 'tags',
+                    attributes: ['tagID', 'name'],
+                    through: { attributes: [] }
                 },
                 {
                     model: sequelize.models.Users,

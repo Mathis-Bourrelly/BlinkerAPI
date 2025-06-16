@@ -3,16 +3,6 @@ require("dotenv").config();
 const { initializeConfigMiddlewares } = require("./middlewares");
 const authMiddleware = require("./middlewares/authMiddleware");
 
-// Routes traditionnelles
-const usersRoute = require("../route/OLD/users.route");
-const followsRoute = require("../route/OLD/follows.route");
-const profilesRoute = require("../route/OLD/profiles.route");
-const loginRoute = require("../route/OLD/login.route");
-const blinksRoute = require("../route/OLD/blinks.route");
-const messagesRoute = require("../route/OLD/messages.route");
-const conversationsRoute = require("../route/OLD/conversations.route");
-const interactionsRoute = require("../route/OLD/interactions.route");
-
 // Routes standardisées
 const loginRouteStd = require("../route/login.route.standardized");
 const usersRouteStd = require("../route/users.route.standardized");
@@ -24,6 +14,7 @@ const conversationsRouteStd = require("../route/conversations.route.standardized
 const interactionsRouteStd = require("../route/interactions.route.standardized");
 const reportsRouteStd = require("../route/reports.route.standardized");
 const commentsRouteStd = require("../route/comments.route.standardized");
+const tagsRoute = require("../route/tags.route");
 
 const { sequelize } = require("./postgres");
 const { AUTO_DELETE_INTERVAL } = require("../../config/blinks.config");
@@ -81,6 +72,7 @@ class WebServer {
         this.app.use("/interactions", interactionsRouteStd.initializeRoutes());
         this.app.use("/reports", reportsRouteStd.initializeRoutes());
         this.app.use("/comments", commentsRouteStd);
+        this.app.use("/tags", tagsRoute);
 
         logger.info("Routes standardisées initialisées");
 

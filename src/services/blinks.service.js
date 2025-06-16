@@ -1,5 +1,6 @@
 const BlinkRepository = require('../repository/blinks.repository.js');
 const BlinkLifetimesRepository = require('../repository/blinkLifetimes.repository.js');
+const TagsService = require('./tags.service');
 const { sequelize } = require('../core/postgres');
 const ErrorCodes = require('../../constants/errorCodes');
 const TIER_LEVELS = require('../../constants/tierLevels');
@@ -14,10 +15,15 @@ class BlinkService {
     /**
      * Crée un Blink avec son contenu
      */
-    async createBlinkWithContent({ userID, contents, skipScoreUpdate = false }) {
+    async createBlinkWithContent({ userID, contents, tags = [], skipScoreUpdate = false }) {
         return await withTransaction(async (transaction) => {
             const blink = await BlinkRepository.createBlink(userID, transaction);
             await BlinkRepository.addBlinkContents(blink.blinkID, contents, transaction);
+
+            // Traiter les tags si fournis
+            if (tags && tags.length > 0) {
+                await TagsService.processBlinkTags(blink.blinkID, tags, transaction);
+            }
 
             // Mettre à jour le score de l'utilisateur après la création du blink
             // Sauf si on demande explicitement de sauter cette étape (utile pour le seeding)
@@ -33,10 +39,15 @@ class BlinkService {
         }, sequelize, ErrorCodes.Blinks.CreationFailed);
     }
 
-    async createBlinkWithContentAndDate({ userID, contents, date, skipScoreUpdate = false }) {
+    async createBlinkWithContentAndDate({ userID, contents, date, tags = [], skipScoreUpdate = false }) {
         return await withTransaction(async (transaction) => {
             const blink = await BlinkRepository.createBlinkWithDate(userID, date, transaction);
             await BlinkRepository.addBlinkContents(blink.blinkID, contents, transaction);
+
+            // Traiter les tags si fournis
+            if (tags && tags.length > 0) {
+                await TagsService.processBlinkTags(blink.blinkID, tags, transaction);
+            }
 
             // Mettre à jour le score de l'utilisateur après la création du blink
             // Sauf si on demande explicitement de sauter cette étape (utile pour le seeding)
@@ -137,13 +148,18 @@ class BlinkService {
     /**
      * Met à jour un Blink et son contenu
      */
-    async updateBlink(blinkID, { contents }) {
+    async updateBlink(blinkID, { contents, tags = null }) {
         const blink = await BlinkRepository.getBlinkById(blinkID);
         if (!blink) throw createError(ErrorCodes.Blinks.NotFound);
 
         return await withTransaction(async (transaction) => {
             await BlinkRepository.deleteBlinkContents(blinkID, transaction);
             await BlinkRepository.addBlinkContents(blinkID, contents, transaction);
+
+            // Mettre à jour les tags si fournis
+            if (tags !== null) {
+                await TagsService.updateBlinkTags(blinkID, tags, transaction);
+            }
 
             await this.updateBlinkTier(blinkID);
 
@@ -227,7 +243,7 @@ class BlinkService {
      * Met à jour le palier (tier) d'un Blink en fonction de son nombre de likes
      */
     async updateBlinkTier(blinkID) {
-        const blink = await BlinkRepository.getBlinkById(blinkID);
+        const blink = await BlinkRepository.getBlinkForTierUpdate(blinkID);
         if (!blink) return;
 
         for (const { tier, likes } of TIER_LEVELS) {
