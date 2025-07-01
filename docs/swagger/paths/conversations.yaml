@@ -1,0 +1,141 @@
+paths:
+  /conversations:
+    get:
+      tags:
+        - Conversations
+      summary: Récupérer les conversations de l'utilisateur
+      description: |
+        Récupère toutes les conversations de l'utilisateur connecté avec les informations sur le dernier message et le nombre de messages non lus.
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Conversations récupérées avec succès
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '../schemas/index.yaml#/components/schemas/ConversationSummary'
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+
+  /messages/conversation/{conversationID}:
+    get:
+      tags:
+        - Conversations
+      summary: Récupérer les messages d'une conversation
+      description: |
+        Récupère tous les messages non expirés d'une conversation spécifique.
+        Les messages sont triés par date de création (du plus ancien au plus récent).
+        Chaque message inclut les informations sur l'expéditeur (sender).
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: conversationID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de la conversation
+      responses:
+        '200':
+          description: Messages récupérés avec succès
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '../schemas/index.yaml#/components/schemas/Message'
+        '400':
+          description: ID conversation requis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Accès non autorisé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+
+  /messages/read/conversation/{conversationID}:
+    put:
+      tags:
+        - Conversations
+      summary: Marquer les messages d'une conversation comme lus
+      description: |
+        Marque tous les messages non lus et non expirés d'une conversation spécifique comme lus.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: conversationID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID de la conversation
+      responses:
+        '200':
+          description: Messages marqués comme lus avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Messages marqués comme lus"
+        '400':
+          description: ID conversation requis
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "ID conversation requis"
+        '403':
+          description: Accès non autorisé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Accès non autorisé à cette conversation"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Erreur interne du serveur"

@@ -1,0 +1,18 @@
+{
+  "local": {
+    "username": "postgres",
+    "password": "",
+    "database": "blinker",
+    "host": "127.0.0.1",
+    "port": 5432,
+    "dialect": "postgres"
+  },
+  "development": {
+    "username": "blinker_user",
+    "password": "1seulMaître13",
+    "database": "BLINKER_DB",
+    "host": "bdd.dev.blinker.eterny.fr",
+    "port": 5432,
+    "dialect": "postgres"
+  }
+}

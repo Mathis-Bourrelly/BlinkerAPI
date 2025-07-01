@@ -1,7 +1,7 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
-const { PostgresDialect } = require("@sequelize/postgres");
 
+// Initialisation de Sequelize avec les options de connexion
 exports.sequelize = new Sequelize({
     dialect: 'postgres',
     database: process.env.DB_NAME,
@@ -9,17 +9,53 @@ exports.sequelize = new Sequelize({
     password: process.env.DB_PASSWORD,
     host: process.env.HOST,
     port: process.env.DB_PORT,
-    ssl: true,
-    clientMinMessages: 'notice',
+    define: {
+        freezeTableName: true, // Empêche Sequelize de modifier les noms de table
+    },
+    ssl: false,
+    logging: console.log, // Pour afficher les logs SQL (facultatif)
+    dialectOptions: {
+        clientMinMessages: 'notice',
+    }
 });
 
+// Importer les modèles
 const modelDefiners = [
-    require('../model/users'),
+    require('../models/users'),
+    require('../models/profiles'),
+    require('../models/follows'),
+    require('../models/blinks'),
+    require('../models/blinkContents'),
+    require('../models/interactions'),
+    require('../models/blinkLifetimes'),
+    require('../models/conversations'),
+    require('../models/messages'),
+    require('../models/reports'),
+    require('../models/comments'),
+    require('../models/tags'),
+    require('../models/blinkTags'),
 ];
 
-for (const modelDefiner of modelDefiners) {
-    modelDefiner.sync();
-}
+(async () => {
+    try {
+        // Synchronisation des modèles
+        for (const modelDefiner of modelDefiners) {
+            if (modelDefiner && typeof modelDefiner.sync === 'function') {
+                console.log(`Synchronisation du modèle : ${modelDefiner.name || 'Inconnu'}`);
+                await modelDefiner.sync();
+            } else {
+                console.warn('Un modèle est invalide ou mal importé.');
+            }
+        }
 
+        // Définition des associations après la synchronisation des modèles
+        require('../models/associations'); // Importer le fichier des associations
 
-
+        // Synchronisation globale de la base avec `alter` pour ajuster les tables existantes
+        await exports.sequelize.sync();
+        console.log('Base de données synchronisée avec succès !');
+        console.log('http://localhost:3011/api-docs');
+    } catch (error) {
+        console.error('Erreur de synchronisation des modèles :', error);
+    }
+})();

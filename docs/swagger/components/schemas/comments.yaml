@@ -1,0 +1,176 @@
+components:
+  schemas:
+    Comment:
+      type: object
+      properties:
+        commentID:
+          type: string
+          format: uuid
+          description: Identifiant unique du commentaire
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        blinkID:
+          type: string
+          format: uuid
+          description: ID du blink commenté
+          example: "987fcdeb-51a2-43d1-9f12-123456789abc"
+        userID:
+          type: string
+          format: uuid
+          description: ID de l'utilisateur qui a posté le commentaire
+          example: "456e7890-e12b-34d5-a678-901234567def"
+        content:
+          type: string
+          description: Contenu du commentaire
+          minLength: 1
+          maxLength: 1000
+          example: "Super blink ! J'adore ce contenu."
+        createdAt:
+          type: string
+          format: date-time
+          description: Date et heure de création du commentaire
+          example: "2024-03-15T10:30:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Date et heure de dernière modification du commentaire
+          example: "2024-03-15T10:30:00.000Z"
+      required:
+        - commentID
+        - blinkID
+        - userID
+        - content
+        - createdAt
+        - updatedAt
+
+    CommentWithUser:
+      allOf:
+        - $ref: '#/components/schemas/Comment'
+        - type: object
+          properties:
+            user:
+              type: object
+              properties:
+                userID:
+                  type: string
+                  format: uuid
+                  description: ID de l'utilisateur
+                  example: "456e7890-e12b-34d5-a678-901234567def"
+                Profiles:
+                  type: object
+                  properties:
+                    display_name:
+                      type: string
+                      description: Nom d'affichage de l'utilisateur
+                      example: "John Doe"
+                    username:
+                      type: string
+                      description: Nom d'utilisateur unique
+                      example: "johndoe"
+                    avatar_url:
+                      type: string
+                      nullable: true
+                      description: URL de l'avatar de l'utilisateur
+                      example: "http://localhost:3011/uploads/avatar123.jpg"
+                  required:
+                    - display_name
+                    - username
+              required:
+                - userID
+                - Profiles
+
+    CommentWithBlink:
+      allOf:
+        - $ref: '#/components/schemas/Comment'
+        - type: object
+          properties:
+            blink:
+              type: object
+              properties:
+                blinkID:
+                  type: string
+                  format: uuid
+                  description: ID du blink commenté
+                  example: "987fcdeb-51a2-43d1-9f12-123456789abc"
+                createdAt:
+                  type: string
+                  format: date-time
+                  description: Date de création du blink
+                  example: "2024-03-15T09:00:00.000Z"
+              required:
+                - blinkID
+                - createdAt
+
+    CommentCreateRequest:
+      type: object
+      properties:
+        blinkID:
+          type: string
+          format: uuid
+          description: ID du blink à commenter
+          example: "987fcdeb-51a2-43d1-9f12-123456789abc"
+        content:
+          type: string
+          description: Contenu du commentaire
+          minLength: 1
+          maxLength: 1000
+          example: "Super blink ! J'adore ce contenu."
+      required:
+        - blinkID
+        - content
+
+    CommentUpdateRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Nouveau contenu du commentaire
+          minLength: 1
+          maxLength: 1000
+          example: "Commentaire mis à jour avec plus de détails."
+      required:
+        - content
+
+    CommentResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "success"
+        message:
+          type: string
+          example: "Commentaire créé avec succès"
+        data:
+          type: object
+          properties:
+            comment:
+              $ref: '#/components/schemas/CommentWithUser'
+
+    CommentsListResponse:
+      allOf:
+        - $ref: '#/components/schemas/StandardResponse'
+        - type: object
+          properties:
+            data:
+              allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/CommentWithUser'
+
+    UserCommentsListResponse:
+      allOf:
+        - $ref: '#/components/schemas/StandardResponse'
+        - type: object
+          properties:
+            data:
+              allOf:
+                - $ref: '#/components/schemas/PaginatedResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/CommentWithBlink'

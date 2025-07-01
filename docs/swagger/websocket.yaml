@@ -1,0 +1,208 @@
+openapi: 3.0.0
+info:
+  title: Blinker WebSocket API
+  description: Documentation des événements WebSocket de l'API Blinker
+  version: 1.0.0
+
+servers:
+  - url: "ws://localhost:3011"
+    description: "Serveur WebSocket de développement"
+  - url: "wss://dev.blinker.eterny.fr"
+    description: "Serveur WebSocket de production"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    WebSocketAuthentication:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Token JWT pour l'authentification
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    SendMessageEvent:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Contenu du message
+          example: "Bonjour, comment ça va ?"
+        conversationID:
+          type: string
+          format: uuid
+          description: ID de la conversation (optionnel si receiverID est fourni)
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        receiverID:
+          type: string
+          format: uuid
+          description: ID du destinataire (optionnel si conversationID est fourni)
+          example: "550e8400-e29b-41d4-a716-446655440001"
+
+    MarkAsReadEvent:
+      type: object
+      properties:
+        conversationID:
+          type: string
+          format: uuid
+          description: ID de la conversation
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    GetConversationMessagesEvent:
+      type: object
+      properties:
+        conversationID:
+          type: string
+          format: uuid
+          description: ID de la conversation
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    NewMessageEvent:
+      allOf:
+        - $ref: '../schemas/index.yaml#/components/schemas/Message'
+        - type: object
+          description: Message avec informations complètes pour les événements WebSocket
+
+    MessageNotificationEvent:
+      type: object
+      properties:
+        conversationID:
+          type: string
+          format: uuid
+          description: ID de la conversation
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        message:
+          $ref: '#/components/schemas/NewMessageEvent'
+
+    MessagesReadEvent:
+      type: object
+      properties:
+        conversationID:
+          type: string
+          format: uuid
+          description: ID de la conversation
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        userID:
+          type: string
+          format: uuid
+          description: ID de l'utilisateur qui a lu les messages
+          example: "550e8400-e29b-41d4-a716-446655440001"
+
+    ConversationMessagesEvent:
+      type: object
+      properties:
+        conversationID:
+          type: string
+          format: uuid
+          description: ID de la conversation
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewMessageEvent'
+
+    MessagesExpiredEvent:
+      type: object
+      properties:
+        conversationID:
+          type: string
+          format: uuid
+          description: ID de la conversation
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        messageIDs:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: IDs des messages expirés
+          example: ["550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440001"]
+
+    ErrorEvent:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Message d'erreur
+          example: "Erreur lors de l'envoi du message"
+
+paths:
+  /socket.io/:
+    get:
+      summary: Connexion WebSocket
+      description: |
+        Établit une connexion WebSocket avec le serveur.
+        L'authentification se fait en incluant le token JWT dans l'objet `auth` lors de la connexion.
+      security:
+        - bearerAuth: []
+      responses:
+        '101':
+          description: Connexion WebSocket établie
+
+tags:
+  - name: Client Events
+    description: Événements envoyés par le client au serveur
+
+  - name: Server Events
+    description: Événements envoyés par le serveur au client
+
+x-websocket-events:
+  client:
+    - name: sendMessage
+      description: Envoie un nouveau message
+      payload:
+        $ref: '#/components/schemas/SendMessageEvent'
+      tag: Client Events
+
+    - name: markAsRead
+      description: Marque les messages d'une conversation comme lus
+      payload:
+        $ref: '#/components/schemas/MarkAsReadEvent'
+      tag: Client Events
+
+    - name: getConversationMessages
+      description: Récupère les messages d'une conversation
+      payload:
+        $ref: '#/components/schemas/GetConversationMessagesEvent'
+      tag: Client Events
+
+  server:
+    - name: newMessage
+      description: Notification d'un nouveau message
+      payload:
+        $ref: '#/components/schemas/NewMessageEvent'
+      tag: Server Events
+
+    - name: messageNotification
+      description: Notification d'un nouveau message pour un utilisateur spécifique
+      payload:
+        $ref: '#/components/schemas/MessageNotificationEvent'
+      tag: Server Events
+
+    - name: messagesRead
+      description: Notification que des messages ont été lus
+      payload:
+        $ref: '#/components/schemas/MessagesReadEvent'
+      tag: Server Events
+
+    - name: conversationMessages
+      description: Réponse à la demande de messages d'une conversation
+      payload:
+        $ref: '#/components/schemas/ConversationMessagesEvent'
+      tag: Server Events
+
+    - name: messagesExpired
+      description: Notification que des messages ont expiré
+      payload:
+        $ref: '#/components/schemas/MessagesExpiredEvent'
+      tag: Server Events
+
+    - name: error
+      description: Notification d'erreur
+      payload:
+        $ref: '#/components/schemas/ErrorEvent'
+      tag: Server Events

@@ -1,0 +1,57 @@
+openapi: 3.0.0
+info:
+  title: Blinker API
+  description: Documentation globale de l'API Blinker
+  version: 1.0.0
+
+servers:
+  - url: "http://localhost:3011/"
+    description: "Serveur de développement"
+  - url: "https://dev.blinker.eterny.fr/"
+    description: "Serveur de production"
+
+tags:
+  - name: Blinks
+    description: Opérations liées aux Blinks
+  - name: Follows
+    description: Opérations liées aux abonnements
+  - name: Profiles
+    description: Opérations liées aux profils utilisateurs
+  - name: Users
+    description: Gestion des utilisateurs
+  - name: Authentification
+    description: Gestion des connexions
+  - name: Interactions
+    description: Gestion des likes et dislikes sur les Blinks
+  - name: Messages
+    description: Gestion des messages entre utilisateurs
+  - name: Conversations
+    description: Gestion des conversations entre utilisateurs
+  - name: Comments
+    description: Gestion des commentaires sur les Blinks
+  - name: Tags
+    description: Gestion des tags et mots-clés pour les Blinks
+
+# Les chemins sont chargés dynamiquement dans le middleware
+paths: {}
+
+# Les composants sont chargés dynamiquement dans le middleware
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Authentification par token JWT.
+
+        **Comment obtenir un token :**
+        1. Utilisez l'endpoint `POST /login` avec vos identifiants
+        2. Récupérez le token dans la réponse
+        3. Cliquez sur "Authorize" et entrez le token (sans "Bearer ")
+
+        **Format du token :** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+
+# Configuration de sécurité globale
+security:
+  - BearerAuth: []

@@ -1,0 +1,139 @@
+paths:
+  /login:
+    post:
+      tags:
+        - Authentification
+      summary: Connexion utilisateur
+      description: Authentifie un utilisateur avec son email et mot de passe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "Password123!"
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          token:
+                            type: string
+                            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                          userID:
+                            type: string
+                            format: uuid
+                            example: "123e4567-e89b-12d3-a456-426614174000"
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Authentification échouée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+
+  /login/google:
+    post:
+      tags:
+        - Authentification
+      summary: Connexion avec Google
+      description: Authentifie un utilisateur avec son token Google
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id_token
+              properties:
+                id_token:
+                  type: string
+                  example: "google_id_token"
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          token:
+                            type: string
+                            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                          userID:
+                            type: string
+                            format: uuid
+                            example: "123e4567-e89b-12d3-a456-426614174000"
+        '400':
+          description: Token invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Authentification échouée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+
+  /checkToken:
+    post:
+      tags:
+        - Authentification
+      summary: Vérification du token
+      description: Vérifie la validité du token d'authentification Bearer
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Token valide
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          valid:
+                            type: boolean
+                            example: true
+        '401':
+          description: Token invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
